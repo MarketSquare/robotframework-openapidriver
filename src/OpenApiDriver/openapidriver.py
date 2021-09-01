@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 from OpenApiDriver.openapi_reader import OpenApiReader
 
 from DataDriver import DataDriver
+from DataDriver.AbstractReaderClass import AbstractReaderClass
 from requests.auth import AuthBase
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -241,8 +242,9 @@ Test Endpoint
     def __init__(
             self,
             source: str,
-            ignored_endpoint: Optional[List[str]] = None,
+            ignored_endpoints: Optional[List[str]] = None,
             ignored_responses: Optional[List[int]] = None,
+            ignored_testcases: Optional[List[List[str]]] = None,
             ignore_fastapi_default_422: Optional[bool] = None,
             origin: str = "",
             base_path: str = "",
@@ -252,10 +254,13 @@ Test Endpoint
             auth: Optional[AuthBase] = None,
         ):
         super().__init__(
-            reader_class=OpenApiReader,
+            #FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
+            # reader_class=OpenApiReader
+            reader_class="openapi_reader",
             source=source,
-            ignored_endpoint = ignored_endpoint,
+            ignored_endpoints = ignored_endpoints,
             ignored_responses = ignored_responses,
+            ignored_testcases = ignored_testcases,
             ignore_fastapi_default_422 = ignore_fastapi_default_422,
         )
 
@@ -270,3 +275,8 @@ Test Endpoint
             password,
             auth,
         )
+
+    #FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
+    # accepts an AbstractReaderClass subclass as reader_class argument
+    def _data_reader(self) -> AbstractReaderClass:
+        return OpenApiReader(self.reader_config)
