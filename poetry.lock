@@ -302,6 +302,14 @@ robotframework = ">=3.1"
 xls = ["pandas", "xlrd (>=1.2.0)", "openpyxl"]
 
 [[package]]
+name = "robotframework-pythonlibcore"
+version = "3.0.0"
+description = "Tools to ease creating larger test libraries for Robot Framework using Python."
+category = "main"
+optional = false
+python-versions = ">=3.6, <4"
+
+[[package]]
 name = "robotframework-stacktrace"
 version = "0.4.1"
 description = "A listener that prints a Stack Trace to console to faster find the code section where the failure appears."
@@ -410,7 +418,7 @@ standard = ["websockets (>=9.1)", "httptools (>=0.2.0,<0.3.0)", "watchgod (>=0.6
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "19c48863f315b61a8d72c6c1b9660e51428c6072355637d6bb3dbedb716b9769"
+content-hash = "7667a0df8e3e071e56782e6d2b731161cf58ed66f1c35151fddb2c82ea1f59a2"
 
 [metadata.files]
 asgiref = [
@@ -623,6 +631,10 @@ robotframework = [
 robotframework-datadriver = [
     {file = "robotframework-datadriver-1.5.0.tar.gz", hash = "sha256:67e14bf8d7c4d370ecaca35879cbf786c3f30382d3ceaf50c6ed81820e8166cf"},
     {file = "robotframework_datadriver-1.5.0-py3-none-any.whl", hash = "sha256:58f5009fa2d91fba5cfdefe72927523538e10ecee2657808b927f39b63ef47b9"},
+]
+robotframework-pythonlibcore = [
+    {file = "robotframework-pythonlibcore-3.0.0.tar.gz", hash = "sha256:1bce3b8dfcb7519789ee3a89320f6402e126f6d0a02794184a1ab8cee0e46b5d"},
+    {file = "robotframework_pythonlibcore-3.0.0-py2.py3-none-any.whl", hash = "sha256:af10c2403cd38834988c4ce68ffb6ec6f9b14bd2cd39ecf836d443377c59b7c4"},
 ]
 robotframework-stacktrace = [
     {file = "robotframework-stacktrace-0.4.1.tar.gz", hash = "sha256:e96cb36e7e9ab55104c1f7d3606249a109e0a4c3bb6a0e294bff07d54ee6f6a5"},

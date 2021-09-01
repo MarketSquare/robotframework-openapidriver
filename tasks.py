@@ -41,8 +41,8 @@ def tests(context):
 @task
 def libspec(context):
     json_file = f"{project_root}/tests/files/petstore_openapi.json"
-    source = f"{project_root}/src/OpenApiDriver/openapi_executors.py::{json_file}"
-    target = f"{project_root}/src/OpenApiDriver/openapi_executors.libspec"
+    source = f"{project_root}/src/OpenApiDriver/openapidriver.py::{json_file}"
+    target = f"{project_root}/src/OpenApiDriver/openapidriver.libspec"
     cmd = [
         "python",
         "-m",

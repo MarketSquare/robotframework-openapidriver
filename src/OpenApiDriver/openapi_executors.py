@@ -18,10 +18,10 @@ from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from robot.api import SkipExecution
-from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
+from robotlibcore import keyword
 
-from OpenApiDriver import (
+from OpenApiDriver.dto_base import (
     Dto,
     IdDependency,
     PropertyValueConstraint,
@@ -35,7 +35,6 @@ run_keyword = BuiltIn().run_keyword
 logger = getLogger(__name__)
 
 
-@library(scope="GLOBAL")
 class OpenapiExecutors:
     def __init__(
             self,

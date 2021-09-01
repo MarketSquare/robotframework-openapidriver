@@ -22,8 +22,9 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-robotframework = ">="
-robotframework-datadriver = ">=1.4"
+robotframework = ">=4"
+robotframework-pythonlibcore = ">=3"
+robotframework-datadriver = ">=1.5"
 requests = "*"
 prance = "*"
 jsonschema = "*"

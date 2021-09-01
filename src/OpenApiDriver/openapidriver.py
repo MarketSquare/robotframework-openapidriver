@@ -1,14 +1,15 @@
 from pathlib import Path
-from typing import List, Optional, Union, Type
+from typing import List, Optional, Union
 
 from OpenApiDriver.openapi_reader import OpenApiReader
+from OpenApiDriver.openapi_executors import OpenapiExecutors
 
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from requests.auth import AuthBase
-from robot.libraries.BuiltIn import BuiltIn
+from robotlibcore import DynamicCore
 
-class OpenApiDriver(DataDriver):
+class OpenApiDriver(DataDriver, DynamicCore):
 # region: docstring
     """
 
@@ -41,15 +42,6 @@ Table of contents
 -  `What DataDriver Does`_
 -  `How DataDriver Works`_
 -  `Usage`_
--  `Structure of Test Suite`_
--  `Structure of data file`_
--  `Accessing Test Data From Robot Variables`_
--  `Data Sources`_
--  `File Encoding and CSV Dialect`_
--  `Custom DataReader Classes`_
--  `Selection of Test Cases to Execute`_
--  `Configure DataDriver by Pre-Run Keyword`_
--  `Pabot and DataDriver`_
 
 
 What DataDriver Does
@@ -253,7 +245,7 @@ Test Endpoint
             password: str = "",
             auth: Optional[AuthBase] = None,
         ):
-        super().__init__(
+        DataDriver.__init__(self,
             #FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
             # reader_class=OpenApiReader
             reader_class="openapi_reader",
@@ -265,18 +257,21 @@ Test Endpoint
         )
 
         mappings_path = Path(mappings_path).as_posix()
-        BuiltIn().import_library(
-            "OpenApiDriver.openapi_executors",
-            source,
-            origin,
-            base_path,
-            mappings_path,
-            username,
-            password,
-            auth,
+        openapi_executors = OpenapiExecutors(
+            source=source,
+            origin=origin,
+            base_path=base_path,
+            mappings_path=mappings_path,
+            username=username,
+            password=password,
+            auth=auth,
         )
+        DynamicCore.__init__(self, [openapi_executors])
 
     #FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
     # accepts an AbstractReaderClass subclass as reader_class argument
     def _data_reader(self) -> AbstractReaderClass:
         return OpenApiReader(self.reader_config)
+
+# Support Robot Framework import mechanism
+openapidriver = OpenApiDriver    # pylint: disable=invalid-name
