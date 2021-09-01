@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
-from openapidriver import (
+from OpenApiDriver import (
     Constraint,
     Dependency,
     Dto,
