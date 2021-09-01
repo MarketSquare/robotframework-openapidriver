@@ -1,19 +1,24 @@
 *** Settings ***
 Library            OpenApiDriver
 ...                    source=${root}/tests/files/petstore_openapi.json
-Suite Setup        Validate OpenAPI specification
+...                    ignored_responses=${ignored_responses}
+...                    ignored_testcases=${ignored_tests}
 Test Template      Do Nothing
 
 
 *** Test Cases ***
-Some OpenAPI test for ${method} on ${endpoint} where ${status_code} is expected
+openapi.json test for ${method} on ${endpoint} where ${status_code} is expected
+
 
 *** Keywords *** ***
 Do Nothing
     [Arguments]    ${endpoint}    ${method}    ${status_code}
     No Operation
 
-Validate OpenAPI specification
-    [Documentation]
-    ...    Validate the retrieved document against the OpenApi 3.0 specification
-    Validate OpenAPI Document
+
+*** Variables ***
+@{ignored_responses}=    200    404    400
+@{ignore_post_pet}=    /pet    POST    405
+@{ignore_post_pet_id}=    /pet/{petId}    post    405
+@{ignore_post_order}=    /store/order    post    405
+@{ignored_tests}=    ${ignore_post_pet}    ${ignore_post_pet_id}    ${ignore_post_order}
