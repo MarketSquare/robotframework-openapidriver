@@ -462,8 +462,19 @@ class OpenapiExecutors:
                 if method in ["PATCH", "PUT"]:
                     post_url_parts = url.split("/")[:-1]
                     post_url = "/".join(post_url_parts)
+                    # the PATCH or PUT may use a different dto than required for POST
+                    # so a valid POST dto must be constructed
+                    endpoint = post_url.replace(self.base_url, "")
+                    post_dto, _ = self.get_dto_and_schema(
+                        endpoint=endpoint, method="POST"
+                    )
+                    post_json = asdict(post_dto)
+                    for key in post_json.keys():
+                        if key in json_data:
+                            post_json[key] = json_data.get(key)
                 else:
                     post_url = url
+                    post_json = json_data
                 response = self.authorized_request(
                     method="POST", url=post_url, json=json_data
                 )
