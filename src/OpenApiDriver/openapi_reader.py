@@ -31,13 +31,12 @@ class OpenApiReader(AbstractReaderClass):
             parser = ResolvingParser(getattr(self, "source", None))
         except ResolutionError as exception:
             BuiltIn().fatal_error(
-                f"Exception while trying to load openapi spec from url: {exception}"
+                f"Exception while trying to load openapi spec from source: {exception}"
             )
         endpoints: Dict[str, Any] = parser.specification["paths"]
         if ignored_endpoints := getattr(self, "ignored_endpoints", None):
             for endpoint in ignored_endpoints:
-                if isinstance(endpoint, str):
-                    endpoints.pop(endpoint)
+                endpoints.pop(endpoint)
         if ignored_responses := getattr(self, "ignored_responses", None):
             ignore_list: List[str] = [str(response) for response in ignored_responses]
         else:

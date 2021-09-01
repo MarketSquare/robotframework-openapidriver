@@ -14,6 +14,7 @@ from uuid import uuid4
 import jsonschema
 from openapi_spec_validator import openapi_v3_spec_validator, validate_spec
 from prance import ResolvingParser
+from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from robot.api import SkipExecution
@@ -46,7 +47,12 @@ class OpenapiExecutors:
             password: str = "",
             auth: Optional[AuthBase] = None,
         ) -> None:
-        parser = ResolvingParser(source)
+        try:
+            parser = ResolvingParser(source)
+        except ResolutionError as exception:
+            BuiltIn().fatal_error(
+                f"Exception while trying to load openapi spec from source: {exception}"
+            )
         self.openapi_doc: Dict[str, Any] = parser.specification
         self.session = Session()
         self.origin = origin
