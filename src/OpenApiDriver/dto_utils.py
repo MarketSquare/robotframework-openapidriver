@@ -10,15 +10,6 @@ logger = getLogger(__name__)
 
 
 class DtoMixin:
-    def set_minimum_data(self) -> None:
-        raise NotImplementedError
-
-    def set_complete_data(self) -> None:
-        raise NotImplementedError
-
-    def set_partial_data(self) -> None:
-        raise NotImplementedError
-
     def get_invalidated_data(
             self, schema: Dict[str, Any], status_code: int
         ) -> Dict[str, Any]:
