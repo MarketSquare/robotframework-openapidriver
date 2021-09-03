@@ -135,7 +135,9 @@ class OpenapiExecutors:
                 f"can be invalidated."
             )
         response = self.authorized_request(method=method, url=url)
-        assert response.status_code == expected_status_code
+        if response.status_code != expected_status_code:
+            raise AssertionError(
+                f"Response {response.status_code} was not {expected_status_code}")
 
     @keyword
     def test_endpoint(self, method: str, endpoint: str, status_code: int) -> None:
@@ -155,7 +157,8 @@ class OpenapiExecutors:
             run_keyword("ensure_in_use", url)
         if status_code == 404:
             #FIXME: determine the reason and trigger its conditions
-            raise SkipExecution(f"404: Implementation not found.")
+            self.test_invalid_url(endpoint=endpoint, method=method)
+            return
         if method == "PATCH":
             response: Response = run_keyword("authorized_request", url, "GET")
             if response.ok:
@@ -553,11 +556,6 @@ class OpenapiExecutors:
             response: Response,
             original_data: Optional[Dict[str, Any]] = None,
         ) -> None:
-        response_spec = self.get_response_spec(
-            endpoint=endpoint,
-            method=response.request.method,
-            status_code=response.status_code,
-        )
         if response.status_code == 204:
             assert not response.content
             return
@@ -577,6 +575,12 @@ class OpenapiExecutors:
                     logger.warning(validation_error)
                 else:
                     logger.info(validation_error)
+
+        response_spec = self.get_response_spec(
+            endpoint=endpoint,
+            method=response.request.method,
+            status_code=response.status_code,
+        )
         # content should be a single key/value entry, so use tuple assignment
         content_type, = response_spec["content"].keys()
         if content_type != "application/json":
@@ -587,8 +591,20 @@ class OpenapiExecutors:
                 f"Content-Type '{response.headers['Content-Type']}' of the response "
                 f"is not '{content_type}' as specified in the OpenAPI document."
             )
+        response_schema = response_spec["content"][content_type]["schema"]
+        resolved_schema = self.resolve_schema(response_schema)
+        expected_response_properties = resolved_schema["properties"]
         json_response = response.json()
-        # ensure the href is valid
+        if expected_response_properties.keys() != json_response.keys():
+            expected_response_properties = sorted(expected_response_properties.keys())
+            properties_in_response = sorted(json_response.keys())
+            raise AssertionError(
+                f"Response schema violation: the response contains properties that are "
+                f"not specified in the schema."
+                f"\n\tExpected: {expected_response_properties}"
+                f"\n\tGot: {properties_in_response}"
+            )
+        # ensure the href is valid if present in the response
         if "href" in json_response:
             url = f"{self.origin}{json_response['href']}"
             get_response = self.authorized_request(method="GET", url=url)
@@ -597,8 +613,8 @@ class OpenapiExecutors:
             )
         # if the response contains a resource, perform additional validations
         if isinstance(json_response, dict):
-            # every property that was sucessfully send must be in the response and
-            # the value in the response must be the value that was send
+            # every property that was sucessfully send and that is in the response
+            # schema must have the value that was send
             if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
                 self.validate_send_response(response=response, original_data=original_data)
             # ensure string properties are not empty
@@ -608,8 +624,8 @@ class OpenapiExecutors:
                     failed_keys.append(key)
             if failed_keys:
                 raise AssertionError(
-                f"Properties {', '.join(failed_keys)} contain a whitespace value"
-            )
+                    f"Properties {', '.join(failed_keys)} contain a whitespace value"
+                )
 
     @staticmethod
     @keyword
