@@ -7,5 +7,11 @@ from OpenApiDriver.dto_base import  (
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
+from importlib.metadata import version
 
-__version__ = "0.1.0-alpha.1"
+try:
+    __version__ = version(__name__)
+except:
+    pass
+
+# __version__ = "0.1.0-alpha.2"
