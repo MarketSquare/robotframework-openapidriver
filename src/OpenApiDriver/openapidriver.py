@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from OpenApiDriver.openapi_reader import OpenApiReader
-from OpenApiDriver.openapi_executors import OpenapiExecutors
+from OpenApiDriver.openapi_executors import OpenapiExecutors, ValidationLevel
 
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
@@ -244,6 +244,7 @@ Test Endpoint
             username: str = "",
             password: str = "",
             auth: Optional[AuthBase] = None,
+            response_validation: ValidationLevel = ValidationLevel.WARN,
         ):
         DataDriver.__init__(self,
             #FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
@@ -265,6 +266,7 @@ Test Endpoint
             username=username,
             password=password,
             auth=auth,
+            response_validation=response_validation
         )
         DynamicCore.__init__(self, [openapi_executors])
 

@@ -3,6 +3,7 @@
 import json as _json
 import sys
 from dataclasses import asdict, make_dataclass
+from enum import Enum, auto
 from importlib import import_module
 from itertools import zip_longest
 from logging import getLogger
@@ -11,7 +12,9 @@ from random import choice, getrandbits, randint, uniform
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from uuid import uuid4
 
-import jsonschema
+from openapi_core import create_spec
+from openapi_core.validation.response.validators import ResponseValidator
+from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
 from openapi_spec_validator import openapi_v3_spec_validator, validate_spec
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -35,6 +38,13 @@ run_keyword = BuiltIn().run_keyword
 logger = getLogger(__name__)
 
 
+class ValidationLevel(str, Enum):
+    DISABLED = auto()
+    INFO = auto()
+    WARN = auto()
+    STRICT = auto()
+
+
 class OpenapiExecutors:
     def __init__(
             self,
@@ -45,6 +55,7 @@ class OpenapiExecutors:
             username: str = "",
             password: str = "",
             auth: Optional[AuthBase] = None,
+            response_validation: ValidationLevel = ValidationLevel.WARN,
         ) -> None:
         try:
             parser = ResolvingParser(source)
@@ -53,6 +64,11 @@ class OpenapiExecutors:
                 f"Exception while trying to load openapi spec from source: {exception}"
             )
         self.openapi_doc: Dict[str, Any] = parser.specification
+        validation_spec = create_spec(self.openapi_doc)
+        self.response_validator = ResponseValidator(
+            spec=validation_spec,
+            base_url=base_path,
+        )
         self.session = Session()
         self.origin = origin
         self.base_url = f"{self.origin}{base_path}"
@@ -60,6 +76,7 @@ class OpenapiExecutors:
             self.auth = auth
         else:
             self.auth = HTTPBasicAuth(username, password)
+        self.response_validation = response_validation
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -544,13 +561,26 @@ class OpenapiExecutors:
         if response.status_code == 204:
             assert not response.content
             return
+        # validate the response against the schema
+        openapi_request = RequestsOpenAPIRequest(response.request)
+        openapi_response = RequestsOpenAPIResponse(response)
+        validation_result = self.response_validator.validate(
+            request=openapi_request,
+            response=openapi_response,
+        )
+        validation_errors = validation_result.errors
+        if self.response_validation == ValidationLevel.STRICT:
+            validation_result.raise_for_errors()
+        if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
+            for validation_error in validation_errors:
+                if self.response_validation == ValidationLevel.WARN:
+                    logger.warning(validation_error)
+                else:
+                    logger.info(validation_error)
         # content should be a single key/value entry, so use tuple assignment
         content_type, = response_spec["content"].keys()
-        content_schema, = response_spec["content"].values()
-        if content_type == "application/json":
-            jsonschema.validate(instance=response.content, schema=content_schema)
-        else:
-            # At present, only json is supported.
+        if content_type != "application/json":
+            # At present, all endpoints use json so no supported for other types.
             raise NotImplementedError(f"content_type '{content_type}' not supported")
         if response.headers["Content-Type"] != content_type:
             raise ValueError(
@@ -602,27 +632,22 @@ class OpenapiExecutors:
                 # Use the (mandatory) id to get the POSTed resource from the list
                 [reference] = [item for item in item_list if item["id"] == send_json["id"]]
         for key, value in send_json.items():
-            try:
-                if value is None:
-                    # if a None value is send, the target property should be cleared or
-                    # reverted to the default value which depends on its type
-                    assert reference[key] in [None, [], 1, False, ""], (
-                        f"Received value for {key} '{reference[key]}' does not "
-                        f"match '{value}' in the {response.request.method} request"
-                        f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                        f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
-                    )
-                else:
-                    assert reference[key] == value, (
-                        f"Received value for {key} '{reference[key]}' does not "
-                        f"match '{value}' in the {response.request.method} request"
-                        f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                        f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
-                    )
-            except KeyError:
-                raise AssertionError(
-                    f"{key} was {response.request.method} with value '{value}' "
-                    f"but not present in the response: {reference}"
+            # sometimes, a property in the request is not in the response, e.g. a password
+            if key not in reference.keys():
+                continue
+            if value is None:
+                # if a None value is send, the target property should be cleared or
+                # reverted to the default value which depends on its type
+                assert reference[key] in [None, [], 1, False, ""], (
+                    f"Received value for {key} '{reference[key]}' does not "
+                    f"match '{value}' in the {response.request.method} request"
+                    f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
+                    f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
+                )
+            else:
+                assert reference[key] == value, (
+                    f"Received value for {key} '{reference[key]}' does not "
+                    f"match '{value}' in the {response.request.method} request"
                     f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
                     f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
                 )
@@ -630,20 +655,12 @@ class OpenapiExecutors:
         if original_data:
             for key, value in original_data.items():
                 if key not in send_json.keys():
-                    try:
-                        assert value == reference[key], (
-                            f"Received value for {key} '{reference[key]}' does not "
-                            f"match '{value}' in the pre-patch data\nPre-patch: "
-                            f"{_json.dumps(original_data, indent=4, sort_keys=True)}"
-                            f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
-                        )
-                    except KeyError:
-                        raise AssertionError(
-                            f"{key} was with value '{value}' was no longer "
-                            f"present in the response: {reference}\nPre-patch: "
-                            f"{_json.dumps(original_data, indent=4, sort_keys=True)}"
-                            f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
-                        )
+                    assert value == reference[key], (
+                        f"Received value for {key} '{reference[key]}' does not "
+                        f"match '{value}' in the pre-patch data"
+                        f"\nPre-patch: {_json.dumps(original_data, indent=4, sort_keys=True)}"
+                        f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
+                    )
 
     def get_response_spec(
             self, endpoint: str, method: str, status_code: int
