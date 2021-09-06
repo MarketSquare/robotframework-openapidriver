@@ -129,6 +129,8 @@ class OpenapiExecutors:
             self, endpoint: str, method: str, expected_status_code: int = 404
         ) -> None:
         valid_url: str = run_keyword("get_valid_url", endpoint)
+        #TODO: support for 400/422 prioritized over 404
+        # Since no body is send, some APIs may return 400/422 instead of 404
         if not (url:= run_keyword("get_invalidated_url", valid_url)):
             raise SkipExecution(
                 f"Endpoint {endpoint} does not contain resource references that "
@@ -144,6 +146,11 @@ class OpenapiExecutors:
         json_data: Optional[Dict[str, Any]] = None
         original_data: Optional[Dict[str, Any]] = None
 
+        if status_code == 404:
+            #FIXME: determine the reason and trigger its conditions
+            self.test_invalid_url(endpoint=endpoint, method=method)
+            return
+
         url: str = run_keyword("get_valid_url", endpoint)
         dto, schema = self.get_dto_and_schema(method=method, endpoint=endpoint)
         if dto and schema:
@@ -155,10 +162,6 @@ class OpenapiExecutors:
                 json_data = dto.get_invalidated_data(schema, status_code)
         if status_code == 403:
             run_keyword("ensure_in_use", url)
-        if status_code == 404:
-            #FIXME: determine the reason and trigger its conditions
-            self.test_invalid_url(endpoint=endpoint, method=method)
-            return
         if method == "PATCH":
             response: Response = run_keyword("authorized_request", url, "GET")
             if response.ok:
@@ -584,48 +587,75 @@ class OpenapiExecutors:
         # content should be a single key/value entry, so use tuple assignment
         content_type, = response_spec["content"].keys()
         if content_type != "application/json":
-            # At present, all endpoints use json so no supported for other types.
+            # at present, only json reponses are supported
             raise NotImplementedError(f"content_type '{content_type}' not supported")
         if response.headers["Content-Type"] != content_type:
             raise ValueError(
                 f"Content-Type '{response.headers['Content-Type']}' of the response "
                 f"is not '{content_type}' as specified in the OpenAPI document."
             )
+        json_response = response.json()
+
         response_schema = response_spec["content"][content_type]["schema"]
         resolved_schema = self.resolve_schema(response_schema)
-        expected_response_properties = resolved_schema["properties"]
-        json_response = response.json()
-        if expected_response_properties.keys() != json_response.keys():
-            expected_response_properties = sorted(expected_response_properties.keys())
-            properties_in_response = sorted(json_response.keys())
-            raise AssertionError(
-                f"Response schema violation: the response contains properties that are "
-                f"not specified in the schema."
-                f"\n\tExpected: {expected_response_properties}"
-                f"\n\tGot: {properties_in_response}"
-            )
+        if list_item_schema := resolved_schema.get("items"):
+            if not isinstance(json_response, list):
+                raise AssertionError(
+                    f"Response schema violation: the schema specifies an array / list as "
+                    f"response type but the response was of type {type(json_response)}."
+                )
+            # at present, only lists of resource objects are supported
+            if list_item_schema.get("type") != "object":
+                raise NotImplementedError(
+                    f"response validation of lists of "
+                    f"{list_item_schema.get('type')} not supported"
+                )
+            expected_properties = list_item_schema["properties"]
+            for resource in json_response:
+                run_keyword("validate_resource_properties", resource, expected_properties)
+            # no further validation; value validation of individual resources should
+            # be performed on the endpoints for the specific resource
+            return None
+
+        run_keyword(
+            "validate_resource_properties", json_response, resolved_schema["properties"]
+        )
         # ensure the href is valid if present in the response
-        if "href" in json_response:
-            url = f"{self.origin}{json_response['href']}"
+        if href := json_response.get("href"):
+            url = f"{self.origin}{href}"
             get_response = self.authorized_request(method="GET", url=url)
             assert get_response.json() == json_response, (
                 f"{get_response.json()} not equal to original {json_response}"
             )
-        # if the response contains a resource, perform additional validations
-        if isinstance(json_response, dict):
-            # every property that was sucessfully send and that is in the response
-            # schema must have the value that was send
-            if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
-                self.validate_send_response(response=response, original_data=original_data)
-            # ensure string properties are not empty
-            failed_keys: List[str] = []
-            for key, value in json_response.items():
-                if isinstance(value, str) and value.isspace():
-                    failed_keys.append(key)
-            if failed_keys:
-                raise AssertionError(
-                    f"Properties {', '.join(failed_keys)} contain a whitespace value"
-                )
+        # every property that was sucessfully send and that is in the response
+        # schema must have the value that was send
+        if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
+            self.validate_send_response(response=response, original_data=original_data)
+        # ensure string properties are not empty
+        failed_keys: List[str] = []
+        for key, value in json_response.items():
+            if isinstance(value, str) and value.isspace():
+                failed_keys.append(key)
+        if failed_keys:
+            raise AssertionError(
+                f"Properties {', '.join(failed_keys)} contain a whitespace value"
+            )
+
+    @staticmethod
+    @keyword
+    def validate_resource_properties(
+        resource: Dict[str, Any],
+        schema_properties: Dict[str, Any]
+    ) -> None:
+        if resource.keys() != schema_properties.keys():
+            expected_property_names = sorted(schema_properties.keys())
+            property_names_in_resource = sorted(resource.keys())
+            raise AssertionError(
+                f"Response schema violation: the response contains properties that are "
+                f"not specified in the schema."
+                f"\n\tExpected: {expected_property_names}"
+                f"\n\tGot: {property_names_in_resource}"
+            )
 
     @staticmethod
     @keyword
@@ -701,6 +731,7 @@ class OpenapiExecutors:
             auth=self.auth,
             verify=False,
         )
+        logger.debug(f"Response text: {response.text}")
         return response
 
 
