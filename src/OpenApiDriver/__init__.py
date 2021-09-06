@@ -1,3 +1,5 @@
+from importlib.metadata import version
+
 from OpenApiDriver.openapidriver import OpenApiDriver
 from OpenApiDriver.dto_base import  (
     Constraint,
@@ -7,11 +9,8 @@ from OpenApiDriver.dto_base import  (
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
-from importlib.metadata import version
 
 try:
-    __version__ = version(__name__)
+    __version__ = version("robotframework-openapidriver")
 except:
     pass
-
-# __version__ = "0.1.0-alpha.2"
