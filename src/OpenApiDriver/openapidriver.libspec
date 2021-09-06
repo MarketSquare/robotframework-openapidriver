@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-01T13:30:41Z" specversion="3" source="openapidriver.py" lineno="12">
+<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-06T13:27:37Z" specversion="3" source="openapidriver.py" lineno="12">
 <version>1.5.0</version>
 <doc>&lt;div class="document" id="openapidriver-for-robot-framework"&gt;
 &lt;h1 class="title"&gt;OpenApiDriver for Robot Framework®&lt;/h1&gt;
@@ -12,124 +12,8 @@ For more information about the DataDriver library, see
 &lt;a class="reference external" href="https://github.com/Snooz82/robotframework-datadriver"&gt;https://github.com/Snooz82/robotframework-datadriver&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="section" id="installation"&gt;
 &lt;h1&gt;Installation&lt;/h1&gt;
-&lt;p&gt;If you already have Python &amp;gt;= 3.7 with pip installed, you can simply
-run:&lt;/p&gt;
+&lt;p&gt;If you already have Python &amp;gt;= 3.8 with pip installed, you can simply run:&lt;/p&gt;
 &lt;p&gt;&lt;tt class="docutils literal"&gt;pip install &lt;span class="pre"&gt;--upgrade&lt;/span&gt; &lt;span class="pre"&gt;robotframework-openapidriver&lt;/span&gt;&lt;/tt&gt;&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="table-of-contents"&gt;
-&lt;h1&gt;Table of contents&lt;/h1&gt;
-&lt;ul class="simple"&gt;
-&lt;li&gt;&lt;a class="reference internal" href="#what-datadriver-does"&gt;What DataDriver Does&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class="reference internal" href="#how-datadriver-works"&gt;How DataDriver Works&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class="reference internal" href="#usage"&gt;Usage&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;div class="section" id="what-datadriver-does"&gt;
-&lt;h1&gt;What DataDriver Does&lt;/h1&gt;
-&lt;p&gt;DataDriver is an alternative approach to create Data-Driven Tests with
-Robot Framework®. DataDriver creates multiple test cases based on a test
-template and data content of a csv or Excel file. All created tests
-share the same test sequence (keywords) and differ in the test data.
-Because these tests are created on runtime only the template has to be
-specified within the robot test specification and the used data are
-specified in an external data file.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="how-datadriver-works"&gt;
-&lt;h1&gt;How DataDriver Works&lt;/h1&gt;
-&lt;p&gt;When the DataDriver is used in a test suite it will be activated before
-the test suite starts. It uses the Listener Interface Version 3 of Robot
-Framework® to read and modify the test specification objects. After
-activation it searches for the &lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; -Keyword to analyze the
-&lt;tt class="docutils literal"&gt;[Arguments]&lt;/tt&gt; it has. As a second step, it loads the data from the
-specified data source. Based on the &lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; -Keyword, DataDriver
-creates as much test cases as data sets are in the data source.&lt;/p&gt;
-&lt;p&gt;In the case that data source is csv (Default)
-As values for the arguments of the &lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; -Keyword, DataDriver
-reads values from the column of the CSV file with the matching name of the
-&lt;tt class="docutils literal"&gt;[Arguments]&lt;/tt&gt;.
-For each line of the CSV data table, one test case will be created. It
-is also possible to specify test case names, tags and documentation for
-each test case in the specific test suite related CSV file.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="usage"&gt;
-&lt;h1&gt;Usage&lt;/h1&gt;
-&lt;p&gt;Data Driver is a &amp;quot;Library Listener&amp;quot; but does not provide keywords.
-Because Data Driver is a listener and a library at the same time it
-sets itself as a listener when this library is imported into a test suite.&lt;/p&gt;
-&lt;p&gt;To use it, just use it as Library in your suite. You may use the first
-argument (option) which may set the file name or path to the data file.&lt;/p&gt;
-&lt;p&gt;Without any options set, it loads a .csv file which has the same name
-and path like the test suite .robot .&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt;&lt;/p&gt;
-&lt;pre class="code robotframework literal-block"&gt;
-&lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="nn"&gt;DataDriver&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Test Template&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="nf"&gt;Invalid Logins&lt;/span&gt;&lt;span class="p"&gt;
-
-&lt;/span&gt;&lt;span class="gh"&gt;*** Keywords ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="gu"&gt;Invalid Logins&lt;/span&gt;&lt;span class="p"&gt;
-    ...&lt;/span&gt;
-&lt;/pre&gt;
-&lt;/div&gt;
-&lt;div class="section" id="structure-of-test-suite"&gt;
-&lt;h1&gt;Structure of Test Suite&lt;/h1&gt;
-&lt;div class="section" id="requirements"&gt;
-&lt;h2 id="Requirements"&gt;Requirements&lt;/h2&gt;
-&lt;p&gt;In the Moment there are some requirements how a test
-suite must be structured so that the DataDriver can get all the
-information it needs.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;ul class="simple"&gt;
-&lt;li&gt;only the first test case will be used as a template. All other test
-cases will be deleted.&lt;/li&gt;
-&lt;li&gt;Test cases have to be defined with a
-&lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; in Settings secion. Reason for this is,
-that the DataDriver needs to know the names of the test case arguments.
-Test cases do not have named arguments. Keywords do.&lt;/li&gt;
-&lt;li&gt;The keyword which is used as
-&lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; must be defined within the test suite (in the same
-*.robot file). If the keyword which is used as &lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; is
-defined in a &lt;tt class="docutils literal"&gt;Resource&lt;/tt&gt; the DataDriver has no access to its
-arguments names.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;/div&gt;
-&lt;div class="section" id="example-test-suite"&gt;
-&lt;h2 id="Example Test Suite"&gt;Example Test Suite&lt;/h2&gt;
-&lt;pre class="code robotframework literal-block"&gt;
-&lt;span class="gh"&gt;***Settings***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;           &lt;/span&gt;&lt;span class="nn"&gt;DataDriver&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Resource&lt;/span&gt;&lt;span class="p"&gt;          &lt;/span&gt;&lt;span class="nn"&gt;login_resources.robot&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Suite Setup&lt;/span&gt;&lt;span class="p"&gt;       &lt;/span&gt;&lt;span class="nf"&gt;Open my Browser&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Suite Teardown&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="nf"&gt;Close Browsers&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Test Setup&lt;/span&gt;&lt;span class="p"&gt;        &lt;/span&gt;&lt;span class="nf"&gt;Open Login Page&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Test Template&lt;/span&gt;&lt;span class="p"&gt;     &lt;/span&gt;&lt;span class="nf"&gt;Invalid Login&lt;/span&gt;&lt;span class="p"&gt;
-
-&lt;/span&gt;&lt;span class="gh"&gt;*** Test Case ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="gu"&gt;Login with user &lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;username&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="gu"&gt; and password &lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;password&lt;/span&gt;&lt;span class="p"&gt;}    &lt;/span&gt;&lt;span class="s"&gt;Default&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="s"&gt;UserData&lt;/span&gt;&lt;span class="p"&gt;
-
-&lt;/span&gt;&lt;span class="gh"&gt;***** *Keywords* *****&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="gu"&gt;Invalid login&lt;/span&gt;&lt;span class="p"&gt;
-    [&lt;/span&gt;&lt;span class="kn"&gt;Arguments&lt;/span&gt;&lt;span class="p"&gt;]    ${&lt;/span&gt;&lt;span class="nv"&gt;username&lt;/span&gt;&lt;span class="p"&gt;}    ${&lt;/span&gt;&lt;span class="nv"&gt;password&lt;/span&gt;&lt;span class="p"&gt;}
-    &lt;/span&gt;&lt;span class="nf"&gt;Input username&lt;/span&gt;&lt;span class="p"&gt;    ${&lt;/span&gt;&lt;span class="nv"&gt;username&lt;/span&gt;&lt;span class="p"&gt;}
-    &lt;/span&gt;&lt;span class="nf"&gt;Input pwd&lt;/span&gt;&lt;span class="p"&gt;    ${&lt;/span&gt;&lt;span class="nv"&gt;password&lt;/span&gt;&lt;span class="p"&gt;}
-    &lt;/span&gt;&lt;span class="nf"&gt;click login button&lt;/span&gt;&lt;span class="p"&gt;
-    &lt;/span&gt;&lt;span class="nf"&gt;Error page should be visible&lt;/span&gt;
-&lt;/pre&gt;
-&lt;p&gt;In this example, the DataDriver is activated by using it as a Library.
-It is used with default settings.
-As &lt;tt class="docutils literal"&gt;Test Template&lt;/tt&gt; the keyword &lt;tt class="docutils literal"&gt;Invalid Login&lt;/tt&gt; is used. This
-keyword has two arguments. Argument names are &lt;tt class="docutils literal"&gt;${username}&lt;/tt&gt; and
-&lt;tt class="docutils literal"&gt;${password}&lt;/tt&gt;. These names have to be in the CSV file as column
-header. The test case has two variable names included in its name,
-which does not have any functionality in Robot Framework®. However, the
-Data Driver will use the test case name as a template name and
-replaces the variables with the specific value of the single generated
-test case.
-This template test will only be used as a template. The specified data
-&lt;tt class="docutils literal"&gt;Default&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;UserData&lt;/tt&gt; would only be used if no CSV file has
-been found.&lt;/p&gt;
-&lt;/div&gt;
 &lt;div class="section" id="openapi-aka-swagger"&gt;
 &lt;h2 id="OpenAPI (aka Swagger)"&gt;OpenAPI (aka Swagger)&lt;/h2&gt;
 &lt;p&gt;The OpenAPI Specification (OAS) defines a standard, language-agnostic interface to RESTful APIs.
@@ -139,12 +23,12 @@ endpoint, method and response that is defined in an OpenAPI document, typically
 an openapi.json or openapi.yaml file.&lt;/p&gt;
 &lt;div class="section" id="how-it-works"&gt;
 &lt;h3 id="How it works"&gt;How it works&lt;/h3&gt;
-&lt;p&gt;If the openapi_reader is used and the file has the .json or .yaml extension, it will be
+&lt;p&gt;If the source file has the .json or .yaml extension, it will be
 loaded by the prance module and the test cases will be generated.&lt;/p&gt;
 &lt;pre class="code robotframework literal-block"&gt;
 &lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;            &lt;/span&gt;&lt;span class="nn"&gt;DataDriver&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="s"&gt;reader_class=openapi_reader&lt;/span&gt;&lt;span class="p"&gt;
-...                    &lt;/span&gt;&lt;span class="s"&gt;file=openapi.json&lt;/span&gt;&lt;span class="p"&gt;
+&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;            &lt;/span&gt;&lt;span class="nn"&gt;OpenApiDriver&lt;/span&gt;&lt;span class="p"&gt;
+...                    &lt;/span&gt;&lt;span class="s"&gt;source=openapi.json&lt;/span&gt;&lt;span class="p"&gt;
 &lt;/span&gt;&lt;span class="kn"&gt;Test Template&lt;/span&gt;&lt;span class="p"&gt;      &lt;/span&gt;&lt;span class="nf"&gt;Do Nothing&lt;/span&gt;&lt;span class="p"&gt;
 
 
@@ -160,24 +44,13 @@ loaded by the prance module and the test cases will be generated.&lt;/p&gt;
 by using the url instead of a local file:&lt;/p&gt;
 &lt;pre class="code robotframework literal-block"&gt;
 &lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;            &lt;/span&gt;&lt;span class="nn"&gt;DataDriver&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="s"&gt;reader_class=openapi_reader&lt;/span&gt;&lt;span class="p"&gt;
-...                    &lt;/span&gt;&lt;span class="s"&gt;url=http://127.0.0.1:8000/openapi.json&lt;/span&gt;
+&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;            &lt;/span&gt;&lt;span class="nn"&gt;OpenApiDriver&lt;/span&gt;&lt;span class="p"&gt;
+...                    &lt;/span&gt;&lt;span class="s"&gt;source=http://127.0.0.1:8000/openapi.json&lt;/span&gt;
 &lt;/pre&gt;
 &lt;p&gt;Since the OpenAPI document is essentially a contract that specifies what operations are
 supported and what data needs to be send and will be returned, it is possible to
 automatically validate the API against this contract. For this purpose, the openapi
 module also implements a number of keywords.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="validate-openapi-document"&gt;
-&lt;h3 id="Validate OpenAPI Document"&gt;Validate OpenAPI Document&lt;/h3&gt;
-&lt;p&gt;The Validate OpenAPI Document is intended to be used in the Suite Setup and will validate
-the OpenAPI document against the OpenAPI v3 specification. All errors encountered will
-be logged and the keyword fails if any errors are found. This keyword can be used in
-Test Setup to Skip test execution for the generated Test Cases if the document is
-invalid to prevent a great number of failed test cases.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="test-endpoint"&gt;
-&lt;h3 id="Test Endpoint"&gt;Test Endpoint&lt;/h3&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -186,8 +59,8 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 <tags>
 </tags>
 <inits>
-<init name="Init" lineno="234">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, ignore_fastapi_default_422: bool | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None">
+<init name="Init" lineno="86">
+<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, ignore_fastapi_default_422: bool | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = 3">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type>str</type>
@@ -247,6 +120,11 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 <type>AuthBase</type>
 <type>None</type>
 <default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = 3">
+<name>response_validation</name>
+<type>ValidationLevel</type>
+<default>3</default>
 </arg>
 </arguments>
 <doc>&lt;div class="document"&gt;
@@ -329,7 +207,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </init>
 </inits>
 <keywords>
-<kw name="Authorized Request" source="openapi_executors.py" lineno="648">
+<kw name="Authorized Request" source="openapi_executors.py" lineno="720">
 <arguments repr="url: str, method: str, json: Any | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -351,7 +229,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Ensure Conflict" source="openapi_executors.py" lineno="458">
+<kw name="Ensure Conflict" source="openapi_executors.py" lineno="479">
 <arguments repr="url: str, method: str, dto: Dto">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -371,7 +249,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Ensure In Use" source="openapi_executors.py" lineno="432">
+<kw name="Ensure In Use" source="openapi_executors.py" lineno="453">
 <arguments repr="url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -383,7 +261,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Get Dto Data" source="openapi_executors.py" lineno="312">
+<kw name="Get Dto Data" source="openapi_executors.py" lineno="333">
 <arguments repr="schema: Dict[str, typing.Any], dto: Type[OpenApiDriver.dto_base.Dto], operation_id: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema: Dict[str, typing.Any]">
 <name>schema</name>
@@ -403,7 +281,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="421">
+<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="442">
 <arguments repr="valid_url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="valid_url: str">
 <name>valid_url</name>
@@ -415,7 +293,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="196">
+<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="217">
 <arguments repr="endpoint: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -427,7 +305,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Get Valid Url" source="openapi_executors.py" lineno="181">
+<kw name="Get Valid Url" source="openapi_executors.py" lineno="202">
 <arguments repr="endpoint: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -439,7 +317,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Test Endpoint" source="openapi_executors.py" lineno="126">
+<kw name="Test Endpoint" source="openapi_executors.py" lineno="145">
 <arguments repr="method: str, endpoint: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
@@ -459,7 +337,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Test Invalid Url" source="openapi_executors.py" lineno="113">
+<kw name="Test Invalid Url" source="openapi_executors.py" lineno="128">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -480,7 +358,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Test Unauthorized" source="openapi_executors.py" lineno="103">
+<kw name="Test Unauthorized" source="openapi_executors.py" lineno="118">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -496,7 +374,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Validate Openapi Document" source="openapi_executors.py" lineno="96">
+<kw name="Validate Openapi Document" source="openapi_executors.py" lineno="111">
 <arguments repr="">
 </arguments>
 <doc>&lt;div class="document"&gt;
@@ -504,7 +382,23 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Validate Response" source="openapi_executors.py" lineno="524">
+<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="646">
+<arguments repr="resource: Dict[str, typing.Any], schema_properties: Dict[str, typing.Any]">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="resource: Dict[str, typing.Any]">
+<name>resource</name>
+<type>Dict[str, typing.Any]</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema_properties: Dict[str, typing.Any]">
+<name>schema_properties</name>
+<type>Dict[str, typing.Any]</type>
+</arg>
+</arguments>
+<doc>&lt;div class="document"&gt;
+&lt;/div&gt;
+</doc>
+<shortdoc/>
+</kw>
+<kw name="Validate Response" source="openapi_executors.py" lineno="556">
 <arguments repr="endpoint: str, response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -526,7 +420,7 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </doc>
 <shortdoc/>
 </kw>
-<kw name="Validate Send Response" source="openapi_executors.py" lineno="577">
+<kw name="Validate Send Response" source="openapi_executors.py" lineno="662">
 <arguments repr="response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
@@ -546,5 +440,19 @@ invalid to prevent a great number of failed test cases.&lt;/p&gt;
 </kw>
 </keywords>
 <datatypes>
+<enums>
+<enum name="ValidationLevel">
+<doc>&lt;div class="document"&gt;
+&lt;p&gt;An enumeration.&lt;/p&gt;
+&lt;/div&gt;
+</doc>
+<members>
+<member name="DISABLED" value="1"/>
+<member name="INFO" value="2"/>
+<member name="WARN" value="3"/>
+<member name="STRICT" value="4"/>
+</members>
+</enum>
+</enums>
 </datatypes>
 </keywordspec>
