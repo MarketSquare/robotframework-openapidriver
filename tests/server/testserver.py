@@ -68,7 +68,7 @@ def get_root() -> Message:
     responses={409: {"model": Message}},
 )
 def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
-    if wagegroup.id in WAGE_GROUPS:
+    if wagegroup.id in WAGE_GROUPS.keys():
         raise HTTPException(status_code=409, detail="Wage group already exists.")
     WAGE_GROUPS[wagegroup.id] = wagegroup
     return wagegroup
@@ -81,7 +81,7 @@ def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
     responses={404: {"model": Message}},
 )
 def get_wagegroup(wagegroup_id: str) -> WageGroup:
-    if wagegroup_id not in WAGE_GROUPS:
+    if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(status_code=404, detail="Wage group not found")
     return WAGE_GROUPS[wagegroup_id]
 
@@ -93,7 +93,7 @@ def get_wagegroup(wagegroup_id: str) -> WageGroup:
     responses={404: {"model": Message}},
 )
 def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
-    if wagegroup_id not in WAGE_GROUPS:
+    if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(status_code=404, detail="Wage group not found.")
     WAGE_GROUPS[wagegroup.id] = wagegroup
     return wagegroup
@@ -106,7 +106,7 @@ def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
     responses={404: {"model": Message}, 403: {"model": Message}},
 )
 def delete_wagegroup(wagegroup_id: str) -> None:
-    if wagegroup_id not in WAGE_GROUPS:
+    if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(status_code=404, detail="Wage group not found.")
     used_by = [e for e in EMPLOYEES.values() if e.wagegroup_id == wagegroup_id]
     if used_by:
@@ -125,7 +125,7 @@ def delete_wagegroup(wagegroup_id: str) -> None:
 )
 def post_employee(employee: Employee) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
-    if wagegroup_id not in WAGE_GROUPS:
+    if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(
             status_code=400,
             detail=f"Wage group with id {wagegroup_id} does not exist."
@@ -146,7 +146,7 @@ def post_employee(employee: Employee) -> EmployeeDetails:
     responses={404: {"model": Message}},
 )
 def get_employee(employee_id: str) -> EmployeeDetails:
-    if employee_id not in EMPLOYEES:
+    if employee_id not in EMPLOYEES.keys():
         raise HTTPException(status_code=404, detail="Employee not found")
     return EMPLOYEES[employee_id]
 
@@ -158,7 +158,7 @@ def get_employee(employee_id: str) -> EmployeeDetails:
     responses={404: {"model": Message}},
 )
 def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetails:
-    if employee_id not in EMPLOYEES:
+    if employee_id not in EMPLOYEES.keys():
         raise HTTPException(status_code=404, detail="Employee not found")
     stored_employee_data = EMPLOYEES[employee_id]
     employee_update_data = employee.dict(exclude_unset=True)
