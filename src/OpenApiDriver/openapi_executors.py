@@ -116,7 +116,7 @@ class OpenapiExecutors:
 
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:
-        url = run_keyword("get_valid_url", endpoint)
+        url: str = run_keyword("get_valid_url", endpoint)
         response = self.session.request(
             method=method,
             url=url,
@@ -136,7 +136,7 @@ class OpenapiExecutors:
                 f"Endpoint {endpoint} does not contain resource references that "
                 f"can be invalidated."
             )
-        response = self.authorized_request(method=method, url=url)
+        response: Response = run_keyword("authorized_request", url, method)
         if response.status_code != expected_status_code:
             raise AssertionError(
                 f"Response {response.status_code} was not {expected_status_code}")
@@ -166,7 +166,7 @@ class OpenapiExecutors:
             response: Response = run_keyword("authorized_request", url, "GET")
             if response.ok:
                 original_data = response.json()
-        response = self.authorized_request(method=method, url=url, json=json_data)
+        response: Response = run_keyword("authorized_request", url, method, json_data)
         if response.status_code != status_code:
             if not response.ok:
                 if description := response.json().get("detail"):
@@ -185,7 +185,7 @@ class OpenapiExecutors:
             )
         run_keyword("validate_response", endpoint, response, original_data)
         if method == "DELETE" and response.ok:
-            response = run_keyword("authorized_request", url, "GET")
+            response: Response = run_keyword("authorized_request", url, "GET")
             if response.ok:
                 raise AssertionError(
                     f"Resource still exists after deletion. Url was {url}"
@@ -215,18 +215,18 @@ class OpenapiExecutors:
 
     @keyword
     def get_valid_id_for_endpoint(self, endpoint: str) -> str:
-        url = self.get_valid_url(endpoint=endpoint)
+        url: str = run_keyword("get_valid_url", endpoint)
         # Try to create a new resource to prevent 403 and 409 conflicts caused by
         # operations performed on the same resource by other test cases
         try:
             dto, _ = self.get_dto_and_schema(endpoint=endpoint, method="POST")
             json_data = asdict(dto)
-            response = self.authorized_request(method="POST", url=url, json=json_data)
+            response: Response = run_keyword("authorized_request", url, "POST", json_data)
         except NotImplementedError as exception:
             logger.debug(f"get_valid_id_for_endpoint POST failed: {exception}")
             # For endpoints that do no support POST, try to get an existing id using GET
             try:
-                response = self.authorized_request(method="GET", url=url)
+                response: Response = run_keyword("authorized_request", url, "GET")
                 assert response.ok
                 response_data: Union[Dict[str, Any], List[Dict[str, Any]]] = response.json()
                 if isinstance(response_data, list):
@@ -425,7 +425,6 @@ class OpenapiExecutors:
                 json_data[property_name] = value
                 continue
             if property_type == "object":
-                #FIXME: user implemented Dto should not depend on endpoint and method
                 default_dto = self.get_dto_class(endpoint="", method="")
                 object_data = self.get_dto_data(
                     schema=schema["properties"][property_name],
@@ -467,8 +466,8 @@ class OpenapiExecutors:
         json_data = asdict(dto)
         if resource_id:
             json_data[property_name] = resource_id
-        post_url = self.get_valid_url(endpoint=post_endpoint)
-        response = self.authorized_request(method="POST", url=post_url, json=json_data)
+        post_url: str = run_keyword("get_valid_url", post_endpoint)
+        response: Response = run_keyword("authorized_request", post_url, "POST",json_data)
         if not response.ok:
             logger.debug(
                 f"POST on {post_url} with json {json_data} failed: {response.json()}"
@@ -498,29 +497,29 @@ class OpenapiExecutors:
                 else:
                     post_url = url
                     post_json = json_data
-                response = self.authorized_request(
-                    method="POST", url=post_url, json=json_data
+                response: Response = run_keyword(
+                    "authorized_request", post_url, "POST", json_data
                 )
                 # conflicting resource may already exist, so 409 is also valid
                 assert response.ok or response.status_code == 409, (
                     f"ensure_conflict received {response.status_code}: {response.json()}"
                 )
                 return json_data
-        try:
-            response = self.authorized_request(method="GET", url=url)
+        response: Response = run_keyword("authorized_request", url, "GET")
+        if response.ok:
             response_json = response.json()
-            # update the values in the json_data with the values from the response
-            for key in json_data.keys():
-                if key in response_json.keys():
-                    json_data[key] = response_json[key]
-            return json_data
-        except Exception:
-            # couldn't retrieve a resource to conflict with, so create one instead
-            response = self.authorized_request(method="POST", url=url, json=json_data)
-            assert response.ok, (
-                f"ensure_conflict received {response.status_code}: {response.json()}"
-            )
-            return json_data
+            if isinstance(response_json, dict):
+                # update the values in the json_data with the values from the response
+                for key in json_data.keys():
+                    if key in response_json.keys():
+                        json_data[key] = response_json[key]
+                return json_data
+        # couldn't retrieve a resource to conflict with, so create one instead
+        response: Response = run_keyword("authorized_request", url, "POST", json_data)
+        assert response.ok, (
+            f"ensure_conflict received {response.status_code}: {response.json()}"
+        )
+        return json_data
 
     def resolve_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
         # schema is mutable, so copy to prevent mutation of original schema argument
