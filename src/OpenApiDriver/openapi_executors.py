@@ -498,7 +498,7 @@ class OpenapiExecutors:
                     post_url = url
                     post_json = json_data
                 response: Response = run_keyword(
-                    "authorized_request", post_url, "POST", json_data
+                    "authorized_request", post_url, "POST", post_json
                 )
                 # conflicting resource may already exist, so 409 is also valid
                 assert response.ok or response.status_code == 409, (
