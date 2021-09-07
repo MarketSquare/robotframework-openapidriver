@@ -672,7 +672,7 @@ class OpenapiExecutors:
         response_path = reference.get("href", None)
         if response_path and send_path not in response_path:
             property_to_check = send_path.replace(response_path, "")[1:]
-            if isinstance(reference[property_to_check], list):
+            if reference.get(property_to_check) and isinstance(reference[property_to_check], list):
                 item_list: List[Dict[str, Any]] = reference[property_to_check]
                 # Use the (mandatory) id to get the POSTed resource from the list
                 [reference] = [item for item in item_list if item["id"] == send_json["id"]]
