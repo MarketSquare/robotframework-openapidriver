@@ -27,6 +27,14 @@ def tests(context):
         "coverage",
         "run",
         "-m",
+        "unittest",
+        f"{project_root}/tests/unittests/test_openapidriver.py",
+    ]
+    subprocess.run(cmd, shell=True)
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
         "robot",
         f"--argumentfile={project_root}/tests/rf_cli.args",
         f"--variable=root:{project_root}",
@@ -34,6 +42,7 @@ def tests(context):
         f"{project_root}/tests/suites",
     ]
     subprocess.run(cmd, shell=True)
+    subprocess.run(["coverage", "combine"], shell=True)
     subprocess.run(["coverage", "report"], shell=True)
     subprocess.run(["coverage", "html"], shell=True)
 
