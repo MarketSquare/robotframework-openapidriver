@@ -15,6 +15,7 @@ from uuid import uuid4
 from openapi_core import create_spec
 from openapi_core.validation.response.validators import ResponseValidator
 from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
+from openapi_core.templating.paths.exceptions import ServerNotFound
 from openapi_spec_validator import openapi_v3_spec_validator, validate_spec
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -56,6 +57,7 @@ class OpenapiExecutors:
             password: str = "",
             auth: Optional[AuthBase] = None,
             response_validation: ValidationLevel = ValidationLevel.WARN,
+            disable_server_validation: bool = True,
         ) -> None:
         try:
             parser = ResolvingParser(source)
@@ -77,6 +79,7 @@ class OpenapiExecutors:
         else:
             self.auth = HTTPBasicAuth(username, password)
         self.response_validation = response_validation
+        self.disable_server_validation = disable_server_validation
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -568,11 +571,14 @@ class OpenapiExecutors:
             request=openapi_request,
             response=openapi_response,
         )
-        validation_errors = validation_result.errors
+        if self.disable_server_validation:
+            validation_result.errors = [
+                e for e in validation_result.errors if not isinstance(e, ServerNotFound)
+            ]
         if self.response_validation == ValidationLevel.STRICT:
             validation_result.raise_for_errors()
         if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
-            for validation_error in validation_errors:
+            for validation_error in validation_result.errors:
                 if self.response_validation == ValidationLevel.WARN:
                     logger.warning(validation_error)
                 else:
