@@ -16,7 +16,6 @@ from openapi_core import create_spec
 from openapi_core.validation.response.validators import ResponseValidator
 from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
 from openapi_core.templating.paths.exceptions import ServerNotFound
-from openapi_spec_validator import openapi_v3_spec_validator, validate_spec
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
 from requests import Response, Session
@@ -110,12 +109,6 @@ class OpenapiExecutors:
             self.add_dto_mixin = add_dto_mixin
             self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
 
-    @keyword
-    def validate_openapi_document(self) -> None:
-        errors_iterator = openapi_v3_spec_validator.iter_errors(self.openapi_doc)
-        for error in errors_iterator:
-            logger.error(error)
-        validate_spec(self.openapi_doc)
 
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:
