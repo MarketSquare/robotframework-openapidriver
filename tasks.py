@@ -11,7 +11,7 @@ project_root = pathlib.Path(__file__).parent.resolve().as_posix()
 @task
 def testserver(context):
     testserver_path = f"{project_root}/tests/server/testserver.py"
-    subprocess.run(["python", testserver_path])
+    subprocess.run(f"python {testserver_path}", shell=True)
 
 
 @task
@@ -23,7 +23,7 @@ def tests(context):
         "unittest",
         f"{project_root}/tests/unittests/test_openapidriver.py",
     ]
-    subprocess.run(cmd)
+    subprocess.run(" ".join(cmd), shell=True)
     cmd = [
         "coverage",
         "run",
@@ -34,10 +34,10 @@ def tests(context):
         f"--outputdir={project_root}/tests/logs",
         f"{project_root}/tests/suites",
     ]
-    subprocess.run(cmd, shell=True)
-    subprocess.run(["coverage", "combine"])
-    subprocess.run(["coverage", "report"])
-    subprocess.run(["coverage", "html"])
+    subprocess.run(" ".join(cmd), shell=True)
+    subprocess.run("coverage combine", shell=True)
+    subprocess.run("coverage report", shell=True)
+    subprocess.run("coverage html", shell=True)
 
 
 @task
@@ -52,7 +52,7 @@ def libdoc(context):
         source,
         target,
     ]
-    subprocess.run(cmd)
+    subprocess.run(" ".join(cmd), shell=True)
 
 
 @task
@@ -67,7 +67,7 @@ def libspec(context):
         source,
         target,
     ]
-    subprocess.run(cmd)
+    subprocess.run(" ".join(cmd), shell=True)
 
 
 @task
@@ -79,9 +79,9 @@ def readme(context):
 
 @task(libdoc, libspec, readme)
 def build(context):
-    subprocess.run(["poetry", "build"])
+    subprocess.run("poetry build", shell=True)
 
 
 @task(post=[build])
 def bump_version(context, rule):
-    subprocess.run(["poetry", "version", rule])
+    subprocess.run(f"poetry version {rule}", shell=True)
