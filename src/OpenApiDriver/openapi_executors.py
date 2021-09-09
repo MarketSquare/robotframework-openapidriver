@@ -3,7 +3,7 @@
 import json as _json
 import sys
 from dataclasses import asdict, make_dataclass
-from enum import Enum, auto
+from enum import Enum
 from importlib import import_module
 from itertools import zip_longest
 from logging import getLogger
@@ -40,10 +40,10 @@ logger = getLogger(__name__)
 
 
 class ValidationLevel(str, Enum):
-    DISABLED = auto()
-    INFO = auto()
-    WARN = auto()
-    STRICT = auto()
+    DISABLED = "DISABLED"
+    INFO = "INFO"
+    WARN = "WARN"
+    STRICT = "STRICT"
 
 
 class OpenapiExecutors:
