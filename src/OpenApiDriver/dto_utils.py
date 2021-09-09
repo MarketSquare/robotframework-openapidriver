@@ -42,7 +42,6 @@ class DtoMixin:
             property_data = schema["properties"][property_name]
             property_type = property_data["type"]
             current_value = properties[property_name]
-            #TODO: add handling for enums; if defined, set something not in the enum
             if enum_values := property_data.get("enum"):
                 invalidated_value = self.get_invalid_value_from_enum(
                     values=enum_values, value_type=property_type
