@@ -7,13 +7,13 @@ download for your OS can be found [here](https://www.python.org/downloads/).
 After installing Python, poetry can be installed. For OSX/ Linux / bashonwindows the command is:
 
 ```curl
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
 ```
 
 For Windows the PowerShell command is:
 
 ```powershell
-(Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py -UseBasicParsing).Content | python -
 ```
 
 To ensure the install succeeded, you can open a new shell and run
