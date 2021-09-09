@@ -6,7 +6,6 @@ Library            OpenApiDriver
 ...                    mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
 ...                    ignore_fastapi_default_422=True
 ...                    response_validation=INFO
-Suite Setup        Validate OpenAPI specification
 Test Template      Validate Test Endpoint Keyword
 
 
@@ -18,8 +17,3 @@ Validate Test Endpoint Keyword
     [Arguments]    ${endpoint}    ${method}    ${status_code}
     Test Endpoint
     ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
-
-Validate OpenAPI specification
-    [Documentation]
-    ...    Validate the retrieved document against the OpenApi 3.0 specification
-    Validate OpenAPI Document
