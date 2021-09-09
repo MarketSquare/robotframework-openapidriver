@@ -721,7 +721,6 @@ class OpenapiExecutors:
             method: str,
             json: Optional[Any] = None,
         ) -> Response:
-        logger.info(f"Sending {method} request to {url}")
         response = self.session.request(
             method=method,
             url=url,
