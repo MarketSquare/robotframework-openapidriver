@@ -1,93 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-08T12:08:07Z" specversion="3" source="openapidriver.py" lineno="12">
-<version>1.5.0</version>
-<doc>&lt;div class="document" id="openapidriver-for-robot-framework"&gt;
-&lt;h1 class="title"&gt;OpenApiDriver for Robot Framework®&lt;/h1&gt;
-&lt;p&gt;OpenDriver is an extension of the Robot Framework® DataDriver library that allows for
-generation and execution of test cases based on the information in an OpenAPI document
-(also known as Swagger document).
-This document explains how to use the OpenApiDriver library.&lt;/p&gt;
-&lt;p&gt;For more information about Robot Framework®, see &lt;a class="reference external" href="http://robotframework.org"&gt;http://robotframework.org&lt;/a&gt;.
-For more information about the DataDriver library, see
-&lt;a class="reference external" href="https://github.com/Snooz82/robotframework-datadriver"&gt;https://github.com/Snooz82/robotframework-datadriver&lt;/a&gt;.&lt;/p&gt;
-&lt;div class="section" id="installation"&gt;
-&lt;h1&gt;Installation&lt;/h1&gt;
-&lt;p&gt;If you already have Python &amp;gt;= 3.8 with pip installed, you can simply run:&lt;/p&gt;
-&lt;p&gt;&lt;tt class="docutils literal"&gt;pip install &lt;span class="pre"&gt;--upgrade&lt;/span&gt; &lt;span class="pre"&gt;robotframework-openapidriver&lt;/span&gt;&lt;/tt&gt;&lt;/p&gt;
-&lt;div class="section" id="openapi-aka-swagger"&gt;
-&lt;h2 id="OpenAPI (aka Swagger)"&gt;OpenAPI (aka Swagger)&lt;/h2&gt;
-&lt;p&gt;The OpenAPI Specification (OAS) defines a standard, language-agnostic interface to RESTful APIs.
-&lt;a class="reference external" href="https://swagger.io/specification/"&gt;https://swagger.io/specification/&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;The openapi module implements a reader class that generates a test case for each
-endpoint, method and response that is defined in an OpenAPI document, typically
-an openapi.json or openapi.yaml file.&lt;/p&gt;
-&lt;div class="section" id="how-it-works"&gt;
-&lt;h3 id="How it works"&gt;How it works&lt;/h3&gt;
-&lt;p&gt;If the source file has the .json or .yaml extension, it will be
-loaded by the prance module and the test cases will be generated.&lt;/p&gt;
-&lt;pre class="code robotframework literal-block"&gt;
-&lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;            &lt;/span&gt;&lt;span class="nn"&gt;OpenApiDriver&lt;/span&gt;&lt;span class="p"&gt;
-...                    &lt;/span&gt;&lt;span class="s"&gt;source=openapi.json&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Test Template&lt;/span&gt;&lt;span class="p"&gt;      &lt;/span&gt;&lt;span class="nf"&gt;Do Nothing&lt;/span&gt;&lt;span class="p"&gt;
-
-
-&lt;/span&gt;&lt;span class="gh"&gt;*** Test Cases ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="gu"&gt;Some OpenAPI test for &lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;method&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="gu"&gt; on &lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;endpoint&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="gu"&gt; where &lt;/span&gt;&lt;span class="p"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;status_code&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="gu"&gt; is expected&lt;/span&gt;&lt;span class="p"&gt;
-
-&lt;/span&gt;&lt;span class="gh"&gt;*** Keywords *** ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="gu"&gt;Do Nothing&lt;/span&gt;&lt;span class="p"&gt;
-    [&lt;/span&gt;&lt;span class="kn"&gt;Arguments&lt;/span&gt;&lt;span class="p"&gt;]    ${&lt;/span&gt;&lt;span class="nv"&gt;endpoint&lt;/span&gt;&lt;span class="p"&gt;}    ${&lt;/span&gt;&lt;span class="nv"&gt;method&lt;/span&gt;&lt;span class="p"&gt;}    ${&lt;/span&gt;&lt;span class="nv"&gt;status_code&lt;/span&gt;&lt;span class="p"&gt;}
-    &lt;/span&gt;&lt;span class="nf"&gt;No Operation&lt;/span&gt;
-&lt;/pre&gt;
-&lt;p&gt;It is also possible to load the openapi.json / openapi.yaml directly from the server
-by using the url instead of a local file:&lt;/p&gt;
-&lt;pre class="code robotframework literal-block"&gt;
-&lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;            &lt;/span&gt;&lt;span class="nn"&gt;OpenApiDriver&lt;/span&gt;&lt;span class="p"&gt;
-...                    &lt;/span&gt;&lt;span class="s"&gt;source=http://127.0.0.1:8000/openapi.json&lt;/span&gt;
-&lt;/pre&gt;
-&lt;p&gt;Since the OpenAPI document is essentially a contract that specifies what operations are
-supported and what data needs to be send and will be returned, it is possible to
-automatically validate the API against this contract. For this purpose, the openapi
-module also implements a number of keywords.&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-</doc>
+<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-09T13:19:00Z" specversion="3" source="openapidriver.py" lineno="118">
+<version>0.1.0a5</version>
+<doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;
+&lt;p&gt;Note that the following Keywords are intended to be used in Test Suites:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Test Endpoint&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Test Invalid Url&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Test Unauthorized&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="Init" lineno="86">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, ignore_fastapi_default_422: bool | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = 3">
+<init name="Init" lineno="133">
+<arguments repr="source: str, ignored_endpoints: List[str] = [], ignored_responses: List[int] = [], ignored_testcases: List[typing.List[str]] = [], ignore_fastapi_default_422: bool = False, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type>str</type>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] = []">
 <name>ignored_endpoints</name>
 <type>List[str]</type>
-<type>None</type>
-<default>None</default>
+<default>[]</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] = []">
 <name>ignored_responses</name>
 <type>List[int]</type>
-<type>None</type>
-<default>None</default>
+<default>[]</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[typing.List[str]] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[typing.List[str]] = []">
 <name>ignored_testcases</name>
 <type>List[typing.List[str]]</type>
-<type>None</type>
-<default>None</default>
+<default>[]</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_fastapi_default_422: bool | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_fastapi_default_422: bool = False">
 <name>ignore_fastapi_default_422</name>
 <type>bool</type>
-<type>None</type>
-<default>None</default>
+<default>False</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="origin: str = ">
 <name>origin</name>
@@ -121,93 +69,53 @@ module also implements a number of keywords.&lt;/p&gt;
 <type>None</type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = 3">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
 <name>response_validation</name>
 <type>ValidationLevel</type>
-<default>3</default>
+<default>WARN</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="disable_server_validation: bool = True">
+<name>disable_server_validation</name>
+<type>bool</type>
+<default>True</default>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt;&lt;/p&gt;
-&lt;pre class="code robotframework literal-block"&gt;
-&lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="nn"&gt;DataDriver&lt;/span&gt;
-&lt;/pre&gt;
-&lt;div class="section" id="options"&gt;
-&lt;h1&gt;Options&lt;/h1&gt;
-&lt;pre class="code robotframework literal-block"&gt;
-&lt;span class="gh"&gt;*** Settings ***&lt;/span&gt;&lt;span class="p"&gt;
-&lt;/span&gt;&lt;span class="kn"&gt;Library&lt;/span&gt;&lt;span class="p"&gt;    &lt;/span&gt;&lt;span class="nn"&gt;DataDriver&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;file=None&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;encoding=cp1252&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;dialect=Excel-EU&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;delimiter=;&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;quotechar=&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;escapechar=\\&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;doublequote=True&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;skipinitialspace=False&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;lineterminator=\r\n&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;*&lt;/span&gt;&lt;span class="p"&gt;  &lt;/span&gt;&lt;span class="c"&gt;# the following are named only arguments
-&lt;/span&gt;&lt;span class="p"&gt;...    &lt;/span&gt;&lt;span class="s"&gt;sheet_name=0&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;reader_class=None&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;file_search_strategy=PATH&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;file_regex=(?i)(.*?)(\.csv)&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;include=None&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;exclude=None&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;handle_template_tags=UnsetTags&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;listseperator=,&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;config_keyword=None&lt;/span&gt;&lt;span class="p"&gt;
-...    &lt;/span&gt;&lt;span class="s"&gt;optimize_pabot=Equal&lt;/span&gt;&lt;span class="p"&gt;
-...    &amp;amp;{&lt;/span&gt;&lt;span class="nv"&gt;kwargs&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
-&lt;/pre&gt;
-&lt;div class="section" id="file"&gt;
-&lt;h2&gt;File&lt;/h2&gt;
-&lt;p&gt;Defines which data file to be read. May be None or an extension like &lt;tt class="docutils literal"&gt;.txt&lt;/tt&gt; or relative or absolute path.
-&lt;tt class="docutils literal"&gt;file_search_strategy=&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;file_regex&lt;/tt&gt; may also have influence here.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="encoding"&gt;
-&lt;h2&gt;Encoding&lt;/h2&gt;
-&lt;p&gt;&lt;tt class="docutils literal"&gt;encoding&lt;/tt&gt; must be set if it shall not be cp1252.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Examples&lt;/strong&gt;:&lt;/p&gt;
-&lt;p&gt;&lt;tt class="docutils literal"&gt;cp1252, ascii, &lt;span class="pre"&gt;iso-8859-1,&lt;/span&gt; &lt;span class="pre"&gt;latin-1,&lt;/span&gt; utf_8, utf_16, utf_16_be, utf_16_le&lt;/tt&gt;&lt;/p&gt;
-&lt;p&gt;See &lt;a class="reference external" href="https://docs.python.org/3/library/codecs.html#standard-encodings"&gt;Python Standard Encoding&lt;/a&gt; for more encodings&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="dialect-to-lineterminator"&gt;
-&lt;h2&gt;Dialect to LineTerminator&lt;/h2&gt;
-&lt;p&gt;Defines how a csv file is interpreted.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="reader-class"&gt;
-&lt;h2&gt;Reader Class&lt;/h2&gt;
-&lt;p&gt;Defines which custom DataReader shall be loaded and get handed over all configs to deliver the TestCaseData.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="include-exclude"&gt;
-&lt;h2&gt;Include &amp;amp; Exclude&lt;/h2&gt;
-&lt;p&gt;Alternative way to CLI Options of Robot Framework® to filter the specific TestCaseData based on given Tags.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="handle-template-tags"&gt;
-&lt;h2&gt;Handle Template Tags&lt;/h2&gt;
-&lt;p&gt;It can be configured how the tags of the template test will be added to the data-driven test cases.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="list-separator"&gt;
-&lt;h2&gt;List Separator&lt;/h2&gt;
-&lt;p&gt;Defines how list values or dictionary values are seperated.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="config-keyword"&gt;
-&lt;h2&gt;Config Keyword&lt;/h2&gt;
-&lt;p&gt;Keyword that is executed before DataDriver starts working. Can manipulate all data.&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class="section" id="optimize-pabot"&gt;
-&lt;h2&gt;Optimize Pabot&lt;/h2&gt;
-&lt;p&gt;When DataDriver is used together with Pabot, it optimizes the &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;--testlevelsplit&lt;/span&gt;&lt;/tt&gt; to be faster.&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-</doc>
-<shortdoc>**Example:**</shortdoc>
+<doc>&lt;h4&gt;source&lt;/h4&gt;
+&lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
+&lt;h4&gt;ignored_endpoints&lt;/h4&gt;
+&lt;p&gt;A list of endpoints that will be ignored when generating the test cases.&lt;/p&gt;
+&lt;h4&gt;ignored_responses&lt;/h4&gt;
+&lt;p&gt;A list of responses that will be ignored when generating the test cases.&lt;/p&gt;
+&lt;h4&gt;ignored_testcases&lt;/h4&gt;
+&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;endpoint&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;ignore_fastapi_default_422&lt;/h4&gt;
+&lt;p&gt;The FastAPI framework generates an openapi.json that, by default, has a 422 response for almost every endpoint. In some cases, this response can only be triggered by request header invalidation, which is currently not supported. When testing a FastApi webserver, you can set this argument to &lt;code&gt;True&lt;/code&gt;&lt;/p&gt;
+&lt;h4&gt;origin&lt;/h4&gt;
+&lt;p&gt;The server (and port) of the target server. E.g. &lt;code&gt;https://localhost:7000&lt;/code&gt;&lt;/p&gt;
+&lt;h4&gt;base_path&lt;/h4&gt;
+&lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;mappings_path&lt;/h4&gt;
+&lt;h4&gt;username&lt;/h4&gt;
+&lt;p&gt;The username to be used for Basic Authentication.&lt;/p&gt;
+&lt;h4&gt;password&lt;/h4&gt;
+&lt;p&gt;The password to be used for Basic Authentication.&lt;/p&gt;
+&lt;h4&gt;auth&lt;/h4&gt;
+&lt;p&gt;A &lt;a href="https://docs.python-requests.org/en/latest/api/#authentication"&gt;requests AuthBase instance&lt;/a&gt; to be used for authentication instead of the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;response_validation&lt;/h4&gt;
+&lt;p&gt;By default, a &lt;code&gt;WARN&lt;/code&gt; is logged when the Response received after a Request does not comply with the schema as defined in the openapi document for the given operation. The following values are supported:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;DISABLED&lt;/code&gt;: All Response validation errors will be ignored&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;INFO&lt;/code&gt;: Any Response validation erros will be logged at &lt;code&gt;INFO&lt;/code&gt; level&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WARN&lt;/code&gt;: Any Response validation erros will be logged at &lt;code&gt;WARN&lt;/code&gt; level&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;STRICT&lt;/code&gt;: The Test Case will fail on any Response validation errors&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;disable_server_validation&lt;/h4&gt;
+&lt;p&gt;If enabled by setting this parameter to &lt;code&gt;True&lt;/code&gt;, the Response validation will also include possible errors for Requests made to a server address that is not defined in the list of servers in the openapi document. This generally means that if there is a mismatch, every Test Case will raise this error. Note that &lt;code&gt;localhost&lt;/code&gt; and &lt;code&gt;127.0.0.1&lt;/code&gt; are not considered the same by Response validation.&lt;/p&gt;</doc>
+<shortdoc>=== source === An absolute path to an openapi.json or openapi.yaml file or an url to such a file.</shortdoc>
 </init>
 </inits>
 <keywords>
-<kw name="Authorized Request" source="openapi_executors.py" lineno="725">
+<kw name="Authorized Request" source="openapi_executors.py" lineno="718">
 <arguments repr="url: str, method: str, json: Any | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -224,12 +132,10 @@ module also implements a number of keywords.&lt;/p&gt;
 <default>None</default>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Ensure Conflict" source="openapi_executors.py" lineno="481">
+<kw name="Ensure Conflict" source="openapi_executors.py" lineno="474">
 <arguments repr="url: str, method: str, dto: Dto">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -244,24 +150,20 @@ module also implements a number of keywords.&lt;/p&gt;
 <type>Dto</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Ensure In Use" source="openapi_executors.py" lineno="455">
+<kw name="Ensure In Use" source="openapi_executors.py" lineno="448">
 <arguments repr="url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
 <type>str</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Dto Data" source="openapi_executors.py" lineno="336">
+<kw name="Get Dto Data" source="openapi_executors.py" lineno="329">
 <arguments repr="schema: Dict[str, typing.Any], dto: Type[OpenApiDriver.dto_base.Dto], operation_id: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema: Dict[str, typing.Any]">
 <name>schema</name>
@@ -276,48 +178,40 @@ module also implements a number of keywords.&lt;/p&gt;
 <type>str</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="444">
+<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="437">
 <arguments repr="valid_url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="valid_url: str">
 <name>valid_url</name>
 <type>str</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="220">
+<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="213">
 <arguments repr="endpoint: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
 <type>str</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Valid Url" source="openapi_executors.py" lineno="205">
+<kw name="Get Valid Url" source="openapi_executors.py" lineno="198">
 <arguments repr="endpoint: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
 <type>str</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Test Endpoint" source="openapi_executors.py" lineno="148">
+<kw name="Test Endpoint" source="openapi_executors.py" lineno="141">
 <arguments repr="method: str, endpoint: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
@@ -332,12 +226,10 @@ module also implements a number of keywords.&lt;/p&gt;
 <type>int</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Test Invalid Url" source="openapi_executors.py" lineno="131">
+<kw name="Test Invalid Url" source="openapi_executors.py" lineno="124">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -353,12 +245,10 @@ module also implements a number of keywords.&lt;/p&gt;
 <default>404</default>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Test Unauthorized" source="openapi_executors.py" lineno="121">
+<kw name="Test Unauthorized" source="openapi_executors.py" lineno="114">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -369,20 +259,10 @@ module also implements a number of keywords.&lt;/p&gt;
 <type>str</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Validate Openapi Document" source="openapi_executors.py" lineno="114">
-<arguments repr="">
-</arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
-<shortdoc/>
-</kw>
-<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="651">
+<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="644">
 <arguments repr="resource: Dict[str, typing.Any], schema_properties: Dict[str, typing.Any]">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="resource: Dict[str, typing.Any]">
 <name>resource</name>
@@ -393,12 +273,10 @@ module also implements a number of keywords.&lt;/p&gt;
 <type>Dict[str, typing.Any]</type>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Validate Response" source="openapi_executors.py" lineno="558">
+<kw name="Validate Response" source="openapi_executors.py" lineno="551">
 <arguments repr="endpoint: str, response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -415,12 +293,10 @@ module also implements a number of keywords.&lt;/p&gt;
 <default>None</default>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
-<kw name="Validate Send Response" source="openapi_executors.py" lineno="667">
+<kw name="Validate Send Response" source="openapi_executors.py" lineno="660">
 <arguments repr="response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
@@ -433,24 +309,19 @@ module also implements a number of keywords.&lt;/p&gt;
 <default>None</default>
 </arg>
 </arguments>
-<doc>&lt;div class="document"&gt;
-&lt;/div&gt;
-</doc>
+<doc/>
 <shortdoc/>
 </kw>
 </keywords>
 <datatypes>
 <enums>
 <enum name="ValidationLevel">
-<doc>&lt;div class="document"&gt;
-&lt;p&gt;An enumeration.&lt;/p&gt;
-&lt;/div&gt;
-</doc>
+<doc>&lt;p&gt;An enumeration.&lt;/p&gt;</doc>
 <members>
-<member name="DISABLED" value="1"/>
-<member name="INFO" value="2"/>
-<member name="WARN" value="3"/>
-<member name="STRICT" value="4"/>
+<member name="DISABLED" value="DISABLED"/>
+<member name="INFO" value="INFO"/>
+<member name="WARN" value="WARN"/>
+<member name="STRICT" value="STRICT"/>
 </members>
 </enum>
 </enums>
