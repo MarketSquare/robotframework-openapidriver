@@ -72,7 +72,7 @@ def libspec(context):
 
 @task
 def readme(context):
-    with open("README.md", "w", encoding="utf-8") as readme:
+    with open(f"{project_root}/docs/README.md", "w", encoding="utf-8") as readme:
         doc_string = openapidriver.__doc__
         readme.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
 
