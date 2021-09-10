@@ -1,6 +1,8 @@
 # region: docstring
-"""
----
+# --- directly after """ is required to prevent the generated README.md from staring with
+# a blank line, which invalides the  front matter that GitHub Pages (Jekyll) uses to
+# generate the README.html.
+"""---
 ---
 
 # OpenApiDriver for Robot Framework®
