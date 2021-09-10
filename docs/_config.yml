@@ -4,3 +4,4 @@ defaults:
       path: "README.md"
     values:
       permalink: "README.html"
+theme: jekyll-theme-midnight
