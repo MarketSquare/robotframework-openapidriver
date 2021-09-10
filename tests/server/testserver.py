@@ -21,6 +21,10 @@ class Message(BaseModel):
     message: str
 
 
+class Detail(BaseModel):
+    detail: str
+
+
 class WageGroup(BaseModel):
     id: str
     # hourly_rate: confloat(ge=14.37, lt=50.00)
@@ -65,7 +69,7 @@ def get_root() -> Message:
     "/wagegroups",
     status_code=201,
     response_model=WageGroup,
-    responses={409: {"model": Message}},
+    responses={409: {"model": Detail}},
 )
 def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
     if wagegroup.id in WAGE_GROUPS.keys():
@@ -78,7 +82,7 @@ def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
     "/wagegroups/{wagegroup_id}",
     status_code=200,
     response_model=WageGroup,
-    responses={404: {"model": Message}},
+    responses={404: {"model": Detail}},
 )
 def get_wagegroup(wagegroup_id: str) -> WageGroup:
     if wagegroup_id not in WAGE_GROUPS.keys():
@@ -90,7 +94,7 @@ def get_wagegroup(wagegroup_id: str) -> WageGroup:
     "/wagegroups/{wagegroup_id}",
     status_code=200,
     response_model=WageGroup,
-    responses={404: {"model": Message}},
+    responses={404: {"model": Detail}},
 )
 def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
     if wagegroup_id not in WAGE_GROUPS.keys():
@@ -103,7 +107,7 @@ def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
     "/wagegroups/{wagegroup_id}",
     status_code=204,
     response_class=Response,
-    responses={404: {"model": Message}, 403: {"model": Message}},
+    responses={404: {"model": Detail}, 403: {"model": Detail}},
 )
 def delete_wagegroup(wagegroup_id: str) -> None:
     if wagegroup_id not in WAGE_GROUPS.keys():
@@ -121,13 +125,13 @@ def delete_wagegroup(wagegroup_id: str) -> None:
     "/employees",
     status_code=201,
     response_model=EmployeeDetails,
-    responses={400: {"model": Message}},
+    responses={409: {"model": Detail}},
 )
 def post_employee(employee: Employee) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
     if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail=f"Wage group with id {wagegroup_id} does not exist."
         )
     new_employee = EmployeeDetails(
@@ -143,7 +147,7 @@ def post_employee(employee: Employee) -> EmployeeDetails:
     "/employees/{employee_id}",
     status_code=200,
     response_model=EmployeeDetails,
-    responses={404: {"model": Message}},
+    responses={404: {"model": Detail}},
 )
 def get_employee(employee_id: str) -> EmployeeDetails:
     if employee_id not in EMPLOYEES.keys():
@@ -155,7 +159,7 @@ def get_employee(employee_id: str) -> EmployeeDetails:
     "/employees/{employee_id}",
     status_code=200,
     response_model=EmployeeDetails,
-    responses={404: {"model": Message}},
+    responses={404: {"model": Detail}},
 )
 def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetails:
     if employee_id not in EMPLOYEES.keys():
