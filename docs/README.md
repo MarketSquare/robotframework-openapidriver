@@ -1,3 +1,6 @@
+---
+permalink: README.html
+---
 
 # OpenApiDriver for Robot Framework®
 
