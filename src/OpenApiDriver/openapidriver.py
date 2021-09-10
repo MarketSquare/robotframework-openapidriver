@@ -45,7 +45,7 @@ an openapi.json or openapi.yaml file.
 If the source file has the .json or .yaml extension, it will be loaded by the
 library (using the prance library under the hood) and the test cases will be generated.
 
-``` code robotframework
+``` robotframework
 *** Settings ***
 Library            OpenApiDriver
 ...                    source=openapi.json
@@ -64,7 +64,7 @@ Do Nothing
 It is also possible to load the openapi.json / openapi.yaml directly from the
 server by using the url instead of a local file:
 
-``` code robotframework
+``` robotframework
 *** Settings ***
 Library            OpenApiDriver
 ...                    source=http://127.0.0.1:8000/openapi.json
