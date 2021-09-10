@@ -69,10 +69,8 @@ supported and what data needs to be send and will be returned, it is possible to
 automatically validate the API against this contract. For this purpose, the openapi
 module also implements a number of keywords.
 
-Most of these keywords are for internal use by the library (for example to ensure the
-result logs provide insight into the executed steps) but a number of them are intended
-to be used as ``Test Template`` or within the ``Keyword`` that serves as the
-``Test Template``.
+Details about the Keywords can be found
+[here](https://marketsquare.github.io/robotframework-openapidriver/openapidriver.html).
 
 ---
 ## Limitations

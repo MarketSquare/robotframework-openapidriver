@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-09T13:19:00Z" specversion="3" source="openapidriver.py" lineno="118">
+<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-09T17:11:42Z" specversion="3" source="openapidriver.py" lineno="116">
 <version>0.1.0a5</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;
-&lt;p&gt;Note that the following Keywords are intended to be used in Test Suites:&lt;/p&gt;
+&lt;p&gt;Most of the provided keywords are for internal use by the library (for example to ensure the result logs provide insight into the executed steps) but a number of them are intended to be used as &lt;code&gt;Test Template&lt;/code&gt; or within the &lt;code&gt;Keyword&lt;/code&gt; that serves as the &lt;code&gt;Test Template&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The following Keywords are intended to be used in Test Suites:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;Test Endpoint&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;Test Invalid Url&lt;/code&gt;&lt;/li&gt;
@@ -11,7 +12,7 @@
 <tags>
 </tags>
 <inits>
-<init name="Init" lineno="133">
+<init name="Init" lineno="136">
 <arguments repr="source: str, ignored_endpoints: List[str] = [], ignored_responses: List[int] = [], ignored_testcases: List[typing.List[str]] = [], ignore_fastapi_default_422: bool = False, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
