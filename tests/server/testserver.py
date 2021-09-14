@@ -69,11 +69,11 @@ def get_root() -> Message:
     "/wagegroups",
     status_code=201,
     response_model=WageGroup,
-    responses={409: {"model": Detail}},
+    responses={418: {"model": Detail}},
 )
 def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
     if wagegroup.id in WAGE_GROUPS.keys():
-        raise HTTPException(status_code=409, detail="Wage group already exists.")
+        raise HTTPException(status_code=418, detail="Wage group already exists.")
     WAGE_GROUPS[wagegroup.id] = wagegroup
     return wagegroup
 
@@ -107,7 +107,7 @@ def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
     "/wagegroups/{wagegroup_id}",
     status_code=204,
     response_class=Response,
-    responses={404: {"model": Detail}, 403: {"model": Detail}},
+    responses={404: {"model": Detail}, 406: {"model": Detail}},
 )
 def delete_wagegroup(wagegroup_id: str) -> None:
     if wagegroup_id not in WAGE_GROUPS.keys():
@@ -115,7 +115,7 @@ def delete_wagegroup(wagegroup_id: str) -> None:
     used_by = [e for e in EMPLOYEES.values() if e.wagegroup_id == wagegroup_id]
     if used_by:
         raise HTTPException(
-            status_code=403,
+            status_code=406,
             detail=f"Wage group still in use by {len(used_by)} employees."
         )
     WAGE_GROUPS.pop(wagegroup_id)
@@ -125,13 +125,13 @@ def delete_wagegroup(wagegroup_id: str) -> None:
     "/employees",
     status_code=201,
     response_model=EmployeeDetails,
-    responses={409: {"model": Detail}},
+    responses={451: {"model": Detail}},
 )
 def post_employee(employee: Employee) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
     if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(
-            status_code=409,
+            status_code=451,
             detail=f"Wage group with id {wagegroup_id} does not exist."
         )
     new_employee = EmployeeDetails(
