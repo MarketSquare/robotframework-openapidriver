@@ -4,7 +4,7 @@ from random import shuffle
 from typing import Any, Dict, List, Tuple, Type
 from uuid import uuid4
 
-from OpenApiDriver import Dto, Constraint, Dependency, IdDependency
+from OpenApiDriver import Dto, ResourceRelation, IdDependency, IdReference
 
 logger = getLogger(__name__)
 
@@ -21,7 +21,7 @@ class DtoMixin:
         # Current implementation breaks an existing IdDependency which ensures the
         # properties in the request will not violate the schema, so the API logic is
         # where the 4xx response must come from.
-        dependencies: List[Dependency] = self.get_dependencies()
+        dependencies: List[ResourceRelation] = self.get_dependencies()
         shuffle(dependencies)
         for dependency in dependencies:
             if isinstance(dependency, IdDependency) and status_code == dependency.error_code:
@@ -30,7 +30,7 @@ class DtoMixin:
 
         #TODO: figure out how constraints should be broken, depending on the type of
         # constraint
-        constrained_properties: List[Constraint] = [
+        constrained_properties: List[ResourceRelation] = [
             c.property_name for c in self.get_constraints()
         ]
         property_names = list(properties.keys())

@@ -27,6 +27,7 @@ from robotlibcore import keyword
 from OpenApiDriver.dto_base import (
     Dto,
     IdDependency,
+    IdReference,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
@@ -57,6 +58,7 @@ class OpenapiExecutors:
             auth: Optional[AuthBase] = None,
             response_validation: ValidationLevel = ValidationLevel.WARN,
             disable_server_validation: bool = True,
+            require_body_for_invalid_url: bool = False,
         ) -> None:
         try:
             parser = ResolvingParser(source)
@@ -79,6 +81,7 @@ class OpenapiExecutors:
             self.auth = HTTPBasicAuth(username, password)
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
+        self.require_body_for_invalid_url = require_body_for_invalid_url
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -93,7 +96,7 @@ class OpenapiExecutors:
             try:
                 mappings_module = import_module(mappings_module_name)
                 self.in_use_mapping: Dict[str, Tuple[str, str]] = mappings_module.IN_USE_MAPPING
-            except ImportError as exception:
+            except (ImportError, AttributeError) as exception:
                 logger.debug(f"IN_USE_MAPPING was not imported: {exception}")
                 self.in_use_mapping = {}
             finally:
@@ -125,14 +128,20 @@ class OpenapiExecutors:
             self, endpoint: str, method: str, expected_status_code: int = 404
         ) -> None:
         valid_url: str = run_keyword("get_valid_url", endpoint)
-        #TODO: support for 400/422 prioritized over 404
-        # Since no body is send, some APIs may return 400/422 instead of 404
+
         if not (url:= run_keyword("get_invalidated_url", valid_url)):
             raise SkipExecution(
                 f"Endpoint {endpoint} does not contain resource references that "
                 f"can be invalidated."
             )
-        response: Response = run_keyword("authorized_request", url, method)
+
+        json_data = None
+        if self.require_body_for_invalid_url:
+            dto, _ = self.get_dto_and_schema(method=method, endpoint=endpoint)
+            if dto:
+                dto = self.add_dto_mixin(dto=dto)
+                json_data = asdict(dto)
+        response: Response = run_keyword("authorized_request", url, method, json_data)
         if response.status_code != expected_status_code:
             raise AssertionError(
                 f"Response {response.status_code} was not {expected_status_code}")
@@ -142,22 +151,33 @@ class OpenapiExecutors:
         json_data: Optional[Dict[str, Any]] = None
         original_data: Optional[Dict[str, Any]] = None
 
-        if status_code == 404:
-            #FIXME: determine the reason and trigger its conditions
-            self.test_invalid_url(endpoint=endpoint, method=method)
-            return
-
         url: str = run_keyword("get_valid_url", endpoint)
         dto, schema = self.get_dto_and_schema(method=method, endpoint=endpoint)
-        if dto and schema:
+        if dto:
             dto = self.add_dto_mixin(dto=dto)
             json_data = asdict(dto)
-            if status_code == 409:
-                json_data = run_keyword("ensure_conflict", url, method, dto)
-            if status_code in [400, 422]:
-                json_data = dto.get_invalidated_data(schema, status_code)
-        if status_code == 403:
-            run_keyword("ensure_in_use", url)
+        # in case of a status code indicating an error, ensure the error occurs
+        if status_code >= 400 and dto:
+            if resource_relations := dto.get_relation_for_error_code(status_code):
+                resource_relation = resource_relations.pop()
+                if isinstance(resource_relation, UniquePropertyValueConstraint):
+                    json_data = run_keyword("ensure_conflict", url, method, dto)
+                elif isinstance(resource_relation, IdReference):
+                    run_keyword("ensure_in_use", url)
+                else:
+                    if schema:
+                        json_data = dto.get_invalidated_data(
+                            schema=schema, status_code=status_code
+                        )
+                    else:
+                        raise AssertionError("Failed to invalidate: missing schema")
+            elif schema:
+                json_data = dto.get_invalidated_data(
+                    schema=schema, status_code=status_code
+                )
+            else:
+                raise AssertionError("Failed to invalidate: missing schema")
+
         if method == "PATCH":
             response: Response = run_keyword("authorized_request", url, "GET")
             if response.ok:
@@ -172,9 +192,13 @@ class OpenapiExecutors:
                 logger.error(
                     f"{response.reason}: {description}"
                 )
+            try:
+                response_json = response.json()
+            except Exception:
+                response_json = {}
             logger.info(
                 f"\nSend: {_json.dumps(json_data, indent=4, sort_keys=True)}"
-                f"\nGot: {_json.dumps(response.json(), indent=4, sort_keys=True)}"
+                f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
             )
             raise AssertionError(
                 f"Response status_code {response.status_code} was not {status_code}"
@@ -268,7 +292,7 @@ class OpenapiExecutors:
 
     def get_dto_and_schema(
             self, endpoint: str, method: str
-        ) -> Union[Tuple[Dto, Dict[str, Any]], Tuple[None, None]]:
+        ) -> Union[Tuple[Dto, Dict[str, Any]], Tuple[Dto, None] ,Tuple[None, None]]:
         method = method.lower()
         # The endpoint can contain already resolved Ids that have to be matched
         # against the parametrized endpoints in the paths section.
@@ -278,7 +302,16 @@ class OpenapiExecutors:
         except KeyError:
             raise NotImplementedError(f"method '{method}' not suported on '{spec_endpoint}")
         if (body_spec := method_spec.get("requestBody", None)) is None:
-            return body_spec, None
+            dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
+            if dto_class == Dto:
+                return None, None
+            dto_class = make_dataclass(
+                cls_name=method_spec["operationId"],
+                fields=[],
+                bases=(dto_class,),
+            )
+            dto_instance = dto_class()
+            return dto_instance, None
         # Content should be a single key/value entry, so use tuple assignment
         content_type, = body_spec["content"].keys()
         if content_type != "application/json":

@@ -114,7 +114,7 @@ from robotlibcore import DynamicCore
 
 try:
     __version__ = version("robotframework-openapidriver")
-except:
+except:     # pragma: no cover
     __version__ = "unknown"
 
 
@@ -153,6 +153,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
             auth: Optional[AuthBase] = None,
             response_validation: ValidationLevel = ValidationLevel.WARN,
             disable_server_validation: bool = True,
+            require_body_for_invalid_url: bool = False,
         ):
 # region: docstring
         """
@@ -211,6 +212,14 @@ include possible errors for Requests made to a server address that is not define
 the list of servers in the openapi document. This generally means that if there is a
 mismatch, every Test Case will raise this error. Note that ``localhost`` and
 ``127.0.0.1`` are not considered the same by Response validation.
+
+=== require_body_for_invalid_url ===
+When a request is made against an invalid url, this usually is because of a "404" request;
+a request for a resource that does not exist. Depending on API implementation, when a
+request with a missing or invalid request body is made on a non-existent resource,
+either a 404 or a 422 or 400 Response is normally returned. If the API being tested
+processes the request body before checking if the requested resource exists, set
+this parameter to True.
         """
 # endregion
         DataDriver.__init__(self,
@@ -235,6 +244,7 @@ mismatch, every Test Case will raise this error. Note that ``localhost`` and
             auth=auth,
             response_validation=response_validation,
             disable_server_validation=disable_server_validation,
+            require_body_for_invalid_url=require_body_for_invalid_url,
         )
         DynamicCore.__init__(self, [openapi_executors])
 
