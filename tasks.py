@@ -32,6 +32,7 @@ def tests(context):
         f"--argumentfile={project_root}/tests/rf_cli.args",
         f"--variable=root:{project_root}",
         f"--outputdir={project_root}/tests/logs",
+        f"--loglevel=TRACE:DEBUG",
         f"{project_root}/tests/suites",
     ]
     subprocess.run(" ".join(cmd), shell=True)
