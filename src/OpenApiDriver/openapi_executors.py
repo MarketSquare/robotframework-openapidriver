@@ -161,7 +161,9 @@ class OpenapiExecutors:
             if resource_relations := dto.get_relation_for_error_code(status_code):
                 resource_relation = resource_relations.pop()
                 if isinstance(resource_relation, UniquePropertyValueConstraint):
-                    json_data = run_keyword("ensure_conflict", url, method, dto)
+                    json_data = run_keyword(
+                        "ensure_conflict", url, method, dto, status_code
+                    )
                 elif isinstance(resource_relation, IdReference):
                     run_keyword("ensure_in_use", url)
                 else:
@@ -504,7 +506,9 @@ class OpenapiExecutors:
             response.raise_for_status()
 
     @keyword
-    def ensure_conflict(self, url: str, method: str, dto: Dto) -> Dict[str, Any]:
+    def ensure_conflict(
+            self, url: str, method: str, dto: Dto, conflict_status_code: int
+        ) -> Dict[str, Any]:
         json_data = asdict(dto)
         for constraint in dto.get_constraints():
             if isinstance(constraint, UniquePropertyValueConstraint):
@@ -529,8 +533,8 @@ class OpenapiExecutors:
                 response: Response = run_keyword(
                     "authorized_request", post_url, "POST", post_json
                 )
-                # conflicting resource may already exist, so 409 is also valid
-                assert response.ok or response.status_code == 409, (
+                # conflicting resource may already exist
+                assert response.ok or response.status_code == conflict_status_code, (
                     f"ensure_conflict received {response.status_code}: {response.json()}"
                 )
                 return json_data
