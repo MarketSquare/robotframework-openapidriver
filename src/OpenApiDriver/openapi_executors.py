@@ -238,7 +238,7 @@ class OpenapiExecutors:
     @keyword
     def get_valid_id_for_endpoint(self, endpoint: str) -> str:
         url: str = run_keyword("get_valid_url", endpoint)
-        # Try to create a new resource to prevent 403 and 409 conflicts caused by
+        # Try to create a new resource to prevent conflicts caused by
         # operations performed on the same resource by other test cases
         try:
             dto, _ = self.get_dto_and_schema(endpoint=endpoint, method="POST")
