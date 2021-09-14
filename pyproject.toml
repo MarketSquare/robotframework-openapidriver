@@ -47,3 +47,9 @@ build-backend = "poetry.core.masonry.api"
 branch = true
 parallel = true
 source = ["src"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "@abstract"
+]
