@@ -21,7 +21,8 @@ def tests(context):
         "run",
         "-m",
         "unittest",
-        f"{project_root}/tests/unittests/test_openapidriver.py",
+        "discover ",
+        f"{project_root}/tests/unittests",
     ]
     subprocess.run(" ".join(cmd), shell=True)
     cmd = [
