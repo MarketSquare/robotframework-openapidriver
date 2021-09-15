@@ -48,7 +48,7 @@ class OpenApiReader(AbstractReaderClass):
             ignored_tests = []
         ignore_fastapi_default_422: bool = getattr(self, "ignore_fastapi_default_422", False)
         for endpoint, methods in endpoints.items():
-            for method, method_data in methods.items():
+            for method, method_data in reversed(methods.items()):
                 for response in method_data.get("responses"):
                     # FastAPI also adds a 422 response to endpoints that do not take
                     # parameters that can be invalidated. Since header-invalidation is
