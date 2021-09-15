@@ -4,7 +4,6 @@ import json as _json
 import sys
 from dataclasses import asdict, make_dataclass
 from enum import Enum
-from importlib import import_module
 from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
@@ -31,6 +30,7 @@ from OpenApiDriver.dto_base import (
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
+from OpenApiDriver.dto_utils import add_dto_mixin, get_dto_class
 
 
 run_keyword = BuiltIn().run_keyword
@@ -82,6 +82,7 @@ class OpenapiExecutors:
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
         self.require_body_for_invalid_url = require_body_for_invalid_url
+        self.add_dto_mixin = add_dto_mixin
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -93,23 +94,11 @@ class OpenapiExecutors:
             mappings_folder = str(mappings_path.parent)
             sys.path.append(mappings_folder)
             mappings_module_name = mappings_path.stem
-            try:
-                mappings_module = import_module(mappings_module_name)
-                self.in_use_mapping: Dict[str, Tuple[str, str]] = mappings_module.IN_USE_MAPPING
-            except (ImportError, AttributeError) as exception:
-                logger.debug(f"IN_USE_MAPPING was not imported: {exception}")
-                self.in_use_mapping = {}
-            finally:
-                from OpenApiDriver.dto_utils import add_dto_mixin, get_dto_class
-                self.add_dto_mixin = add_dto_mixin
-                self.get_dto_class = get_dto_class(
-                    mappings_module_name=mappings_module_name
-                )
-                sys.path.pop()
+            self.get_dto_class = get_dto_class(
+                mappings_module_name=mappings_module_name
+            )
+            sys.path.pop()
         else:
-            self.in_use_mapping = {}
-            from OpenApiDriver.dto_utils import add_dto_mixin, get_dto_class
-            self.add_dto_mixin = add_dto_mixin
             self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
 
 
@@ -159,13 +148,14 @@ class OpenapiExecutors:
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= 400 and dto:
             if resource_relations := dto.get_relation_for_error_code(status_code):
+                # only 1 relation is assumed for a given status code
                 resource_relation = resource_relations.pop()
                 if isinstance(resource_relation, UniquePropertyValueConstraint):
                     json_data = run_keyword(
                         "ensure_conflict", url, method, dto, status_code
                     )
                 elif isinstance(resource_relation, IdReference):
-                    run_keyword("ensure_in_use", url)
+                    run_keyword("ensure_in_use", url, resource_relation)
                 else:
                     if schema:
                         json_data = dto.get_invalidated_data(
@@ -480,19 +470,18 @@ class OpenapiExecutors:
         return None
 
     @keyword
-    def ensure_in_use(self, url: str) -> None:
+    def ensure_in_use(self, url: str, resource_relation: IdReference) -> None:
         endpoint = url.replace(self.base_url, "")
         endpoint_parts = endpoint.split("/")
         # first part will be '' since an endpoint starts with /
         endpoint_parts.pop(0)
         parameterized_url = self.get_parametrized_endpoint(endpoint=endpoint)
         if parameterized_url.endswith("}"):
-            resource_type = endpoint_parts[-2]
             resource_id = endpoint_parts[-1]
         else:
-            resource_type = endpoint_parts[-1]
             resource_id = None
-        post_endpoint, property_name = self.in_use_mapping[resource_type]
+        post_endpoint = resource_relation.post_path
+        property_name = resource_relation.property_name
         dto, _ = self.get_dto_and_schema(method="POST", endpoint=post_endpoint)
         json_data = asdict(dto)
         if resource_id:

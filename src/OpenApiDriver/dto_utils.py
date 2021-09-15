@@ -4,7 +4,7 @@ from random import shuffle
 from typing import Any, Dict, List, Tuple, Type
 from uuid import uuid4
 
-from OpenApiDriver import Dto, ResourceRelation, IdDependency, IdReference
+from OpenApiDriver.dto_base import Dto, ResourceRelation, IdDependency, IdReference
 
 logger = getLogger(__name__)
 
@@ -15,21 +15,18 @@ class DtoMixin:
         ) -> Dict[str, Any]:
         properties: Dict[str, Any] = self.__dict__
 
-        #TODO: Figure out how dependencies should be considered; breaking a dependency
-        # can result in a number of response codes, depending on API implementation;
-        # perhaps a mapping is needed for the relation between response code and the reason.
-        # Current implementation breaks an existing IdDependency which ensures the
-        # properties in the request will not violate the schema, so the API logic is
-        # where the 4xx response must come from.
         dependencies: List[ResourceRelation] = self.get_dependencies()
         shuffle(dependencies)
         for dependency in dependencies:
             if isinstance(dependency, IdDependency) and status_code == dependency.error_code:
-                properties[dependency.property_name] = uuid4().hex
+                invalid_value = uuid4().hex
+                logger.debug(
+                    f"Breaking IdDependency for status_code {status_code}: replacing "
+                    f"{properties[dependency.property_name]} with {invalid_value}"
+                )
+                properties[dependency.property_name] = invalid_value
                 return properties
 
-        #TODO: figure out how constraints should be broken, depending on the type of
-        # constraint
         constrained_properties: List[ResourceRelation] = [
             c.property_name for c in self.get_constraints()
         ]
@@ -157,4 +154,5 @@ class get_dto_class:
         try:
             return self.dto_mapping[(endpoint, method)]
         except KeyError:
+            logger.debug(f"No Dto mapping for {endpoint} {method}.")
             return Dto

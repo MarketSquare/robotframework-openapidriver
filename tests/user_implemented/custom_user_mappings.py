@@ -24,8 +24,8 @@ class WagegroupDto(Dto):
                 error_code=418,
             ),
             IdReference(
-                property_name="id",
-                post_path="/wagegroups",
+                property_name="wagegroup_id",
+                post_path="/employees",
                 error_code=406,
             )
         ]
@@ -50,10 +50,4 @@ DTO_MAPPING: Dict[Tuple[Any, Any], Any] = {
     (r"/wagegroups", "post"): WagegroupDto,
     (r"/wagegroups/{wagegroup_id}", "delete"): WagegroupDto,
     (r"/employees", "post"): EmployeeDto,
-}
-
-
-IN_USE_MAPPING: Dict[str, Tuple[str, str]] = {
-    # deliberate trailing / to validate redirect matching
-    "wagegroups": ("/employees/", "wagegroup_id"),
 }
