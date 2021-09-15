@@ -29,7 +29,7 @@ class OpenApiReader(AbstractReaderClass):
 
         try:
             parser = ResolvingParser(getattr(self, "source", None))
-        except ResolutionError as exception:
+        except (ResolutionError, AssertionError) as exception:
             BuiltIn().fatal_error(
                 f"Exception while trying to load openapi spec from source: {exception}"
             )
