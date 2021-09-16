@@ -457,16 +457,21 @@ class OpenapiExecutors:
             raise NotImplementedError(f"Type '{property_type}' is currently not supported")
         return json_data
 
-    @staticmethod
     @keyword
-    def get_invalidated_url(valid_url: str) -> Optional[str]:
-        url_parts = list(valid_url.split("/"))
-        #FIXME: don't assume ids are GUIDs, check for {} in parametrized_url
-        #TODO: add support for query parameters that can be invalidated
-        for part in reversed(url_parts):
-            if len(part) > 30:
-                invalid_url = valid_url.replace(part, part[1:])
+    def get_invalidated_url(self, valid_url: str) -> Optional[str]:
+        endpoint = valid_url.replace(self.base_url, "")
+        endpoint_parts = endpoint.split("/")
+        # first part will be '' since an endpoint starts with /
+        endpoint_parts.pop(0)
+        parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
+        parameterized_url = self.base_url + parameterized_endpoint
+        for parametrized_part, valid_part in zip(
+            reversed(parameterized_url.split("/")), reversed(valid_url.split("/"))
+        ):
+            if parametrized_part.startswith("{") and parametrized_part.endswith("}"):
+                invalid_url = valid_url.replace(valid_part, uuid4().hex)
                 return invalid_url
+        #TODO: add support for query parameters that can be invalidated
         return None
 
     @keyword
@@ -475,8 +480,8 @@ class OpenapiExecutors:
         endpoint_parts = endpoint.split("/")
         # first part will be '' since an endpoint starts with /
         endpoint_parts.pop(0)
-        parameterized_url = self.get_parametrized_endpoint(endpoint=endpoint)
-        if parameterized_url.endswith("}"):
+        parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
+        if parameterized_endpoint.endswith("}"):
             resource_id = endpoint_parts[-1]
         else:
             resource_id = None
