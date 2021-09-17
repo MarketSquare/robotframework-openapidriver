@@ -1,11 +1,9 @@
 # pylint: disable=invalid-name
-from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple
 
 from OpenApiDriver import (
-    Constraint,
-    Dependency,
     Dto,
+    Relation,
     IdDependency,
     IdReference,
     PropertyValueConstraint,
@@ -13,11 +11,10 @@ from OpenApiDriver import (
 )
 
 
-@dataclass
 class WagegroupDto(Dto):
     @staticmethod
-    def get_constraints() -> List[Constraint]:
-        constraints = [
+    def get_relations() -> List[Relation]:
+        relations = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -29,21 +26,20 @@ class WagegroupDto(Dto):
                 error_code=406,
             )
         ]
-        return constraints
+        return relations
 
 
-@dataclass
 class EmployeeDto(Dto):
     @staticmethod
-    def get_dependencies() -> List[Dependency]:
-        dependencies = [
+    def get_relations() -> List[Relation]:
+        relations = [
             IdDependency(
                 property_name="wagegroup_id",
                 get_path="/wagegroups",
                 error_code=451,
             ),
         ]
-        return dependencies
+        return relations
 
 
 DTO_MAPPING: Dict[Tuple[Any, Any], Any] = {

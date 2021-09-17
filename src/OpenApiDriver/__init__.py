@@ -2,9 +2,7 @@ from importlib.metadata import version
 
 from OpenApiDriver.openapidriver import OpenApiDriver
 from OpenApiDriver.dto_base import  (
-    ResourceRelation,
-    Constraint,
-    Dependency,
+    Relation,
     Dto,
     IdDependency,
     IdReference,

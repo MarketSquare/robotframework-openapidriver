@@ -30,7 +30,7 @@ from OpenApiDriver.dto_base import (
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
-from OpenApiDriver.dto_utils import add_dto_mixin, get_dto_class
+from OpenApiDriver.dto_utils import get_dto_class, DefaultDto
 
 
 run_keyword = BuiltIn().run_keyword
@@ -82,7 +82,6 @@ class OpenapiExecutors:
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
         self.require_body_for_invalid_url = require_body_for_invalid_url
-        self.add_dto_mixin = add_dto_mixin
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -128,7 +127,6 @@ class OpenapiExecutors:
         if self.require_body_for_invalid_url:
             dto, _ = self.get_dto_and_schema(method=method, endpoint=endpoint)
             if dto:
-                dto = self.add_dto_mixin(dto=dto)
                 json_data = asdict(dto)
         response: Response = run_keyword("authorized_request", url, method, json_data)
         if response.status_code != expected_status_code:
@@ -143,7 +141,6 @@ class OpenapiExecutors:
         url: str = run_keyword("get_valid_url", endpoint)
         dto, schema = self.get_dto_and_schema(method=method, endpoint=endpoint)
         if dto:
-            dto = self.add_dto_mixin(dto=dto)
             json_data = asdict(dto)
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= 400 and dto:
@@ -174,7 +171,7 @@ class OpenapiExecutors:
             response: Response = run_keyword("authorized_request", url, "GET")
             if response.ok:
                 original_data = response.json()
-        response: Response = run_keyword("authorized_request", url, method, json_data)
+        response = run_keyword("authorized_request", url, method, json_data)
         if response.status_code != status_code:
             if not response.ok:
                 if description := response.json().get("detail"):
@@ -197,7 +194,7 @@ class OpenapiExecutors:
             )
         run_keyword("validate_response", endpoint, response, original_data)
         if method == "DELETE" and response.ok:
-            response: Response = run_keyword("authorized_request", url, "GET")
+            response = run_keyword("authorized_request", url, "GET")
             if response.ok:
                 raise AssertionError(
                     f"Resource still exists after deletion. Url was {url}"
@@ -238,7 +235,7 @@ class OpenapiExecutors:
             logger.debug(f"get_valid_id_for_endpoint POST failed: {exception}")
             # For endpoints that do no support POST, try to get an existing id using GET
             try:
-                response: Response = run_keyword("authorized_request", url, "GET")
+                response = run_keyword("authorized_request", url, "GET")
                 assert response.ok
                 response_data: Union[Dict[str, Any], List[Dict[str, Any]]] = response.json()
                 if isinstance(response_data, list):
@@ -272,14 +269,17 @@ class OpenapiExecutors:
         # instead of a newly created resource. In this case, the send_json must be
         # in the array of the 'array_item' property on {id}
         send_path: str = response.request.path_url
-        response_path: Optional[str] = response_data.get("href", None)
+        if isinstance(response_data, dict):
+            response_path: Optional[str] = response_data.get("href", None)
+        else:
+            response_path = None
         if response_path and send_path not in response_path:
             property_to_check = send_path.replace(response_path, "")[1:]
             item_list: List[Dict[str, Any]] = response_data[property_to_check]
             # Use the (mandatory) id to get the POSTed resource from the list
             [valid_id] = [item["id"] for item in item_list if item["id"] == send_json["id"]]
         else:
-            valid_id: str = response_data["id"]
+            valid_id = response_data["id"]
         return valid_id
 
     def get_dto_and_schema(
@@ -295,7 +295,7 @@ class OpenapiExecutors:
             raise NotImplementedError(f"method '{method}' not suported on '{spec_endpoint}")
         if (body_spec := method_spec.get("requestBody", None)) is None:
             dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
-            if dto_class == Dto:
+            if dto_class == DefaultDto:
                 return None, None
             dto_class = make_dataclass(
                 cls_name=method_spec["operationId"],
@@ -356,9 +356,9 @@ class OpenapiExecutors:
         ) -> Optional[Dict[str, Any]]:
 
         def get_constrained_values(property_name: str) -> List[Any]:
-            constraints = dto.get_constraints()
+            relations = dto.get_relations()
             values = [
-                c.values for c in constraints if (
+                c.values for c in relations if (
                     isinstance(c, PropertyValueConstraint) and
                     c.property_name == property_name
                 )
@@ -367,10 +367,10 @@ class OpenapiExecutors:
             return values.pop() if values else []
 
         def get_dependent_id(property_name: str, operation_id: str) -> Optional[str]:
-            dependencies = dto.get_dependencies()
+            relations = dto.get_relations()
             # multiple get paths are possible based on the operation being performed
             id_get_paths = [
-                (d.get_path, d.operation_id) for d in dependencies if (
+                (d.get_path, d.operation_id) for d in relations if (
                     isinstance(d, IdDependency) and
                     d.property_name == property_name
                 )
@@ -484,7 +484,7 @@ class OpenapiExecutors:
         if parameterized_endpoint.endswith("}"):
             resource_id = endpoint_parts[-1]
         else:
-            resource_id = None
+            resource_id = ""
         post_endpoint = resource_relation.post_path
         property_name = resource_relation.property_name
         dto, _ = self.get_dto_and_schema(method="POST", endpoint=post_endpoint)
@@ -504,9 +504,9 @@ class OpenapiExecutors:
             self, url: str, method: str, dto: Dto, conflict_status_code: int
         ) -> Dict[str, Any]:
         json_data = asdict(dto)
-        for constraint in dto.get_constraints():
-            if isinstance(constraint, UniquePropertyValueConstraint):
-                json_data[constraint.property_name] = constraint.value
+        for relation in dto.get_relations():
+            if isinstance(relation, UniquePropertyValueConstraint):
+                json_data[relation.property_name] = relation.value
                 # create a new resource that the original request will conflict with
                 if method in ["PATCH", "PUT"]:
                     post_url_parts = url.split("/")[:-1]
@@ -532,7 +532,7 @@ class OpenapiExecutors:
                     f"ensure_conflict received {response.status_code}: {response.json()}"
                 )
                 return json_data
-        response: Response = run_keyword("authorized_request", url, "GET")
+        response = run_keyword("authorized_request", url, "GET")
         if response.ok:
             response_json = response.json()
             if isinstance(response_json, dict):
@@ -542,7 +542,7 @@ class OpenapiExecutors:
                         json_data[key] = response_json[key]
                 return json_data
         # couldn't retrieve a resource to conflict with, so create one instead
-        response: Response = run_keyword("authorized_request", url, "POST", json_data)
+        response = run_keyword("authorized_request", url, "POST", json_data)
         assert response.ok, (
             f"ensure_conflict received {response.status_code}: {response.json()}"
         )
