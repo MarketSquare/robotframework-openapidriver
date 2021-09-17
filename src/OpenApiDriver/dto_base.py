@@ -55,8 +55,8 @@ Relation = Union[
 
 
 class DtoBase(ABC):
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def get_relations() -> List[Relation]:
         raise NotImplementedError
 
