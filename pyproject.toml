@@ -31,6 +31,8 @@ openapi-core = "*"
 openapi-spec-validator = "*"
 
 [tool.poetry.dev-dependencies]
+mypy = "*"
+types-requests = "^2.25.6"
 invoke = "*"
 docutils = "*"
 Pygments = "*"
@@ -53,3 +55,7 @@ exclude_lines = [
     "pragma: no cover",
     "@abstract"
 ]
+
+[[tool.mypy.overrides]]
+module = ["DataDriver.*", "prance.*", "robot.*", "openapi_core.*", "robotlibcore"]
+ignore_missing_imports = true
