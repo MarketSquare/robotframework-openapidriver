@@ -20,6 +20,8 @@ To ensure the install succeeded, you can open a new shell and run
 ```
 poetry --version
 ```
+> Windows users: if this does not work, see https://python-poetry.org/docs/master/#windows-powershell-install-instructions
+
 Next poetry can be configured to create virtual environments for repos within the repo
 (this makes it easy to locate the .venv for a given repo if you want to clean / delete it):
 ```
