@@ -1,4 +1,4 @@
-#TODO: support ${itemId} mapping instead of only "id"
+# TODO: support ${itemId} mapping instead of only "id"
 
 import json as _json
 import sys
@@ -13,7 +13,10 @@ from uuid import uuid4
 
 from openapi_core import create_spec
 from openapi_core.validation.response.validators import ResponseValidator
-from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
+from openapi_core.contrib.requests import (
+    RequestsOpenAPIRequest,
+    RequestsOpenAPIResponse,
+)
 from openapi_core.templating.paths.exceptions import ServerNotFound
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -48,18 +51,18 @@ class ValidationLevel(str, Enum):
 
 class OpenapiExecutors:
     def __init__(
-            self,
-            source: str,
-            origin: str = "",
-            base_path: str = "",
-            mappings_path: Union[str, Path] = "",
-            username: str = "",
-            password: str = "",
-            auth: Optional[AuthBase] = None,
-            response_validation: ValidationLevel = ValidationLevel.WARN,
-            disable_server_validation: bool = True,
-            require_body_for_invalid_url: bool = False,
-        ) -> None:
+        self,
+        source: str,
+        origin: str = "",
+        base_path: str = "",
+        mappings_path: Union[str, Path] = "",
+        username: str = "",
+        password: str = "",
+        auth: Optional[AuthBase] = None,
+        response_validation: ValidationLevel = ValidationLevel.WARN,
+        disable_server_validation: bool = True,
+        require_body_for_invalid_url: bool = False,
+    ) -> None:
         try:
             parser = ResolvingParser(source)
         except ResolutionError as exception:
@@ -100,7 +103,6 @@ class OpenapiExecutors:
         else:
             self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
 
-
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:
         url: str = run_keyword("get_valid_url", endpoint)
@@ -113,11 +115,11 @@ class OpenapiExecutors:
 
     @keyword
     def test_invalid_url(
-            self, endpoint: str, method: str, expected_status_code: int = 404
-        ) -> None:
+        self, endpoint: str, method: str, expected_status_code: int = 404
+    ) -> None:
         valid_url: str = run_keyword("get_valid_url", endpoint)
 
-        if not (url:= run_keyword("get_invalidated_url", valid_url)):
+        if not (url := run_keyword("get_invalidated_url", valid_url)):
             raise SkipExecution(
                 f"Endpoint {endpoint} does not contain resource references that "
                 f"can be invalidated."
@@ -131,7 +133,8 @@ class OpenapiExecutors:
         response: Response = run_keyword("authorized_request", url, method, json_data)
         if response.status_code != expected_status_code:
             raise AssertionError(
-                f"Response {response.status_code} was not {expected_status_code}")
+                f"Response {response.status_code} was not {expected_status_code}"
+            )
 
     @keyword
     def test_endpoint(self, method: str, endpoint: str, status_code: int) -> None:
@@ -178,9 +181,7 @@ class OpenapiExecutors:
                     pass
                 else:
                     description = response.json().get("message")
-                logger.error(
-                    f"{response.reason}: {description}"
-                )
+                logger.error(f"{response.reason}: {description}")
             try:
                 response_json = response.json()
             except Exception:
@@ -214,7 +215,9 @@ class OpenapiExecutors:
             if part.startswith("{") and part.endswith("}"):
                 type_endpoint_parts = endpoint_parts[slice(index)]
                 type_endpoint = "/".join(type_endpoint_parts)
-                existing_id: str = run_keyword("get_valid_id_for_endpoint", type_endpoint)
+                existing_id: str = run_keyword(
+                    "get_valid_id_for_endpoint", type_endpoint
+                )
                 if not existing_id:
                     raise Exception
                 endpoint_parts[index] = existing_id
@@ -230,14 +233,18 @@ class OpenapiExecutors:
         try:
             dto, _ = self.get_dto_and_schema(endpoint=endpoint, method="POST")
             json_data = asdict(dto)
-            response: Response = run_keyword("authorized_request", url, "POST", json_data)
+            response: Response = run_keyword(
+                "authorized_request", url, "POST", json_data
+            )
         except NotImplementedError as exception:
             logger.debug(f"get_valid_id_for_endpoint POST failed: {exception}")
             # For endpoints that do no support POST, try to get an existing id using GET
             try:
                 response = run_keyword("authorized_request", url, "GET")
                 assert response.ok
-                response_data: Union[Dict[str, Any], List[Dict[str, Any]]] = response.json()
+                response_data: Union[
+                    Dict[str, Any], List[Dict[str, Any]]
+                ] = response.json()
                 if isinstance(response_data, list):
                     valid_ids: List[str] = [item["id"] for item in response_data]
                     logger.debug(
@@ -259,9 +266,9 @@ class OpenapiExecutors:
                 )
                 raise exception
 
-        assert response.ok, (
-            f"get_valid_id_for_endpoint received status_code {response.status_code}"
-        )
+        assert (
+            response.ok
+        ), f"get_valid_id_for_endpoint received status_code {response.status_code}"
         response_data = response.json()
         prepared_body: bytes = response.request.body
         send_json: Dict[str, Any] = _json.loads(prepared_body.decode("UTF-8"))
@@ -277,14 +284,16 @@ class OpenapiExecutors:
             property_to_check = send_path.replace(response_path, "")[1:]
             item_list: List[Dict[str, Any]] = response_data[property_to_check]
             # Use the (mandatory) id to get the POSTed resource from the list
-            [valid_id] = [item["id"] for item in item_list if item["id"] == send_json["id"]]
+            [valid_id] = [
+                item["id"] for item in item_list if item["id"] == send_json["id"]
+            ]
         else:
             valid_id = response_data["id"]
         return valid_id
 
     def get_dto_and_schema(
-            self, endpoint: str, method: str
-        ) -> Union[Tuple[Dto, Dict[str, Any]], Tuple[Dto, None] ,Tuple[None, None]]:
+        self, endpoint: str, method: str
+    ) -> Union[Tuple[Dto, Dict[str, Any]], Tuple[Dto, None], Tuple[None, None]]:
         method = method.lower()
         # The endpoint can contain already resolved Ids that have to be matched
         # against the parametrized endpoints in the paths section.
@@ -292,7 +301,9 @@ class OpenapiExecutors:
         try:
             method_spec = self.openapi_doc["paths"][spec_endpoint][method]
         except KeyError:
-            raise NotImplementedError(f"method '{method}' not suported on '{spec_endpoint}")
+            raise NotImplementedError(
+                f"method '{method}' not suported on '{spec_endpoint}"
+            )
         if (body_spec := method_spec.get("requestBody", None)) is None:
             dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
             if dto_class == DefaultDto:
@@ -305,7 +316,7 @@ class OpenapiExecutors:
             dto_instance = dto_class()
             return dto_instance, None
         # Content should be a single key/value entry, so use tuple assignment
-        content_type, = body_spec["content"].keys()
+        (content_type,) = body_spec["content"].keys()
         if content_type != "application/json":
             # At present no supported for other types.
             raise NotImplementedError(f"content_type '{content_type}' not supported")
@@ -315,7 +326,7 @@ class OpenapiExecutors:
         dto_data = self.get_dto_data(
             schema=resolved_schema,
             dto=dto_class,
-            operation_id=method_spec.get("operationId")
+            operation_id=method_spec.get("operationId"),
         )
         if dto_data is None:
             return None, None
@@ -352,15 +363,16 @@ class OpenapiExecutors:
 
     @keyword
     def get_dto_data(
-            self, schema: Dict[str, Any], dto: Type[Dto], operation_id: str
-        ) -> Optional[Dict[str, Any]]:
-
+        self, schema: Dict[str, Any], dto: Type[Dto], operation_id: str
+    ) -> Optional[Dict[str, Any]]:
         def get_constrained_values(property_name: str) -> List[Any]:
             relations = dto.get_relations()
             values = [
-                c.values for c in relations if (
-                    isinstance(c, PropertyValueConstraint) and
-                    c.property_name == property_name
+                c.values
+                for c in relations
+                if (
+                    isinstance(c, PropertyValueConstraint)
+                    and c.property_name == property_name
                 )
             ]
             # values should be empty or contain 1 list of allowed values
@@ -370,10 +382,9 @@ class OpenapiExecutors:
             relations = dto.get_relations()
             # multiple get paths are possible based on the operation being performed
             id_get_paths = [
-                (d.get_path, d.operation_id) for d in relations if (
-                    isinstance(d, IdDependency) and
-                    d.property_name == property_name
-                )
+                (d.get_path, d.operation_id)
+                for d in relations
+                if (isinstance(d, IdDependency) and d.property_name == property_name)
             ]
             if not id_get_paths:
                 return None
@@ -382,7 +393,9 @@ class OpenapiExecutors:
             else:
                 try:
                     [id_get_path] = [
-                        path for path, operation in id_get_paths if operation == operation_id
+                        path
+                        for path, operation in id_get_paths
+                        if operation == operation_id
                     ]
                 # There could be multiple get_paths, but not one for the current operation
                 except ValueError:
@@ -390,7 +403,6 @@ class OpenapiExecutors:
             valid_id = self.get_valid_id_for_endpoint(endpoint=id_get_path)
             logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
             return valid_id
-
 
         json_data: Dict[str, Any] = {}
 
@@ -408,20 +420,22 @@ class OpenapiExecutors:
                 json_data[property_name] = bool(getrandbits(1))
                 continue
             # if the property specifies an enum, pick one at random
-            if from_enum := schema["properties"	][property_name].get("enum", None):
+            if from_enum := schema["properties"][property_name].get("enum", None):
                 value = choice(from_enum)
                 json_data[property_name] = value
                 continue
             # Use int32 integers if "format" does not specify int64
             if property_type == "integer":
-                property_format = schema["properties"][property_name].get("format", "int32")
+                property_format = schema["properties"][property_name].get(
+                    "format", "int32"
+                )
                 if property_format == "int64":
                     min_int = -9223372036854775808
                     max_int = 9223372036854775807
                 else:
                     min_int = -2147483648
                     max_int = 2147483647
-                #TODO: add support for exclusiveMinimum and exclusiveMaximum
+                # TODO: add support for exclusiveMinimum and exclusiveMaximum
                 minimum = schema["properties"][property_name].get("minimum", min_int)
                 maximum = schema["properties"][property_name].get("maximum", max_int)
                 value = randint(minimum, maximum)
@@ -434,7 +448,7 @@ class OpenapiExecutors:
                 value = uniform(minimum, maximum)
                 json_data[property_name] = value
                 continue
-            #TODO: byte, binary, date, date-time based on "format"
+            # TODO: byte, binary, date, date-time based on "format"
             if property_type == "string":
                 minimum = schema["properties"][property_name].get("minLength", 0)
                 maximum = schema["properties"][property_name].get("maxLength", 36)
@@ -454,7 +468,9 @@ class OpenapiExecutors:
                 )
                 json_data[property_name] = object_data
                 continue
-            raise NotImplementedError(f"Type '{property_type}' is currently not supported")
+            raise NotImplementedError(
+                f"Type '{property_type}' is currently not supported"
+            )
         return json_data
 
     @keyword
@@ -471,7 +487,7 @@ class OpenapiExecutors:
             if parametrized_part.startswith("{") and parametrized_part.endswith("}"):
                 invalid_url = valid_url.replace(valid_part, uuid4().hex)
                 return invalid_url
-        #TODO: add support for query parameters that can be invalidated
+        # TODO: add support for query parameters that can be invalidated
         return None
 
     @keyword
@@ -492,7 +508,9 @@ class OpenapiExecutors:
         if resource_id:
             json_data[property_name] = resource_id
         post_url: str = run_keyword("get_valid_url", post_endpoint)
-        response: Response = run_keyword("authorized_request", post_url, "POST",json_data)
+        response: Response = run_keyword(
+            "authorized_request", post_url, "POST", json_data
+        )
         if not response.ok:
             logger.debug(
                 f"POST on {post_url} with json {json_data} failed: {response.json()}"
@@ -501,8 +519,8 @@ class OpenapiExecutors:
 
     @keyword
     def ensure_conflict(
-            self, url: str, method: str, dto: Dto, conflict_status_code: int
-        ) -> Dict[str, Any]:
+        self, url: str, method: str, dto: Dto, conflict_status_code: int
+    ) -> Dict[str, Any]:
         json_data = asdict(dto)
         for relation in dto.get_relations():
             if isinstance(relation, UniquePropertyValueConstraint):
@@ -528,9 +546,9 @@ class OpenapiExecutors:
                     "authorized_request", post_url, "POST", post_json
                 )
                 # conflicting resource may already exist
-                assert response.ok or response.status_code == conflict_status_code, (
-                    f"ensure_conflict received {response.status_code}: {response.json()}"
-                )
+                assert (
+                    response.ok or response.status_code == conflict_status_code
+                ), f"ensure_conflict received {response.status_code}: {response.json()}"
                 return json_data
         response = run_keyword("authorized_request", url, "GET")
         if response.ok:
@@ -543,9 +561,9 @@ class OpenapiExecutors:
                 return json_data
         # couldn't retrieve a resource to conflict with, so create one instead
         response = run_keyword("authorized_request", url, "POST", json_data)
-        assert response.ok, (
-            f"ensure_conflict received {response.status_code}: {response.json()}"
-        )
+        assert (
+            response.ok
+        ), f"ensure_conflict received {response.status_code}: {response.json()}"
         return json_data
 
     def resolve_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
@@ -580,11 +598,11 @@ class OpenapiExecutors:
 
     @keyword
     def validate_response(
-            self,
-            endpoint: str,
-            response: Response,
-            original_data: Optional[Dict[str, Any]] = None,
-        ) -> None:
+        self,
+        endpoint: str,
+        response: Response,
+        original_data: Optional[Dict[str, Any]] = None,
+    ) -> None:
         if response.status_code == 204:
             assert not response.content
             return
@@ -614,7 +632,7 @@ class OpenapiExecutors:
             status_code=response.status_code,
         )
         # content should be a single key/value entry, so use tuple assignment
-        content_type, = response_spec["content"].keys()
+        (content_type,) = response_spec["content"].keys()
         if content_type != "application/json":
             # at present, only json reponses are supported
             raise NotImplementedError(f"content_type '{content_type}' not supported")
@@ -641,7 +659,9 @@ class OpenapiExecutors:
                 )
             expected_properties = list_item_schema["properties"]
             for resource in json_response:
-                run_keyword("validate_resource_properties", resource, expected_properties)
+                run_keyword(
+                    "validate_resource_properties", resource, expected_properties
+                )
             # no further validation; value validation of individual resources should
             # be performed on the endpoints for the specific resource
             return None
@@ -653,9 +673,9 @@ class OpenapiExecutors:
         if href := json_response.get("href"):
             url = f"{self.origin}{href}"
             get_response = self.authorized_request(method="GET", url=url)
-            assert get_response.json() == json_response, (
-                f"{get_response.json()} not equal to original {json_response}"
-            )
+            assert (
+                get_response.json() == json_response
+            ), f"{get_response.json()} not equal to original {json_response}"
         # every property that was sucessfully send and that is in the response
         # schema must have the value that was send
         if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
@@ -673,8 +693,7 @@ class OpenapiExecutors:
     @staticmethod
     @keyword
     def validate_resource_properties(
-        resource: Dict[str, Any],
-        schema_properties: Dict[str, Any]
+        resource: Dict[str, Any], schema_properties: Dict[str, Any]
     ) -> None:
         if resource.keys() != schema_properties.keys():
             expected_property_names = sorted(schema_properties.keys())
@@ -689,9 +708,8 @@ class OpenapiExecutors:
     @staticmethod
     @keyword
     def validate_send_response(
-            response: Response,
-            original_data: Optional[Dict[str, Any]] = None
-        ) -> None:
+        response: Response, original_data: Optional[Dict[str, Any]] = None
+    ) -> None:
         reference = response.json()
         prepared_body: bytes = response.request.body
         send_json: Dict[str, Any] = _json.loads(prepared_body.decode("UTF-8"))
@@ -702,10 +720,14 @@ class OpenapiExecutors:
         response_path = reference.get("href", None)
         if response_path and send_path not in response_path:
             property_to_check = send_path.replace(response_path, "")[1:]
-            if reference.get(property_to_check) and isinstance(reference[property_to_check], list):
+            if reference.get(property_to_check) and isinstance(
+                reference[property_to_check], list
+            ):
                 item_list: List[Dict[str, Any]] = reference[property_to_check]
                 # Use the (mandatory) id to get the POSTed resource from the list
-                [reference] = [item for item in item_list if item["id"] == send_json["id"]]
+                [reference] = [
+                    item for item in item_list if item["id"] == send_json["id"]
+                ]
         for key, value in send_json.items():
             # sometimes, a property in the request is not in the response, e.g. a password
             if key not in reference.keys():
@@ -738,8 +760,8 @@ class OpenapiExecutors:
                     )
 
     def get_response_spec(
-            self, endpoint: str, method: str, status_code: int
-        ) -> Dict[str, Any]:
+        self, endpoint: str, method: str, status_code: int
+    ) -> Dict[str, Any]:
         method = method.lower()
         status = str(status_code)
         spec = {**self.openapi_doc}["paths"][endpoint][method]["responses"][status]
@@ -747,11 +769,11 @@ class OpenapiExecutors:
 
     @keyword
     def authorized_request(
-            self,
-            url: str,
-            method: str,
-            json: Optional[Any] = None,
-        ) -> Response:
+        self,
+        url: str,
+        method: str,
+        json: Optional[Any] = None,
+    ) -> Response:
         response = self.session.request(
             method=method,
             url=url,
@@ -764,4 +786,4 @@ class OpenapiExecutors:
 
 
 # Support Robot Framework import mechanism
-openapi_executors = OpenapiExecutors    # pylint: disable=invalid-name
+openapi_executors = OpenapiExecutors  # pylint: disable=invalid-name

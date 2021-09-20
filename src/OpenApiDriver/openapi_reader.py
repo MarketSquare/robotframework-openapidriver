@@ -17,9 +17,9 @@ class Test:
         if not isinstance(other, type(self)):
             return False
         return (
-            self.endpoint == other.endpoint and
-            self.method == other.method and
-            self.response == other.response
+            self.endpoint == other.endpoint
+            and self.method == other.method
+            and self.response == other.response
         )
 
 
@@ -42,11 +42,12 @@ class OpenApiReader(AbstractReaderClass):
         else:
             ignore_list = []
         if ignored_testcases := getattr(self, "ignored_testcases", None):
-            ignored_tests = [Test(*test) for test in ignored_testcases
-            ]
+            ignored_tests = [Test(*test) for test in ignored_testcases]
         else:
             ignored_tests = []
-        ignore_fastapi_default_422: bool = getattr(self, "ignore_fastapi_default_422", False)
+        ignore_fastapi_default_422: bool = getattr(
+            self, "ignore_fastapi_default_422", False
+        )
         for endpoint, methods in endpoints.items():
             for method, method_data in reversed(methods.items()):
                 for response in method_data.get("responses"):
@@ -54,17 +55,22 @@ class OpenApiReader(AbstractReaderClass):
                     # parameters that can be invalidated. Since header-invalidation is
                     # currently not supported, these endpoints can be filtered by a
                     # generic flag
-                    if response == "422" and method in ["get", "delete"] and ignore_fastapi_default_422:
+                    if (
+                        response == "422"
+                        and method in ["get", "delete"]
+                        and ignore_fastapi_default_422
+                    ):
                         continue
                     # default applies to all status codes that are not specified, in
                     # which case we don't know what to expect and thus can't verify
                     if (
-                        response == "default" or response in ignore_list or
-                        Test(endpoint, method, response) in ignored_tests
+                        response == "default"
+                        or response in ignore_list
+                        or Test(endpoint, method, response) in ignored_tests
                     ):
                         continue
                     tag_list: List[str] = []
-                    if tags:= method_data.get("tags", None):
+                    if tags := method_data.get("tags", None):
                         tag_list.extend(tags)
                     tag_list.append(f"Method: {method.upper()}")
                     tag_list.append(f"Response: {response}")
@@ -75,7 +81,7 @@ class OpenApiReader(AbstractReaderClass):
                                 "${method}": method.upper(),
                                 "${status_code}": response,
                             },
-                            tags=tag_list
+                            tags=tag_list,
                         )
                     )
         return test_data

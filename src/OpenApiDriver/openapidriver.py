@@ -114,12 +114,12 @@ from robotlibcore import DynamicCore
 
 try:
     __version__ = version("robotframework-openapidriver")
-except:     # pragma: no cover
+except:  # pragma: no cover
     __version__ = "unknown"
 
 
 class OpenApiDriver(DataDriver, DynamicCore):
-# region: docstring
+    # region: docstring
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]
     for an introduction and examples.
@@ -134,103 +134,104 @@ class OpenApiDriver(DataDriver, DynamicCore):
     - ``Test Invalid Url``
     - ``Test Unauthorized``
     """
-# endregion
+    # endregion
     ROBOT_LIBRARY_VERSION = __version__
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
 
     def __init__(
+        self,
+        source: str,
+        ignored_endpoints: List[str] = [],
+        ignored_responses: List[int] = [],
+        ignored_testcases: List[List[str]] = [],
+        ignore_fastapi_default_422: bool = False,
+        origin: str = "",
+        base_path: str = "",
+        mappings_path: Union[str, Path] = "",
+        username: str = "",
+        password: str = "",
+        auth: Optional[AuthBase] = None,
+        response_validation: ValidationLevel = ValidationLevel.WARN,
+        disable_server_validation: bool = True,
+        require_body_for_invalid_url: bool = False,
+    ):
+        # region: docstring
+        """
+        === source ===
+        An absolute path to an openapi.json or openapi.yaml file or an url to such a file.
+
+        === ignored_endpoints ===
+        A list of endpoints that will be ignored when generating the test cases.
+
+        === ignored_responses ===
+        A list of responses that will be ignored when generating the test cases.
+
+        === ignored_testcases ===
+        A list of specific test cases that, if it would be generated, will be ignored.
+        Specific test cases to ignore must be specified as a ``List`` of ``endpoint``,
+        ``method`` and ``response``.
+
+        === ignore_fastapi_default_422 ===
+        The FastAPI framework generates an openapi.json that, by default, has a 422 response
+        for almost every endpoint. In some cases, this response can only be triggered by
+        request header invalidation, which is currently not supported. When testing a FastApi
+        webserver, you can set this argument to ``True``
+
+        === origin ===
+        The server (and port) of the target server. E.g. ``https://localhost:7000``
+
+        === base_path ===
+        The routing between ``origin`` and the endpoints as found in the ``paths`` in the
+        openapi document. E.g. ``/petshop/v2``.
+
+        === mappings_path ===
+
+
+        === username ===
+        The username to be used for Basic Authentication.
+
+        === password ===
+        The password to be used for Basic Authentication.
+
+        === auth ===
+        A [https://docs.python-requests.org/en/latest/api/#authentication | requests AuthBase instance]
+        to be used for authentication instead of the ``username`` and ``password``.
+
+        === response_validation ===
+        By default, a ``WARN`` is logged when the Response received after a Request does not
+        comply with the schema as defined in the openapi document for the given operation. The
+        following values are supported:
+        - ``DISABLED``: All Response validation errors will be ignored
+        - ``INFO``: Any Response validation erros will be logged at ``INFO`` level
+        - ``WARN``: Any Response validation erros will be logged at ``WARN`` level
+        - ``STRICT``: The Test Case will fail on any Response validation errors
+
+        === disable_server_validation ===
+        If enabled by setting this parameter to ``True``, the Response validation will also
+        include possible errors for Requests made to a server address that is not defined in
+        the list of servers in the openapi document. This generally means that if there is a
+        mismatch, every Test Case will raise this error. Note that ``localhost`` and
+        ``127.0.0.1`` are not considered the same by Response validation.
+
+        === require_body_for_invalid_url ===
+        When a request is made against an invalid url, this usually is because of a "404" request;
+        a request for a resource that does not exist. Depending on API implementation, when a
+        request with a missing or invalid request body is made on a non-existent resource,
+        either a 404 or a 422 or 400 Response is normally returned. If the API being tested
+        processes the request body before checking if the requested resource exists, set
+        this parameter to True.
+        """
+        # endregion
+        DataDriver.__init__(
             self,
-            source: str,
-            ignored_endpoints: List[str] = [],
-            ignored_responses: List[int] = [],
-            ignored_testcases: List[List[str]] = [],
-            ignore_fastapi_default_422: bool = False,
-            origin: str = "",
-            base_path: str = "",
-            mappings_path: Union[str, Path] = "",
-            username: str = "",
-            password: str = "",
-            auth: Optional[AuthBase] = None,
-            response_validation: ValidationLevel = ValidationLevel.WARN,
-            disable_server_validation: bool = True,
-            require_body_for_invalid_url: bool = False,
-        ):
-# region: docstring
-        """
-=== source ===
-An absolute path to an openapi.json or openapi.yaml file or an url to such a file.
-
-=== ignored_endpoints ===
-A list of endpoints that will be ignored when generating the test cases.
-
-=== ignored_responses ===
-A list of responses that will be ignored when generating the test cases.
-
-=== ignored_testcases ===
-A list of specific test cases that, if it would be generated, will be ignored.
-Specific test cases to ignore must be specified as a ``List`` of ``endpoint``,
-``method`` and ``response``.
-
-=== ignore_fastapi_default_422 ===
-The FastAPI framework generates an openapi.json that, by default, has a 422 response
-for almost every endpoint. In some cases, this response can only be triggered by
-request header invalidation, which is currently not supported. When testing a FastApi
-webserver, you can set this argument to ``True``
-
-=== origin ===
-The server (and port) of the target server. E.g. ``https://localhost:7000``
-
-=== base_path ===
-The routing between ``origin`` and the endpoints as found in the ``paths`` in the
-openapi document. E.g. ``/petshop/v2``.
-
-=== mappings_path ===
-
-
-=== username ===
-The username to be used for Basic Authentication.
-
-=== password ===
-The password to be used for Basic Authentication.
-
-=== auth ===
-A [https://docs.python-requests.org/en/latest/api/#authentication | requests AuthBase instance]
-to be used for authentication instead of the ``username`` and ``password``.
-
-=== response_validation ===
-By default, a ``WARN`` is logged when the Response received after a Request does not
-comply with the schema as defined in the openapi document for the given operation. The
-following values are supported:
-- ``DISABLED``: All Response validation errors will be ignored
-- ``INFO``: Any Response validation erros will be logged at ``INFO`` level
-- ``WARN``: Any Response validation erros will be logged at ``WARN`` level
-- ``STRICT``: The Test Case will fail on any Response validation errors
-
-=== disable_server_validation ===
-If enabled by setting this parameter to ``True``, the Response validation will also
-include possible errors for Requests made to a server address that is not defined in
-the list of servers in the openapi document. This generally means that if there is a
-mismatch, every Test Case will raise this error. Note that ``localhost`` and
-``127.0.0.1`` are not considered the same by Response validation.
-
-=== require_body_for_invalid_url ===
-When a request is made against an invalid url, this usually is because of a "404" request;
-a request for a resource that does not exist. Depending on API implementation, when a
-request with a missing or invalid request body is made on a non-existent resource,
-either a 404 or a 422 or 400 Response is normally returned. If the API being tested
-processes the request body before checking if the requested resource exists, set
-this parameter to True.
-        """
-# endregion
-        DataDriver.__init__(self,
-            #FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
+            # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
             # reader_class=OpenApiReader
             reader_class="openapi_reader",
             source=source,
-            ignored_endpoints = ignored_endpoints,
-            ignored_responses = ignored_responses,
-            ignored_testcases = ignored_testcases,
-            ignore_fastapi_default_422 = ignore_fastapi_default_422,
+            ignored_endpoints=ignored_endpoints,
+            ignored_responses=ignored_responses,
+            ignored_testcases=ignored_testcases,
+            ignore_fastapi_default_422=ignore_fastapi_default_422,
         )
 
         mappings_path = Path(mappings_path).as_posix()
@@ -248,10 +249,11 @@ this parameter to True.
         )
         DynamicCore.__init__(self, [openapi_executors])
 
-    #FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
+    # FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
     # accepts an AbstractReaderClass subclass as reader_class argument
     def _data_reader(self) -> AbstractReaderClass:
         return OpenApiReader(self.reader_config)
 
+
 # Support Robot Framework import mechanism
-openapidriver = OpenApiDriver    # pylint: disable=invalid-name
+openapidriver = OpenApiDriver  # pylint: disable=invalid-name

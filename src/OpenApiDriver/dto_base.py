@@ -16,6 +16,7 @@ class ResourceRelation(ABC):
 @dataclass
 class PropertyValueConstraint(ResourceRelation):
     """The allowed values for property_name."""
+
     property_name: str
     values: List[Any]
     error_code: int = 422
@@ -24,6 +25,7 @@ class PropertyValueConstraint(ResourceRelation):
 @dataclass
 class IdDependency(ResourceRelation):
     """The path where a valid id for the propery_name can be gotten (using GET)"""
+
     property_name: str
     get_path: str
     operation_id: Optional[str] = None
@@ -33,6 +35,7 @@ class IdDependency(ResourceRelation):
 @dataclass
 class IdReference(ResourceRelation):
     """The path where a resource that needs this resource's id can be created (using POST)"""
+
     property_name: str
     post_path: str
     error_code: int = 422
@@ -41,6 +44,7 @@ class IdReference(ResourceRelation):
 @dataclass
 class UniquePropertyValueConstraint(ResourceRelation):
     """The value of the property must be unique within the resource scope."""
+
     property_name: str
     value: Any
     error_code: int = 422
@@ -67,9 +71,8 @@ class DtoBase(ABC):
         return relations
 
     def get_invalidated_data(
-            self, schema: Dict[str, Any], status_code: int
-        ) -> Dict[str, Any]:
-
+        self, schema: Dict[str, Any], status_code: int
+    ) -> Dict[str, Any]:
         def get_invalid_value_from_enum(values: List[Any], value_type: str):
             if value_type == "string":
                 invalid_value: Any = ""
@@ -85,7 +88,7 @@ class DtoBase(ABC):
             for value in values:
                 if value_type in ["string", "integer", "number"]:
                     invalid_value += value
-                #TODO: can the values to choose from in an enum be array/object in JSON?
+                # TODO: can the values to choose from in an enum be array/object in JSON?
                 if value_type == "array":
                     invalid_value.extend(value)
                 if value_type == "object":
@@ -97,7 +100,10 @@ class DtoBase(ABC):
         relations = self.get_relations()
         shuffle(relations)
         for relation in relations:
-            if isinstance(relation, IdDependency) and status_code == relation.error_code:
+            if (
+                isinstance(relation, IdDependency)
+                and status_code == relation.error_code
+            ):
                 invalid_value = uuid4().hex
                 logger.debug(
                     f"Breaking IdDependency for status_code {status_code}: replacing "
@@ -125,7 +131,10 @@ class DtoBase(ABC):
                 if invalidated_value is not None:
                     properties[property_name] = invalidated_value
                     return properties
-            if property_type == "boolean" and property_name in constrained_property_names:
+            if (
+                property_type == "boolean"
+                and property_name in constrained_property_names
+            ):
                 properties[property_name] = not current_value
                 return properties
             if property_type == "integer":
@@ -136,9 +145,9 @@ class DtoBase(ABC):
                     properties[property_name] = maximum + 1
                     return properties
                 if property_name in constrained_property_names:
-                    #TODO: figure out a good generic approach, also consider multiple
+                    # TODO: figure out a good generic approach, also consider multiple
                     # constraints on the same property
-                    #HACK: this int is way out of the json supported int range
+                    # HACK: this int is way out of the json supported int range
                     properties[property_name] = uuid4().int
                     return properties
             if property_type == "number":
@@ -149,16 +158,16 @@ class DtoBase(ABC):
                     properties[property_name] = maximum + 1
                     return properties
                 if property_name in constrained_property_names:
-                    #TODO: figure out a good generic approach, also consider multiple
+                    # TODO: figure out a good generic approach, also consider multiple
                     # constraints on the same property
-                    #HACK: this float is way out of the json supported float range
+                    # HACK: this float is way out of the json supported float range
                     properties[property_name] = uuid4().int / 3.14
                     return properties
             if property_type == "string":
                 if minimum := property_data.get("minLength"):
                     if minimum > 0:
                         # if there is a minimum length, send 1 character less
-                        properties[property_name] = current_value[0:minimum-1]
+                        properties[property_name] = current_value[0 : minimum - 1]
                         return properties
                 if maximum := property_data.get("maxLength"):
                     properties[property_name] = current_value + uuid4().hex
@@ -175,19 +184,14 @@ class DtoBase(ABC):
             else:
                 # Since int / float / bool can always be cast to sting,
                 # change the string to a nested object
-                properties[property_name] = [
-                    {
-                        "invalid": [
-                            None
-                        ]
-                    }
-                ]
+                properties[property_name] = [{"invalid": [None]}]
         return properties
 
 
 @dataclass
 class DataClassMixin:
     """Mixin to add dataclass functionality to an ABC."""
+
 
 class Dto(DataClassMixin, DtoBase):
     """Abstract base class to support custom mappings of resource dependencies."""

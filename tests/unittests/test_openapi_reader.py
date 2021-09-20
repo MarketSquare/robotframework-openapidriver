@@ -3,8 +3,8 @@ import unittest
 from DataDriver.ReaderConfig import ReaderConfig
 from OpenApiDriver.openapi_reader import OpenApiReader, Test
 
-class TestInit(unittest.TestCase):
 
+class TestInit(unittest.TestCase):
     def test_get_data_from_invalid_source(self):
         reader = OpenApiReader(reader_config=ReaderConfig(source=None))
         self.assertRaises(
@@ -17,5 +17,5 @@ class TestInit(unittest.TestCase):
         self.assertFalse(test == ("/", "GET", 200))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

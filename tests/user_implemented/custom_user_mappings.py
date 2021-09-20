@@ -24,7 +24,7 @@ class WagegroupDto(Dto):
                 property_name="wagegroup_id",
                 post_path="/employees",
                 error_code=406,
-            )
+            ),
         ]
         return relations
 

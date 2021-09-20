@@ -65,6 +65,11 @@ def get_root() -> Message:
     return Message(message="Welcome!")
 
 
+@app.get("/messages", status_code=200, response_model=List[Message])
+def get_messages() -> List[Message]:
+    return []
+
+
 @app.post(
     "/wagegroups",
     status_code=201,
@@ -116,7 +121,7 @@ def delete_wagegroup(wagegroup_id: str) -> None:
     if used_by:
         raise HTTPException(
             status_code=406,
-            detail=f"Wage group still in use by {len(used_by)} employees."
+            detail=f"Wage group still in use by {len(used_by)} employees.",
         )
     WAGE_GROUPS.pop(wagegroup_id)
 
@@ -131,8 +136,7 @@ def post_employee(employee: Employee) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
     if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(
-            status_code=451,
-            detail=f"Wage group with id {wagegroup_id} does not exist."
+            status_code=451, detail=f"Wage group with id {wagegroup_id} does not exist."
         )
     new_employee = EmployeeDetails(
         id=uuid4().hex,

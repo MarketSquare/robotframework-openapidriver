@@ -1,7 +1,7 @@
 from importlib.metadata import version
 
 from OpenApiDriver.openapidriver import OpenApiDriver
-from OpenApiDriver.dto_base import  (
+from OpenApiDriver.dto_base import (
     Relation,
     Dto,
     IdDependency,
@@ -12,5 +12,5 @@ from OpenApiDriver.dto_base import  (
 
 try:
     __version__ = version("robotframework-openapidriver")
-except:     # pragma: no cover
+except:  # pragma: no cover
     pass
