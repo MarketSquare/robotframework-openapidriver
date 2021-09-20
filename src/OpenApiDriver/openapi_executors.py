@@ -480,11 +480,15 @@ class OpenapiExecutors:
         endpoint_parts.pop(0)
         parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
         parameterized_url = self.base_url + parameterized_endpoint
-        for parametrized_part, valid_part in zip(
-            reversed(parameterized_url.split("/")), reversed(valid_url.split("/"))
+        valid_url_parts = list(reversed(valid_url.split("/")))
+        parameterized_parts = reversed(parameterized_url.split("/"))
+        for index, (parameterized_part, _) in enumerate(
+            zip(parameterized_parts, valid_url_parts)
         ):
-            if parametrized_part.startswith("{") and parametrized_part.endswith("}"):
-                invalid_url = valid_url.replace(valid_part, uuid4().hex)
+            if parameterized_part.startswith("{") and parameterized_part.endswith("}"):
+                valid_url_parts[index] = uuid4().hex
+                valid_url_parts.reverse()
+                invalid_url = "/".join(valid_url_parts)
                 return invalid_url
         # TODO: add support for query parameters that can be invalidated
         return None
