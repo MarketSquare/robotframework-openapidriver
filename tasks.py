@@ -43,6 +43,19 @@ def tests(context):
 
 
 @task
+def lint(context):
+    subprocess.run(f"mypy {project_root}", shell=True)
+    subprocess.run(f"pylint {project_root}/src/OpenApiDriver", shell=True)
+
+
+@task
+def format_code(context):
+    subprocess.run(f"black {project_root}", shell=True)
+    subprocess.run(f"isort {project_root}", shell=True)
+    subprocess.run(f"robotidy {project_root}", shell=True)
+
+
+@task
 def libdoc(context):
     json_file = f"{project_root}/tests/files/petstore_openapi.json"
     source = f"{project_root}/src/OpenApiDriver/openapidriver.py::{json_file}"
@@ -79,7 +92,7 @@ def readme(context):
         readme.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
 
 
-@task(libdoc, libspec, readme)
+@task(format_code, libdoc, libspec, readme)
 def build(context):
     subprocess.run("poetry build", shell=True)
 
