@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Response
-from pydantic import BaseModel, conint, constr, confloat
+from pydantic import BaseModel, confloat, conint, constr
 
 app = FastAPI()
 

@@ -1,12 +1,8 @@
 from importlib import import_module
 from logging import getLogger
-
 from typing import Any, Dict, List, Tuple, Type
 
-from OpenApiDriver.dto_base import (
-    Dto,
-    Relation,
-)
+from OpenApiDriver.dto_base import Dto, Relation
 
 logger = getLogger(__name__)
 

@@ -3,10 +3,10 @@ from typing import Any, Dict, List, Tuple
 
 from OpenApiDriver import (
     Dto,
-    Relation,
     IdDependency,
     IdReference,
     PropertyValueConstraint,
+    Relation,
     UniquePropertyValueConstraint,
 )
 

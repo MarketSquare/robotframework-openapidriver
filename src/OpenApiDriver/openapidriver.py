@@ -103,14 +103,13 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import List, Optional, Union
 
-from OpenApiDriver.openapi_reader import OpenApiReader
-from OpenApiDriver.openapi_executors import OpenapiExecutors, ValidationLevel
-
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from requests.auth import AuthBase
 from robotlibcore import DynamicCore
 
+from OpenApiDriver.openapi_executors import OpenapiExecutors, ValidationLevel
+from OpenApiDriver.openapi_reader import OpenApiReader
 
 try:
     __version__ = version("robotframework-openapidriver")

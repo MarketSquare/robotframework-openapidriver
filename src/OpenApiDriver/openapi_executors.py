@@ -12,12 +12,12 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from uuid import uuid4
 
 from openapi_core import create_spec
-from openapi_core.validation.response.validators import ResponseValidator
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
+from openapi_core.validation.response.validators import ResponseValidator
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
 from requests import Response, Session
@@ -33,8 +33,7 @@ from OpenApiDriver.dto_base import (
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
-from OpenApiDriver.dto_utils import get_dto_class, DefaultDto
-
+from OpenApiDriver.dto_utils import DefaultDto, get_dto_class
 
 run_keyword = BuiltIn().run_keyword
 
