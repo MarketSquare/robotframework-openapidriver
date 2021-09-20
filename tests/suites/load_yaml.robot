@@ -1,22 +1,20 @@
 *** Settings ***
-Library            OpenApiDriver
-...                    source=${root}/tests/files/petstore_openapi.yaml
-...                    ignored_endpoints=${ignored_endpoints}
-Test Template      Do Nothing
+Library             OpenApiDriver
+...                 source=${root}/tests/files/petstore_openapi.yaml
+...                 ignored_endpoints=${ignored_endpoints}
 
+Test Template       Do Nothing
+
+*** Variables ***
+@{ignored_endpoints}=
+...                         /pet    /pet/findByStatus    /pet/findByTags    /pet/{petId}
+...                         /store/inventory    /store/order    /store/order/{orderId}
+...                         /user/createWithList    /user/login    /user/{username}
 
 *** Test Cases ***
 openapi.yaml test for ${method} on ${endpoint} where ${status_code} is expected
 
-
-*** Keywords *** ***
+*** Keywords ***
 Do Nothing
     [Arguments]    ${endpoint}    ${method}    ${status_code}
     No Operation
-
-
-*** Variables ***
-@{ignored_endpoints}=
-...    /pet    /pet/findByStatus    /pet/findByTags    /pet/{petId}
-...    /store/inventory    /store/order    /store/order/{orderId}
-...    /user/createWithList    /user/login    /user/{username}
