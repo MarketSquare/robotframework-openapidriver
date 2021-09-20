@@ -31,12 +31,14 @@ openapi-core = "*"
 openapi-spec-validator = "*"
 
 [tool.poetry.dev-dependencies]
+black = "*"
+isort = "*"
+pylint = "*"
 mypy = "*"
 types-requests = "^2.25.6"
 invoke = "*"
-docutils = "*"
-Pygments = "*"
 robotframework-stacktrace = "*"
+robotframework-tidy = "*"
 uvicorn = "*"
 fastapi = "*"
 coverage = {version = "^5.5", extras = ["toml"]}
@@ -57,5 +59,27 @@ exclude_lines = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["DataDriver.*", "prance.*", "robot.*", "openapi_core.*", "robotlibcore"]
+module = ["DataDriver.*", "prance.*", "robot.*", "openapi_core.*", "robotlibcore", "uvicorn"]
 ignore_missing_imports = true
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.isort]
+src_paths = [
+    "src"
+]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+combine_as_imports = true
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = ["W1203"]
+
+[tool.pylint.'FORMAT CHECKER']
+max-line-length=120
