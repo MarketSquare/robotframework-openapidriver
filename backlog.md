@@ -1,0 +1,8 @@
+- source / origin / base_path default from openapi doc
+- support alternative id property names
+- support running test cases in random order
+- support * in ignored_endpoints for bulk filtering
+- warn for empty GET responses
+- suppress openapi_core debug logging
+- add authorization to testserver
+- support multiple reasons for a given response to be triggered
