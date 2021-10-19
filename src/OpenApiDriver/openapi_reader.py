@@ -28,7 +28,7 @@ class OpenApiReader(AbstractReaderClass):
         test_data: List[TestCaseData] = []
 
         try:
-            parser = ResolvingParser(getattr(self, "source", None))
+            parser = ResolvingParser(getattr(self, "source", None), backend = "openapi-spec-validator")
         except (ResolutionError, AssertionError) as exception:
             BuiltIn().fatal_error(
                 f"Exception while trying to load openapi spec from source: {exception}"

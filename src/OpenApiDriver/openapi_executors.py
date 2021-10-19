@@ -63,7 +63,7 @@ class OpenapiExecutors:
         require_body_for_invalid_url: bool = False,
     ) -> None:
         try:
-            parser = ResolvingParser(source)
+            parser = ResolvingParser(source, backend = "openapi-spec-validator")
         except ResolutionError as exception:
             BuiltIn().fatal_error(
                 f"Exception while trying to load openapi spec from source: {exception}"
