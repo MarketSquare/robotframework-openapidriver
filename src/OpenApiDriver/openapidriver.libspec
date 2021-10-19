@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-09-20T11:18:50Z" specversion="3" source="openapidriver.py" lineno="120">
-<version>0.1.0a5</version>
+<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-10-19T14:24:20Z" specversion="3" source="openapidriver.py" lineno="120">
+<version>2.0.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;
 &lt;p&gt;Most of the provided keywords are for internal use by the library (for example to ensure the result logs provide insight into the executed steps) but a number of them are intended to be used as &lt;code&gt;Test Template&lt;/code&gt; or within the &lt;code&gt;Keyword&lt;/code&gt; that serves as the &lt;code&gt;Test Template&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;The following Keywords are intended to be used in Test Suites:&lt;/p&gt;
