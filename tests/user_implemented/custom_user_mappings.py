@@ -5,6 +5,7 @@ from OpenApiDriver import (
     Dto,
     IdDependency,
     IdReference,
+    PathPropertiesConstraint,
     PropertyValueConstraint,
     Relation,
     UniquePropertyValueConstraint,
@@ -42,8 +43,20 @@ class EmployeeDto(Dto):
         return relations
 
 
+class EnergyLabelDto(Dto):
+    @staticmethod
+    def get_relations() -> List[Relation]:
+        relations = [
+            PathPropertiesConstraint(
+                path="/energy_label/1111AA/10"
+            ),
+        ]
+        return relations
+
+
 DTO_MAPPING: Dict[Tuple[Any, Any], Any] = {
-    (r"/wagegroups", "post"): WagegroupDto,
-    (r"/wagegroups/{wagegroup_id}", "delete"): WagegroupDto,
-    (r"/employees", "post"): EmployeeDto,
+    ("/wagegroups", "post"): WagegroupDto,
+    ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDto,
+    ("/employees", "post"): EmployeeDto,
+    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
 }

@@ -24,7 +24,7 @@ class get_dto_class:
 
     def __call__(self, endpoint: str, method: str) -> Type[Dto]:
         try:
-            return self.dto_mapping[(endpoint, method)]
+            return self.dto_mapping[(endpoint, method.lower())]
         except KeyError:
             logger.debug(f"No Dto mapping for {endpoint} {method}.")
             return DefaultDto

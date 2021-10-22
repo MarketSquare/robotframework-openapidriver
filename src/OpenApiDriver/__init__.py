@@ -4,6 +4,7 @@ from OpenApiDriver.dto_base import (
     Dto,
     IdDependency,
     IdReference,
+    PathPropertiesConstraint,
     PropertyValueConstraint,
     Relation,
     UniquePropertyValueConstraint,

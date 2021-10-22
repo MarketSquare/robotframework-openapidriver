@@ -86,9 +86,8 @@ data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are currently supported.
 - The unique identifier for a resource as used in the ``paths`` section of the
     openapi document is expected to be the ``id`` property on a resource of that type.
-- The ``id`` is expected to be a UUID (v4).
-- No support for query strings at this time.
-- No support for headers.
+- Limited support for query strings.
+- No support for headers at this time.
 - Limited support for authentication
     - ``username`` and ``password`` can be passed as parameters to use Basic Authentication
     - A [requests AuthBase instance](https://docs.python-requests.org/en/latest/api/#authentication)

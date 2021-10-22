@@ -14,6 +14,15 @@ class ResourceRelation(ABC):
 
 
 @dataclass
+class PathPropertiesConstraint(ResourceRelation):
+    """The resolved path for the endpoint."""
+
+    path: str
+    property_name: str = "id"
+    error_code: int = 404
+
+
+@dataclass
 class PropertyValueConstraint(ResourceRelation):
     """The allowed values for property_name."""
 
@@ -24,7 +33,7 @@ class PropertyValueConstraint(ResourceRelation):
 
 @dataclass
 class IdDependency(ResourceRelation):
-    """The path where a valid id for the propery_name can be gotten (using GET)"""
+    """The path where a valid id for the propery_name can be gotten (using GET)."""
 
     property_name: str
     get_path: str
@@ -34,7 +43,7 @@ class IdDependency(ResourceRelation):
 
 @dataclass
 class IdReference(ResourceRelation):
-    """The path where a resource that needs this resource's id can be created (using POST)"""
+    """The path where a resource that needs this resource's id can be created (using POST)."""
 
     property_name: str
     post_path: str

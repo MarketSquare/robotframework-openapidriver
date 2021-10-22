@@ -1,12 +1,23 @@
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Header, Path, Query
 from pydantic import BaseModel, confloat, conint, constr
 
 app = FastAPI()
+
+
+class EnergyLabel(str, Enum):
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+    F = "F"
+    G = "G"
+    X = "No registered label"
 
 
 class WeekDay(str, Enum):
@@ -58,16 +69,50 @@ class EmployeeUpdate(BaseModel):
 WAGE_GROUPS: Dict[str, WageGroup] = {}
 EMPLOYEES: Dict[str, EmployeeDetails] = {}
 EMPLOYEE_NUMBERS = iter(range(1, 1000))
+ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
+    "1111AA": {
+        10: {
+            "": EnergyLabel.A,
+            "C": EnergyLabel.C,
+        },
+    }
+}
 
 
 @app.get("/", status_code=200, response_model=Message)
-def get_root() -> Message:
-    return Message(message="Welcome!")
+def get_root(*, name_from_header: str = Header(""), title: str = Header("")) -> Message:
+    name = name_from_header if name_from_header else "stranger"
+    return Message(message=f"Welcome {title}{name}!")
 
 
-@app.get("/messages", status_code=200, response_model=List[Message])
-def get_messages() -> List[Message]:
-    return []
+@app.get(
+    "/message",
+    status_code=200,
+    response_model=Message,
+    responses={403: {"model": Detail}}
+)
+def get_message(*, secret_code: int = Header(...)) -> Message:
+    if secret_code != 42:
+        raise HTTPException(status_code=403, detail="Incorrect code!")
+    return Message(message="Welcome, agent HAL")
+
+
+@app.get(
+    "/energy_label/{zipcode}/{home_number}",
+    status_code=200,
+    response_model=Message,
+)
+def get_energy_label(
+    zipcode: str = Path(..., min_length=6, max_length=6),
+    home_number: int = Path(..., ge=1),
+    extension: Optional[str] = Query(None, min_length=1, max_length=99),
+) -> Message:
+    if not (labels_for_zipcode := ENERGY_LABELS.get(zipcode)):
+        return Message(message=EnergyLabel.X)
+    if not (labels_for_home_number := labels_for_zipcode.get(home_number)):
+        return Message(message=EnergyLabel.X)
+    extension = "" if extension is None else extension
+    return Message(message=labels_for_home_number.get(extension, EnergyLabel.X))
 
 
 @app.post(
@@ -173,6 +218,11 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetail
     updated_employee = stored_employee_data.copy(update=employee_update_data)
     EMPLOYEES[employee_id] = updated_employee
     return updated_employee
+
+
+@app.get("/available_employees", status_code=200, response_model=List[EmployeeDetails])
+def get_available_employees(weekday: WeekDay = Query(...)) -> List[EmployeeDetails]:
+    return [e for e in EMPLOYEES.values() if e.parttime_day != weekday]
 
 
 def main():
