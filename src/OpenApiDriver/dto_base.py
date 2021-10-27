@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
 from logging import getLogger
 from random import shuffle
@@ -9,6 +9,8 @@ logger = getLogger(__name__)
 
 
 class ResourceRelation(ABC):
+    """ABC for all resource relations or restrictions within the API."""
+
     property_name: str
     error_code: int
 
@@ -62,6 +64,7 @@ class UniquePropertyValueConstraint(ResourceRelation):
 Relation = Union[
     IdDependency,
     IdReference,
+    PathPropertiesConstraint,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 ]
@@ -69,13 +72,22 @@ Relation = Union[
 
 class DtoBase(ABC):
     @staticmethod
-    @abstractmethod
-    def get_relations() -> List[Relation]:
-        raise NotImplementedError
+    def get_parameter_relations() -> List[Relation]:
+        return []
 
-    def get_relation_for_error_code(self, error_code: int) -> List[Relation]:
+    @staticmethod
+    def get_relations() -> List[Relation]:
+        return []
+
+    def get_relations_for_error_code(self, error_code: int) -> List[Relation]:
         relations: List[Relation] = [
             r for r in self.get_relations() if r.error_code == error_code
+        ]
+        return relations
+
+    def get_parameter_relations_for_error_code(self, error_code: int) -> List[Relation]:
+        relations: List[Relation] = [
+            r for r in self.get_parameter_relations() if r.error_code == error_code
         ]
         return relations
 

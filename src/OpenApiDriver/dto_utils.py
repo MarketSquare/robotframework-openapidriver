@@ -1,19 +1,22 @@
+from dataclasses import dataclass
 from importlib import import_module
 from logging import getLogger
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Dict, Tuple, Type
 
-from OpenApiDriver.dto_base import Dto, Relation
+from OpenApiDriver.dto_base import Dto
 
 logger = getLogger(__name__)
 
 
+@dataclass
 class DefaultDto(Dto):
-    @staticmethod
-    def get_relations() -> List[Relation]:
-        return []
+    """A default Dto that can be instantiated."""
 
 
+# pylint: disable=invalid-name, too-few-public-methods
 class get_dto_class:
+    """Callable class to return Dtos from user-implemented mappings file."""
+
     def __init__(self, mappings_module_name: str) -> None:
         try:
             mappings_module = import_module(mappings_module_name)
