@@ -59,7 +59,15 @@ exclude_lines = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["DataDriver.*", "prance.*", "robot.*", "openapi_core.*", "robotlibcore", "uvicorn"]
+module = [
+    "DataDriver.*",
+    "prance.*",
+    "robot.*",
+    "openapi_core.*",
+    "robotlibcore",
+    "uvicorn",
+    "invoke",
+]
 ignore_missing_imports = true
 
 [tool.black]
