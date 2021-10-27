@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Response, Header, Path, Query
+from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
 from pydantic import BaseModel, confloat, conint, constr
 
 app = FastAPI()
@@ -89,11 +89,13 @@ def get_root(*, name_from_header: str = Header(""), title: str = Header("")) -> 
     "/message",
     status_code=200,
     response_model=Message,
-    responses={403: {"model": Detail}}
+    responses={403: {"model": Detail}},
 )
 def get_message(*, secret_code: int = Header(...)) -> Message:
     if secret_code != 42:
-        raise HTTPException(status_code=403, detail="Incorrect code!")
+        raise HTTPException(
+            status_code=403, detail=f"Provided code {secret_code} is incorrect!"
+        )
     return Message(message="Welcome, agent HAL")
 
 

@@ -15,7 +15,7 @@ from OpenApiDriver import (
 class WagegroupDto(Dto):
     @staticmethod
     def get_relations() -> List[Relation]:
-        relations = [
+        relations: List[Relation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -33,7 +33,7 @@ class WagegroupDto(Dto):
 class EmployeeDto(Dto):
     @staticmethod
     def get_relations() -> List[Relation]:
-        relations = [
+        relations: List[Relation] = [
             IdDependency(
                 property_name="wagegroup_id",
                 get_path="/wagegroups",
@@ -46,10 +46,21 @@ class EmployeeDto(Dto):
 class EnergyLabelDto(Dto):
     @staticmethod
     def get_relations() -> List[Relation]:
-        relations = [
-            PathPropertiesConstraint(
-                path="/energy_label/1111AA/10"
-            ),
+        relations: List[Relation] = [
+            PathPropertiesConstraint(path="/energy_label/1111AA/10"),
+        ]
+        return relations
+
+
+class MessageDto(Dto):
+    @staticmethod
+    def get_parameter_relations() -> List[Relation]:
+        relations: List[Relation] = [
+            PropertyValueConstraint(
+                property_name="secret-code",  # note: property name converted by FastAPI
+                values=[42],
+                error_code=403,
+            )
         ]
         return relations
 
@@ -59,4 +70,5 @@ DTO_MAPPING: Dict[Tuple[Any, Any], Any] = {
     ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDto,
     ("/employees", "post"): EmployeeDto,
     ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
+    ("/message", "get"): MessageDto,
 }
