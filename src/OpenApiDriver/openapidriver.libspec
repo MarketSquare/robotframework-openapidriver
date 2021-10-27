@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-10-19T14:24:20Z" specversion="3" source="openapidriver.py" lineno="120">
+<keywordspec name="openapidriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-10-27T12:48:19Z" specversion="3" source="openapidriver.py" lineno="119">
 <version>2.0.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;
 &lt;p&gt;Most of the provided keywords are for internal use by the library (for example to ensure the result logs provide insight into the executed steps) but a number of them are intended to be used as &lt;code&gt;Test Template&lt;/code&gt; or within the &lt;code&gt;Keyword&lt;/code&gt; that serves as the &lt;code&gt;Test Template&lt;/code&gt;.&lt;/p&gt;
@@ -12,26 +12,29 @@
 <tags>
 </tags>
 <inits>
-<init name="Init" lineno="140">
-<arguments repr="source: str, ignored_endpoints: List[str] = [], ignored_responses: List[int] = [], ignored_testcases: List[typing.List[str]] = [], ignore_fastapi_default_422: bool = False, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False">
+<init name="Init" lineno="139">
+<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, ignore_fastapi_default_422: bool = False, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type>str</type>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] = []">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] | None = None">
 <name>ignored_endpoints</name>
 <type>List[str]</type>
-<default>[]</default>
+<type>None</type>
+<default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] = []">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] | None = None">
 <name>ignored_responses</name>
 <type>List[int]</type>
-<default>[]</default>
+<type>None</type>
+<default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[typing.List[str]] = []">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[typing.List[str]] | None = None">
 <name>ignored_testcases</name>
 <type>List[typing.List[str]]</type>
-<default>[]</default>
+<type>None</type>
+<default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignore_fastapi_default_422: bool = False">
 <name>ignore_fastapi_default_422</name>
@@ -85,6 +88,11 @@
 <type>bool</type>
 <default>False</default>
 </arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_property_default_response: int = 422">
+<name>invalid_property_default_response</name>
+<type>int</type>
+<default>422</default>
+</arg>
 </arguments>
 <doc>&lt;h4&gt;source&lt;/h4&gt;
 &lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
@@ -118,13 +126,15 @@
 &lt;h4&gt;disable_server_validation&lt;/h4&gt;
 &lt;p&gt;If enabled by setting this parameter to &lt;code&gt;True&lt;/code&gt;, the Response validation will also include possible errors for Requests made to a server address that is not defined in the list of servers in the openapi document. This generally means that if there is a mismatch, every Test Case will raise this error. Note that &lt;code&gt;localhost&lt;/code&gt; and &lt;code&gt;127.0.0.1&lt;/code&gt; are not considered the same by Response validation.&lt;/p&gt;
 &lt;h4&gt;require_body_for_invalid_url&lt;/h4&gt;
-&lt;p&gt;When a request is made against an invalid url, this usually is because of a "404" request; a request for a resource that does not exist. Depending on API implementation, when a request with a missing or invalid request body is made on a non-existent resource, either a 404 or a 422 or 400 Response is normally returned. If the API being tested processes the request body before checking if the requested resource exists, set this parameter to True.&lt;/p&gt;</doc>
+&lt;p&gt;When a request is made against an invalid url, this usually is because of a "404" request; a request for a resource that does not exist. Depending on API implementation, when a request with a missing or invalid request body is made on a non-existent resource, either a 404 or a 422 or 400 Response is normally returned. If the API being tested processes the request body before checking if the requested resource exists, set this parameter to True.&lt;/p&gt;
+&lt;h4&gt;invalid_property_default_response&lt;/h4&gt;
+&lt;p&gt;The default response code for requests with a JSON body that does not comply with the schema. Example: a value outside the specified range or a string value for a property defined as integer in the schema.&lt;/p&gt;</doc>
 <shortdoc>=== source === An absolute path to an openapi.json or openapi.yaml file or an url to such a file.</shortdoc>
 </init>
 </inits>
 <keywords>
-<kw name="Authorized Request" source="openapi_executors.py" lineno="774">
-<arguments repr="url: str, method: str, json: Any | None = None">
+<kw name="Authorized Request" source="openapi_executors.py" lineno="1001">
+<arguments repr="url: str, method: str, params: Dict[str, typing.Any] | None = None, headers: Dict[str, typing.Any] | None = None, json: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
 <type>str</type>
@@ -133,9 +143,21 @@
 <name>method</name>
 <type>str</type>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="json: Any | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="params: Dict[str, typing.Any] | None = None">
+<name>params</name>
+<type>Dict[str, typing.Any]</type>
+<type>None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="headers: Dict[str, typing.Any] | None = None">
+<name>headers</name>
+<type>Dict[str, typing.Any]</type>
+<type>None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="json: Dict[str, typing.Any] | None = None">
 <name>json</name>
-<type>Any</type>
+<type>Dict[str, typing.Any]</type>
 <type>None</type>
 <default>None</default>
 </arg>
@@ -143,7 +165,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Ensure Conflict" source="openapi_executors.py" lineno="524">
+<kw name="Ensure Conflict" source="openapi_executors.py" lineno="732">
 <arguments repr="url: str, method: str, dto: Dto, conflict_status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -165,7 +187,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Ensure In Use" source="openapi_executors.py" lineno="497">
+<kw name="Ensure In Use" source="openapi_executors.py" lineno="702">
 <arguments repr="url: str, resource_relation: IdReference">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -179,7 +201,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Dto Data" source="openapi_executors.py" lineno="364">
+<kw name="Get Dto Data" source="openapi_executors.py" lineno="501">
 <arguments repr="schema: Dict[str, typing.Any], dto: Type[OpenApiDriver.dto_base.Dto], operation_id: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema: Dict[str, typing.Any]">
 <name>schema</name>
@@ -197,7 +219,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="476">
+<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="615">
 <arguments repr="valid_url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="valid_url: str">
 <name>valid_url</name>
@@ -207,34 +229,42 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="228">
-<arguments repr="endpoint: str">
+<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="302">
+<arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
 <type>str</type>
 </arg>
-</arguments>
-<doc/>
-<shortdoc/>
-</kw>
-<kw name="Get Valid Url" source="openapi_executors.py" lineno="211">
-<arguments repr="endpoint: str">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
-<type>str</type>
-</arg>
-</arguments>
-<doc/>
-<shortdoc/>
-</kw>
-<kw name="Test Endpoint" source="openapi_executors.py" lineno="139">
-<arguments repr="method: str, endpoint: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
 <type>str</type>
 </arg>
+</arguments>
+<doc/>
+<shortdoc/>
+</kw>
+<kw name="Get Valid Url" source="openapi_executors.py" lineno="279">
+<arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
+<type>str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type>str</type>
+</arg>
+</arguments>
+<doc/>
+<shortdoc/>
+</kw>
+<kw name="Test Endpoint" source="openapi_executors.py" lineno="156">
+<arguments repr="endpoint: str, method: str, status_code: int">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
+<name>endpoint</name>
+<type>str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
 <type>str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
@@ -245,7 +275,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Test Invalid Url" source="openapi_executors.py" lineno="116">
+<kw name="Test Invalid Url" source="openapi_executors.py" lineno="129">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -264,7 +294,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Test Unauthorized" source="openapi_executors.py" lineno="106">
+<kw name="Test Unauthorized" source="openapi_executors.py" lineno="119">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -278,7 +308,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="698">
+<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="925">
 <arguments repr="resource: Dict[str, typing.Any], schema_properties: Dict[str, typing.Any]">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="resource: Dict[str, typing.Any]">
 <name>resource</name>
@@ -292,7 +322,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Validate Response" source="openapi_executors.py" lineno="603">
+<kw name="Validate Response" source="openapi_executors.py" lineno="824">
 <arguments repr="endpoint: str, response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -312,7 +342,7 @@
 <doc/>
 <shortdoc/>
 </kw>
-<kw name="Validate Send Response" source="openapi_executors.py" lineno="713">
+<kw name="Validate Send Response" source="openapi_executors.py" lineno="940">
 <arguments repr="response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>

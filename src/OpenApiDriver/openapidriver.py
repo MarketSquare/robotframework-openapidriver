@@ -139,9 +139,9 @@ class OpenApiDriver(DataDriver, DynamicCore):
     def __init__(
         self,
         source: str,
-        ignored_endpoints: List[str] = [],
-        ignored_responses: List[int] = [],
-        ignored_testcases: List[List[str]] = [],
+        ignored_endpoints: Optional[List[str]] = None,
+        ignored_responses: Optional[List[int]] = None,
+        ignored_testcases: Optional[List[List[str]]] = None,
         ignore_fastapi_default_422: bool = False,
         origin: str = "",
         base_path: str = "",
@@ -152,6 +152,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         require_body_for_invalid_url: bool = False,
+        invalid_property_default_response: int = 422,
     ):
         # region: docstring
         """
@@ -218,8 +219,16 @@ class OpenApiDriver(DataDriver, DynamicCore):
         either a 404 or a 422 or 400 Response is normally returned. If the API being tested
         processes the request body before checking if the requested resource exists, set
         this parameter to True.
+
+        === invalid_property_default_response ===
+        The default response code for requests with a JSON body that does not comply with
+        the schema. Example: a value outside the specified range or a string value for a
+        property defined as integer in the schema.
         """
         # endregion
+        ignored_endpoints = ignored_endpoints if ignored_endpoints else []
+        ignored_responses = ignored_responses if ignored_responses else []
+        ignored_testcases = ignored_testcases if ignored_testcases else []
         DataDriver.__init__(
             self,
             # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
@@ -244,6 +253,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
             response_validation=response_validation,
             disable_server_validation=disable_server_validation,
             require_body_for_invalid_url=require_body_for_invalid_url,
+            invalid_property_default_response=invalid_property_default_response,
         )
         DynamicCore.__init__(self, [openapi_executors])
 
