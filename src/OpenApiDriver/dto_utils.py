@@ -1,3 +1,4 @@
+"""Module for helper methods and classes used by the openapi_executors module."""
 from dataclasses import dataclass
 from importlib import import_module
 from logging import getLogger

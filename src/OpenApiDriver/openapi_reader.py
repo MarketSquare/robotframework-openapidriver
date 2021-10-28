@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Union
+"""Module holding the OpenApiReader reader_class implementation."""
+from typing import Any, Dict, List, Optional, Union
 
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
@@ -7,7 +8,10 @@ from prance.util.url import ResolutionError
 from robot.libraries.BuiltIn import BuiltIn
 
 
+# pylint: disable=too-few-public-methods
 class Test:
+    """Helper class to support ignoreing endpoints when generating the test cases."""
+
     def __init__(self, endpoint: str, method: str, response: Union[str, int]):
         self.endpoint = endpoint
         self.method = method.lower()
@@ -24,18 +28,12 @@ class Test:
 
 
 class OpenApiReader(AbstractReaderClass):
+    """Implementation of the reader_class used by DataDriver."""
+
     def get_data_from_source(self) -> List[TestCaseData]:
         test_data: List[TestCaseData] = []
 
-        try:
-            parser = ResolvingParser(
-                getattr(self, "source", None), backend="openapi-spec-validator"
-            )
-        except (ResolutionError, AssertionError) as exception:
-            BuiltIn().fatal_error(
-                f"Exception while trying to load openapi spec from source: {exception}"
-            )
-        endpoints: Dict[str, Any] = parser.specification["paths"]
+        endpoints = get_endpoints_from_source(getattr(self, "source", None))
         if ignored_endpoints := getattr(self, "ignored_endpoints", None):
             for endpoint in ignored_endpoints:
                 endpoints.pop(endpoint)
@@ -71,11 +69,7 @@ class OpenApiReader(AbstractReaderClass):
                         or Test(endpoint, method, response) in ignored_tests
                     ):
                         continue
-                    tag_list: List[str] = []
-                    if tags := method_data.get("tags", None):
-                        tag_list.extend(tags)
-                    tag_list.append(f"Method: {method.upper()}")
-                    tag_list.append(f"Response: {response}")
+                    tag_list = method_data.get("tags", [])
                     test_data.append(
                         TestCaseData(
                             arguments={
@@ -83,7 +77,28 @@ class OpenApiReader(AbstractReaderClass):
                                 "${method}": method.upper(),
                                 "${status_code}": response,
                             },
-                            tags=tag_list,
-                        )
+                            tags=get_tag_list(
+                                tags=tag_list,
+                                method=method,
+                                response=response,
+                            ),
+                        ),
                     )
         return test_data
+
+
+def get_endpoints_from_source(source: Optional[str]) -> Dict[str, Any]:
+    try:
+        parser = ResolvingParser(source, backend="openapi-spec-validator")
+    except (ResolutionError, AssertionError) as exception:
+        BuiltIn().fatal_error(
+            f"Exception while trying to load openapi spec from source: {exception}"
+        )
+    endpoints: Dict[str, Any] = parser.specification["paths"]
+    return endpoints
+
+
+def get_tag_list(tags: List[str], method: str, response: str) -> List[str]:
+    tags.append(f"Method: {method.upper()}")
+    tags.append(f"Response: {response}")
+    return tags
