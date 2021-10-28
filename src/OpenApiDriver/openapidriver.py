@@ -148,6 +148,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         mappings_path: Union[str, Path] = "",
         username: str = "",
         password: str = "",
+        security_token: str = "",
         auth: Optional[AuthBase] = None,
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
@@ -191,6 +192,9 @@ class OpenApiDriver(DataDriver, DynamicCore):
 
         === password ===
         The password to be used for Basic Authentication.
+
+        === security_token ===
+        The token to be used for token based security using the `Authorization` header.
 
         === auth ===
         A [https://docs.python-requests.org/en/latest/api/#authentication | requests AuthBase instance]
@@ -249,6 +253,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
             mappings_path=mappings_path,
             username=username,
             password=password,
+            security_token=security_token,
             auth=auth,
             response_validation=response_validation,
             disable_server_validation=disable_server_validation,

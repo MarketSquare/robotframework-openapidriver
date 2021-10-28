@@ -1,3 +1,8 @@
+"""
+Module holding the (base) classes that can be used by the user of the OpenApiDriver
+to implement custom mappings for dependencies between resources in the API under
+test and constraints / restrictions on properties of the resources.
+"""
 from abc import ABC
 from dataclasses import dataclass
 from logging import getLogger
@@ -6,6 +11,9 @@ from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
 logger = getLogger(__name__)
+
+
+IGNORE = object()
 
 
 class ResourceRelation(ABC):
@@ -71,6 +79,8 @@ Relation = Union[
 
 
 class DtoBase(ABC):
+    """Base class for the Dto class."""
+
     @staticmethod
     def get_parameter_relations() -> List[Relation]:
         return []

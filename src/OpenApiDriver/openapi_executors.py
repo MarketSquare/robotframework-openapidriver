@@ -1,3 +1,4 @@
+"""Module containing the keywords and core logic to perform automatic OpenAPI contract validation."""
 # TODO: support ${itemId} mapping instead of only "id"
 
 import json as _json
@@ -27,6 +28,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from robotlibcore import keyword
 
 from OpenApiDriver.dto_base import (
+    IGNORE,
     Dto,
     IdDependency,
     IdReference,
@@ -68,6 +70,7 @@ class OpenapiExecutors:
         mappings_path: Union[str, Path] = "",
         username: str = "",
         password: str = "",
+        security_token: str = "",
         auth: Optional[AuthBase] = None,
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
@@ -89,9 +92,11 @@ class OpenapiExecutors:
         self.session = Session()
         self.origin = origin
         self.base_url = f"{self.origin}{base_path}"
-        if auth:
-            self.auth = auth
-        else:
+        # only username and password, security_token or auth object should be provided
+        # if multiple are provided, username and password take precendence
+        self.security_token = security_token
+        self.auth = auth
+        if username and password:
             self.auth = HTTPBasicAuth(username, password)
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
@@ -477,6 +482,8 @@ class OpenapiExecutors:
                 r.values for r in relations if isinstance(r, PropertyValueConstraint)
             ]:
                 value = choice(*constrained_values)
+                if value is IGNORE:
+                    continue
                 result[parameter_name] = str(value)
                 continue
             if from_enum := parameter["schema"].get("enum", None):
@@ -671,10 +678,16 @@ class OpenapiExecutors:
             relation = choice(relations)
             parameter_to_invalidate = relation.property_name
             if isinstance(relation, PropertyValueConstraint):
-                invalid_values = 2 * relation.values
-                invalid_value = invalid_values.pop()
-                for value in invalid_values:
-                    invalid_value = invalid_value + value
+                # if IGNORE is in the values, the parameter needs to be ignored for an
+                # OK response so leaving the value at it's original value should result
+                # in the specified error response
+                if IGNORE in relation.values:
+                    invalid_value = IGNORE
+                else:
+                    invalid_values = 2 * relation.values
+                    invalid_value = invalid_values.pop()
+                    for value in invalid_values:
+                        invalid_value = invalid_value + value
             else:
                 # TODO: support for other supported constraints
                 raise NotImplemented
@@ -1006,6 +1019,11 @@ class OpenapiExecutors:
         headers: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
     ) -> Response:
+        # if both an auth object and a token are available, auth takes precedence
+        if self.security_token and not self.auth:
+            security_header = {"Authorization": self.security_token}
+            headers = headers if headers else {}
+            headers.update(security_header)
         response = self.session.request(
             url=url,
             method=method,

@@ -2,6 +2,7 @@
 from typing import Any, Dict, List, Tuple
 
 from OpenApiDriver import (
+    IGNORE,
     Dto,
     IdDependency,
     IdReference,
@@ -59,8 +60,13 @@ class MessageDto(Dto):
             PropertyValueConstraint(
                 property_name="secret-code",  # note: property name converted by FastAPI
                 values=[42],
+                error_code=401,
+            ),
+            PropertyValueConstraint(
+                property_name="seal",
+                values=[IGNORE],
                 error_code=403,
-            )
+            ),
         ]
         return relations
 

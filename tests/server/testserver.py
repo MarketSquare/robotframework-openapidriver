@@ -1,12 +1,29 @@
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional
 from uuid import uuid4
 
 import uvicorn
-from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
+from fastapi import FastAPI, Header, HTTPException, Path, Query, Request, Response
 from pydantic import BaseModel, confloat, conint, constr
 
+API_KEY = "OpenApiDriver"
+API_KEY_NAME = "api_key"
+
+
 app = FastAPI()
+
+
+# @app.middleware("http")
+# async def validate_api_key(request: Request, call_next: Callable[..., Response]) -> Response:
+#     if (
+#         not str(request.url).endswith("openapi.json") and
+#         not str(request.url).endswith("docs") and
+#         request.headers.get(API_KEY_NAME) != API_KEY and
+#         request.headers.get("Authorization") != API_KEY
+#     ):
+#         return Response(status_code=401, content="Computer says no.")
+#     response = await call_next(request)
+#     return response
 
 
 class EnergyLabel(str, Enum):
@@ -77,6 +94,7 @@ ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
         },
     }
 }
+REMOVE_ME: str = uuid4().hex
 
 
 @app.get("/", status_code=200, response_model=Message)
@@ -89,13 +107,17 @@ def get_root(*, name_from_header: str = Header(""), title: str = Header("")) -> 
     "/message",
     status_code=200,
     response_model=Message,
-    responses={403: {"model": Detail}},
+    responses={401: {"model": Detail}, 403: {"model": Detail}},
 )
-def get_message(*, secret_code: int = Header(...)) -> Message:
+def get_message(
+    *, secret_code: int = Header(...), seal: str = Header(REMOVE_ME)
+) -> Message:
     if secret_code != 42:
         raise HTTPException(
-            status_code=403, detail=f"Provided code {secret_code} is incorrect!"
+            status_code=401, detail=f"Provided code {secret_code} is incorrect!"
         )
+    if seal is not REMOVE_ME:
+        raise HTTPException(status_code=403, detail="Seal was not removed!")
     return Message(message="Welcome, agent HAL")
 
 

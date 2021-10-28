@@ -1,6 +1,7 @@
 from importlib.metadata import version
 
 from OpenApiDriver.dto_base import (
+    IGNORE,
     Dto,
     IdDependency,
     IdReference,
