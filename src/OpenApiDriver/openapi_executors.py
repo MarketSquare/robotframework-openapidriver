@@ -8,7 +8,7 @@ from enum import Enum
 from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
-from random import choice, getrandbits, randint, uniform
+from random import choice
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 from uuid import uuid4
 
@@ -27,8 +27,8 @@ from robot.api import SkipExecution
 from robot.libraries.BuiltIn import BuiltIn
 from robotlibcore import keyword
 
+from OpenApiDriver import value_utils
 from OpenApiDriver.dto_base import (
-    IGNORE,
     Dto,
     IdDependency,
     IdReference,
@@ -38,6 +38,7 @@ from OpenApiDriver.dto_base import (
     UniquePropertyValueConstraint,
 )
 from OpenApiDriver.dto_utils import DefaultDto, get_dto_class
+from OpenApiDriver.value_utils import IGNORE
 
 run_keyword = BuiltIn().run_keyword
 
@@ -175,7 +176,7 @@ class OpenapiExecutors:
                 status_code
             )
             if data_relations and parameter_relations:
-                if randint(0, 1):
+                if choice([True, False]):
                     json_data = self.invalidate_json_data(
                         data_relations=data_relations,
                         json_data=json_data,
@@ -191,6 +192,7 @@ class OpenapiExecutors:
                         headers=headers,
                         relations=parameter_relations,
                         parameters=request_data.parameters,
+                        status_code=status_code,
                     )
             elif data_relations:
                 json_data = self.invalidate_json_data(
@@ -208,6 +210,7 @@ class OpenapiExecutors:
                     headers=headers,
                     relations=parameter_relations,
                     parameters=request_data.parameters,
+                    status_code=status_code,
                 )
             elif status_code == self.invalid_property_default_response:
                 json_data = self.invalidate_json_data(
@@ -224,6 +227,7 @@ class OpenapiExecutors:
                     headers=headers,
                     relations=parameter_relations,
                     parameters=request_data.parameters,
+                    status_code=status_code,
                 )
             else:
                 logger.error(
@@ -378,16 +382,17 @@ class OpenapiExecutors:
         return valid_id
 
     def get_request_data(self, endpoint: str, method: str) -> RequestData:
+        """Return an object with valid request data for body, headers and query params."""
         method = method.lower()
         # The endpoint can contain already resolved Ids that have to be matched
         # against the parametrized endpoints in the paths section.
         spec_endpoint = self.get_parametrized_endpoint(endpoint)
         try:
             method_spec = self.openapi_doc["paths"][spec_endpoint][method]
-        except KeyError:
+        except KeyError as exception:
             raise NotImplementedError(
                 f"method '{method}' not suported on '{spec_endpoint}"
-            )
+            ) from exception
         dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
 
         parameters = method_spec.get("parameters", [])
@@ -399,20 +404,19 @@ class OpenapiExecutors:
 
         if (body_spec := method_spec.get("requestBody", None)) is None:
             if dto_class == DefaultDto:
-                return RequestData(
-                    dto=DefaultDto(),
-                    parameters=parameters,
-                    params=params,
-                    headers=headers,
+                dto_instance = DefaultDto()
+            else:
+                dto_class = make_dataclass(
+                    cls_name=method_spec["operationId"],
+                    fields=[],
+                    bases=(dto_class,),
                 )
-            dto_class = make_dataclass(
-                cls_name=method_spec["operationId"],
-                fields=[],
-                bases=(dto_class,),
-            )
-            dto_instance = dto_class()
+                dto_instance = dto_class()
             return RequestData(
-                dto=dto_instance, parameters=parameters, params=params, headers=headers
+                dto=dto_instance,
+                parameters=parameters,
+                params=params,
+                headers=headers,
             )
         # Content should be a single key/value entry, so use tuple assignment
         (content_type,) = body_spec["content"].keys()
@@ -420,6 +424,7 @@ class OpenapiExecutors:
             # At present no supported for other types.
             raise NotImplementedError(f"content_type '{content_type}' not supported")
         content_schema = body_spec["content"][content_type]["schema"]
+        # TODO: is resolve_schema still needed?
         resolved_schema: Dict[str, Any] = self.resolve_schema(content_schema)
         dto_data = self.get_dto_data(
             schema=resolved_schema,
@@ -427,16 +432,17 @@ class OpenapiExecutors:
             operation_id=method_spec.get("operationId"),
         )
         if dto_data is None:
-            return RequestData(dto=DefaultDto(), parameters=parameters)
-        fields: List[Tuple[str, type]] = []
-        for key, value in dto_data.items():
-            fields.append((key, type(value)))
-        dto_class = make_dataclass(
-            cls_name=method_spec["operationId"],
-            fields=fields,
-            bases=(dto_class,),
-        )
-        dto_instance = dto_class(**dto_data)
+            dto_instance = DefaultDto()
+        else:
+            fields: List[Tuple[str, type]] = []
+            for key, value in dto_data.items():
+                fields.append((key, type(value)))
+            dto_class = make_dataclass(
+                cls_name=method_spec["operationId"],
+                fields=fields,
+                bases=(dto_class,),
+            )
+            dto_instance = dto_class(**dto_data)
         return RequestData(
             dto=dto_instance,
             dto_schema=resolved_schema,
@@ -465,16 +471,17 @@ class OpenapiExecutors:
                 return spec_endpoint
         raise ValueError(f"{endpoint} not matched to openapi_doc path")
 
+    @staticmethod
     def get_parameter_data(
-        self,
         parameters: List[Dict[str, Any]],
         parameter_relations: List[Relation],
     ) -> Dict[str, str]:
+        """Generate a valid list of key-value pairs for all parameters."""
         result: Dict[str, str] = {}
         value: Any = None
         for parameter in parameters:
             parameter_name = parameter["name"]
-            parameter_type = parameter["schema"]["type"]
+            parameter_schema = parameter["schema"]
             relations = [
                 r for r in parameter_relations if r.property_name == parameter_name
             ]
@@ -486,20 +493,7 @@ class OpenapiExecutors:
                     continue
                 result[parameter_name] = str(value)
                 continue
-            if from_enum := parameter["schema"].get("enum", None):
-                value = choice(from_enum)
-                result[parameter_name] = str(value)
-                continue
-            if parameter_type == "boolean":
-                value = bool(getrandbits(1))
-            if parameter_type == "integer":
-                minimum = -2147483648
-                maximum = 2147483647
-                value = randint(minimum, maximum)
-            if parameter_type == "number":
-                value = uniform(0.0, 1.0)
-            if parameter_type == "string":
-                value = uuid4().hex
+            value = value_utils.get_valid_value(parameter_schema)
             # By the http standard, query string and header values must be strings
             result[parameter_name] = str(value)
         return result
@@ -552,7 +546,8 @@ class OpenapiExecutors:
         json_data: Dict[str, Any] = {}
 
         for property_name in schema.get("properties", []):
-            property_type = schema["properties"][property_name]["type"]
+            value_schema = schema["properties"][property_name]
+            property_type = value_schema["type"]
             if constrained_values := get_constrained_values(property_name):
                 json_data[property_name] = choice(constrained_values)
                 continue
@@ -561,61 +556,16 @@ class OpenapiExecutors:
             ):
                 json_data[property_name] = dependent_id
                 continue
-            if property_type == "boolean":
-                json_data[property_name] = bool(getrandbits(1))
-                continue
-            # if the property specifies an enum, pick one at random
-            if from_enum := schema["properties"][property_name].get("enum", None):
-                value = choice(from_enum)
-                json_data[property_name] = value
-                continue
-            # Use int32 integers if "format" does not specify int64
-            if property_type == "integer":
-                property_format = schema["properties"][property_name].get(
-                    "format", "int32"
-                )
-                if property_format == "int64":
-                    min_int = -9223372036854775808
-                    max_int = 9223372036854775807
-                else:
-                    min_int = -2147483648
-                    max_int = 2147483647
-                # TODO: add support for exclusiveMinimum and exclusiveMaximum
-                minimum = schema["properties"][property_name].get("minimum", min_int)
-                maximum = schema["properties"][property_name].get("maximum", max_int)
-                value = randint(minimum, maximum)
-                json_data[property_name] = value
-                continue
-            # Python floats are already double precision, so no check for "format"
-            if property_type == "number":
-                minimum = schema["properties"][property_name].get("minimum", 0.0)
-                maximum = schema["properties"][property_name].get("maximum", 1.0)
-                value = uniform(minimum, maximum)
-                json_data[property_name] = value
-                continue
-            # TODO: byte, binary, date, date-time based on "format"
-            if property_type == "string":
-                minimum = schema["properties"][property_name].get("minLength", 0)
-                maximum = schema["properties"][property_name].get("maxLength", 36)
-                value = uuid4().hex
-                while len(value) < minimum:
-                    value = value + uuid4().hex
-                if len(value) > maximum:
-                    value = value[:maximum]
-                json_data[property_name] = value
-                continue
             if property_type == "object":
                 default_dto = self.get_dto_class(endpoint="", method="")
                 object_data = self.get_dto_data(
-                    schema=schema["properties"][property_name],
+                    schema=value_schema,
                     dto=default_dto,
                     operation_id="",
                 )
                 json_data[property_name] = object_data
                 continue
-            raise NotImplementedError(
-                f"Type '{property_type}' is currently not supported"
-            )
+            json_data[property_name] = value_utils.get_valid_value(value_schema)
         return json_data
 
     @keyword
@@ -639,8 +589,8 @@ class OpenapiExecutors:
         # TODO: add support for header / query parameters that can be invalidated
         return None
 
-    @staticmethod
     def invalidate_json_data(
+        self,
         data_relations: List[Relation],
         json_data: Dict[str, Any],
         schema: Dict[str, Any],
@@ -654,7 +604,11 @@ class OpenapiExecutors:
                 raise AssertionError(
                     "Failed to invalidate: no data_relations and missing schema."
                 )
-            json_data = dto.get_invalidated_data(schema=schema, status_code=status_code)
+            json_data = dto.get_invalidated_data(
+                schema=schema,
+                status_code=status_code,
+                invalid_property_default_code=self.invalid_property_default_response,
+            )
             return json_data
         resource_relation = choice(data_relations)
         if isinstance(resource_relation, UniquePropertyValueConstraint):
@@ -662,48 +616,62 @@ class OpenapiExecutors:
         elif isinstance(resource_relation, IdReference):
             run_keyword("ensure_in_use", url, resource_relation)
         else:
-            json_data = dto.get_invalidated_data(schema=schema, status_code=status_code)
+            json_data = dto.get_invalidated_data(
+                schema=schema,
+                status_code=status_code,
+                invalid_property_default_code=self.invalid_property_default_response,
+            )
         return json_data
 
-    @staticmethod
     def invalidate_parameters(
+        self,
         params: Dict[str, Any],
         headers: Dict[str, str],
         relations: List[Relation],
         parameters: List[Dict[str, Any]],
+        status_code: int,
     ) -> Tuple[Dict[str, Any], Dict[str, str]]:
-        if not parameters:
+        if not params and not headers:
             return params, headers
-        if relations:
-            relation = choice(relations)
-            parameter_to_invalidate = relation.property_name
-            if isinstance(relation, PropertyValueConstraint):
-                # if IGNORE is in the values, the parameter needs to be ignored for an
-                # OK response so leaving the value at it's original value should result
-                # in the specified error response
-                if IGNORE in relation.values:
-                    invalid_value = IGNORE
-                else:
-                    invalid_values = 2 * relation.values
-                    invalid_value = invalid_values.pop()
-                    for value in invalid_values:
-                        invalid_value = invalid_value + value
-            else:
-                # TODO: support for other supported constraints
-                raise NotImplemented
+        if any([params, headers]) and not parameters:
+            logger.warning(
+                "Could not invalidate parameters: parameters list was empty."
+            )
+            return params, headers
+
+        relations_for_status_code = [
+            r
+            for r in relations
+            if isinstance(r, PropertyValueConstraint) and r.error_code == status_code
+        ]
+        if status_code == self.invalid_property_default_response:
+            parameter_data = choice(parameters)
+            parameter_to_invalidate = parameter_data["name"]
         else:
-            parameter_names = [p["name"] for p in parameters]
+            parameter_names = [r.property_name for r in relations_for_status_code]
             parameter_to_invalidate = choice(parameter_names)
-            [schema] = [
-                p.get("schema")
-                for p in parameters
-                if p.get("name") == parameter_to_invalidate
+            [parameter_data] = [
+                d for d in parameters if d["name"] == parameter_to_invalidate
             ]
-            parameter_type = schema.get("type")
-            if parameter_type == "string":
-                invalid_value = [{"invalid": [None]}]
-            else:
-                invalid_value = uuid4().hex
+        relations_for_parameter = [
+            r.values
+            for r in relations_for_status_code
+            if r.property_name == parameter_to_invalidate
+        ]
+        values_from_constraint = (
+            relations_for_parameter[0] if relations_for_parameter else None
+        )
+        if parameter_to_invalidate in params.keys():
+            valid_value = params[parameter_to_invalidate]
+        elif parameter_to_invalidate in headers.keys():
+            valid_value = headers[parameter_to_invalidate]
+        else:
+            valid_value = value_utils.get_valid_value(parameter_data["schema"])
+        invalid_value = value_utils.get_invalid_value(
+            value_schema=parameter_data["schema"],
+            current_value=valid_value,
+            values_from_constraint=values_from_constraint,
+        )
 
         if parameter_to_invalidate in params.keys():
             params[parameter_to_invalidate] = invalid_value

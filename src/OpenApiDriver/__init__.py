@@ -1,7 +1,6 @@
 from importlib.metadata import version
 
 from OpenApiDriver.dto_base import (
-    IGNORE,
     Dto,
     IdDependency,
     IdReference,
@@ -11,6 +10,7 @@ from OpenApiDriver.dto_base import (
     UniquePropertyValueConstraint,
 )
 from OpenApiDriver.openapidriver import OpenApiDriver
+from OpenApiDriver.value_utils import IGNORE
 
 try:
     __version__ = version("robotframework-openapidriver")
