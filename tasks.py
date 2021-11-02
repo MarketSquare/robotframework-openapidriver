@@ -15,7 +15,7 @@ def testserver(context):
 
 
 @task
-def tests(context):
+def utests(context):
     cmd = [
         "coverage",
         "run",
@@ -25,6 +25,10 @@ def tests(context):
         f"{project_root}/tests/unittests",
     ]
     subprocess.run(" ".join(cmd), shell=True)
+
+
+@task
+def atests(context):
     cmd = [
         "coverage",
         "run",
@@ -33,10 +37,14 @@ def tests(context):
         f"--argumentfile={project_root}/tests/rf_cli.args",
         f"--variable=root:{project_root}",
         f"--outputdir={project_root}/tests/logs",
-        f"--loglevel=TRACE:DEBUG",
+        "--loglevel=TRACE:DEBUG",
         f"{project_root}/tests/suites",
     ]
     subprocess.run(" ".join(cmd), shell=True)
+
+
+@task(utests, atests)
+def tests(context):
     subprocess.run("coverage combine", shell=True)
     subprocess.run("coverage report", shell=True)
     subprocess.run("coverage html", shell=True)
