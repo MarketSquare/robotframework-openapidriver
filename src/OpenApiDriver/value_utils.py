@@ -25,14 +25,7 @@ def get_valid_value(value_schema: Dict[str, Any]) -> Any:
         return get_random_float(value_schema=value_schema)
     # TODO: byte, binary, date, date-time based on "format"
     if value_type == "string":
-        minimum = value_schema.get("minLength", 0)
-        maximum = value_schema.get("maxLength", 36)
-        value = uuid4().hex
-        while len(value) < minimum:
-            value = value + uuid4().hex
-        if len(value) > maximum:
-            value = value[:maximum]
-        return value
+        return get_random_string(value_schema=value_schema)
     raise NotImplementedError(f"Type '{value_type}' is currently not supported")
 
 
@@ -139,7 +132,8 @@ def get_random_float(value_schema: Dict[str, Any]) -> float:
     ):
         if minimum == maximum:
             raise ValueError(
-                f"maximum of {maximum} is equal to minimum of {minimum} and exclusiveMinimum or exclusiveMaximum is True"
+                f"maximum of {maximum} is equal to minimum of {minimum} and "
+                f"exclusiveMinimum or exclusiveMaximum is True"
             )
         result = uniform(minimum, maximum)
         if minimum < result < maximum:
@@ -147,7 +141,22 @@ def get_random_float(value_schema: Dict[str, Any]) -> float:
     return uniform(minimum, maximum)
 
 
+def get_random_string(value_schema: Dict[str, Any]) -> str:
+    """Generate a random string within the min/max length in the schema, is specified."""
+    minimum = value_schema.get("minLength", 0)
+    maximum = value_schema.get("maxLength", 36)
+    if minimum > maximum:
+        maximum = minimum
+    value = uuid4().hex
+    while len(value) < minimum:
+        value = value + uuid4().hex
+    if len(value) > maximum:
+        value = value[:maximum]
+    return value
+
+
 def get_invalid_value_from_enum(values: List[Any], value_type: str):
+    """Return a value not in the enum by combining the enum values."""
     if value_type == "string":
         invalid_value: Any = ""
     elif value_type in ["integer", "number"]:
@@ -155,16 +164,24 @@ def get_invalid_value_from_enum(values: List[Any], value_type: str):
     elif value_type == "array":
         invalid_value = []
     elif value_type == "object":
-        invalid_value = {}
+        # force creation of a new object since we will be modifing it
+        invalid_value = {**values[0]}
     else:
         logger.warning(f"Cannot invalidate enum value with type {value_type}")
         return None
     for value in values:
-        if value_type in ["string", "integer", "number"]:
+        if value_type in ["integer", "number"]:
+            invalid_value += abs(value)
+        if value_type == "string":
             invalid_value += value
-        # TODO: can the values to choose from in an enum be array/object in JSON?
         if value_type == "array":
             invalid_value.extend(value)
+        # objects are a special case, since they must be of the same type / class
+        # invalid_value.update(value) will end up with the last value in the list,
+        # which is a valid value, so another approach is needed
         if value_type == "object":
-            invalid_value.update(value)
+            for key in invalid_value.keys():
+                invalid_value[key] = value.get(key)
+                if invalid_value not in values:
+                    return invalid_value
     return invalid_value

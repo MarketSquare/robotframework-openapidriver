@@ -3,7 +3,7 @@ from sys import float_info
 
 EPSILON = float_info.epsilon
 
-from OpenApiDriver import value_utils
+from OpenApiDriver import IGNORE, value_utils
 
 
 class TestValidInteger(unittest.TestCase):
@@ -127,6 +127,126 @@ class TestValidFloat(unittest.TestCase):
         value = value_utils.get_random_float(schema)
         self.assertGreater(value, -0.2)
         self.assertLess(value, -0.1)
+
+
+class TestValidString(unittest.TestCase):
+    def test_default_min_max(self):
+        schema = {"maxLength": 0}
+        value = value_utils.get_random_string(schema)
+        self.assertEqual(value, "")
+
+        schema = {"minLength": 36}
+        value = value_utils.get_random_string(schema)
+        self.assertEqual(len(value), 36)
+
+    def test_min_max(self):
+        schema = {"minLength": 42, "maxLength": 42}
+        value = value_utils.get_random_string(schema)
+        self.assertEqual(len(value), 42)
+
+        schema = {"minLength": 42}
+        value = value_utils.get_random_string(schema)
+        self.assertEqual(len(value), 42)
+
+
+class TestInvalidEnum(unittest.TestCase):
+    def test_string(self):
+        value_list = ["foo", "bar"]
+        result = value_utils.get_invalid_value_from_enum(
+            values=value_list,
+            value_type="string",
+        )
+        self.assertNotIn(result, value_list)
+
+    def test_integer(self):
+        value_list = [-1, 0, 1]
+        result = value_utils.get_invalid_value_from_enum(
+            values=value_list,
+            value_type="integer",
+        )
+        self.assertNotIn(result, value_list)
+
+    def test_float(self):
+        value_list = [-0.1, 0, 0.1]
+        result = value_utils.get_invalid_value_from_enum(
+            values=value_list,
+            value_type="integer",
+        )
+        self.assertNotIn(result, value_list)
+
+    def test_array(self):
+        value_list = [["foo", "bar", "baz"], ["spam", "ham", "eggs"]]
+        result = value_utils.get_invalid_value_from_enum(
+            values=value_list,
+            value_type="array",
+        )
+        self.assertNotIn(result, value_list)
+
+    def test_object(self):
+        value_list = [
+            {
+                "red": 255,
+                "blue": 0,
+                "green": 0,
+            },
+            {
+                "red": 0,
+                "blue": 255,
+                "green": 0,
+            },
+            {
+                "red": 0,
+                "blue": 0,
+                "green": 255,
+            },
+        ]
+        result = value_utils.get_invalid_value_from_enum(
+            values=value_list,
+            value_type="object",
+        )
+        self.assertNotIn(result, value_list)
+
+    def test_unsupported(self):
+        value_list = [True, False]
+        result = value_utils.get_invalid_value_from_enum(
+            values=value_list,
+            value_type="bool",
+        )
+        self.assertEqual(result, None)
+
+
+class TestGetValidValue(unittest.TestCase):
+    def test_enum(self):
+        schema = {"enum": ["foo", "bar"]}
+        value = value_utils.get_valid_value(schema)
+        self.assertIn(value, ["foo", "bar"])
+
+    def test_bool(self):
+        schema = {"type": "boolean"}
+        value = value_utils.get_valid_value(schema)
+        self.assertIsInstance(value, bool)
+
+    def test_integer(self):
+        schema = {"type": "integer"}
+        value = value_utils.get_valid_value(schema)
+        self.assertIsInstance(value, int)
+
+    def test_number(self):
+        schema = {"type": "number"}
+        value = value_utils.get_valid_value(schema)
+        self.assertIsInstance(value, float)
+
+    def test_string(self):
+        schema = {"type": "string"}
+        value = value_utils.get_valid_value(schema)
+        self.assertIsInstance(value, str)
+
+    def test_raises(self):
+        schema = {"type": "array"}
+        self.assertRaises(NotImplementedError, value_utils.get_valid_value, schema)
+
+
+# class TestGetInvalidValue(unittest.TestCase):
 
 
 if __name__ == "__main__":
