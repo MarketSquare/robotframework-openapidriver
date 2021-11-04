@@ -36,63 +36,43 @@ def get_invalid_value(
 ) -> Any:
     """Return a random value that violates the provided value_schema."""
 
-    # if IGNORE is in the values_from_constraints, the parameter needs to be
-    # ignored for an OK response so leaving the value at it's original value
-    # should result in the specified error response
-    if values_from_constraint:
-        if IGNORE in values_from_constraint:
-            return IGNORE
-        # if the value is forced True or False, return the opposite to invalidate
-        if len(values_from_constraint) == 1 and isinstance(
-            values_from_constraint[0], bool
-        ):
-            return not values_from_constraint[0]
-        invalid_values = 2 * values_from_constraint
-        invalid_value = invalid_values.pop()
-        for value in invalid_values:
-            invalid_value = invalid_value + value
-        return invalid_value
-    # if an enum is possible, combine the values from the enum to invalidate the value
+    invalid_value: Any = None
     value_type = value_schema["type"]
+
+    if values_from_constraint:
+        if (
+            invalid_value := get_invalid_value_from_constraint(
+                values_from_constraint=values_from_constraint,
+                value_type=value_type,
+            )
+        ) is not None:
+            return invalid_value
+    # if an enum is possible, combine the values from the enum to invalidate the value
     if enum_values := value_schema.get("enum"):
-        invalid_value = get_invalid_value_from_enum(
-            values=enum_values, value_type=value_type
+        if (
+            invalid_value := get_invalid_value_from_enum(
+                values=enum_values, value_type=value_type
+            )
+        ) is not None:
+            return invalid_value
+    # violate min / max values or length if possible
+    if (
+        invalid_value := get_value_out_of_bounds(
+            value_schema=value_schema, current_value=current_value
         )
-        if invalid_value is not None:
-            return invalid_value
-    # violate min / max values if possible
-    if value_type == "integer":
-        if minimum := value_schema.get("minimum"):
-            return minimum - 1
-        if maximum := value_schema.get("maximum"):
-            return maximum + 1
-    if value_type == "number":
-        if minimum := value_schema.get("minimum"):
-            return minimum - 1
-        if maximum := value_schema.get("maximum"):
-            return maximum + 1
-    if value_type == "string":
-        # if there is a minimum length, send 1 character less
-        if minimum := value_schema.get("minLength", 0) > 0:
-            return current_value[0 : minimum - 1]
-        # if there is a maximum length, send 1 character more
-        if maximum := value_schema.get("maxLength"):
-            invalid_value = current_value
-            # add random characters from the current value to prevent adding new characters
-            while len(invalid_value) <= maximum:
-                invalid_value += choice(current_value)
-            return invalid_value
+    ) is not None:
+        return invalid_value
     # no value constraints or min / max ranges to violate, so change the data type
     if value_type == "string":
         # since int / float / bool can always be cast to sting, change
         # the string to a nested object
         return [{"invalid": [None]}]
-    logger.debug(f"property set to str instead of {value_type}")
+    logger.debug(f"property type changed from {value_type} to random string")
     return uuid4().hex
 
 
 def get_random_int(value_schema: Dict[str, Any]) -> int:
-    """Generate a random int within the min/max range of the schema, is specified."""
+    """Generate a random int within the min/max range of the schema, if specified."""
     # Use int32 integers if "format" does not specify int64
     property_format = value_schema.get("format", "int32")
     if property_format == "int64":
@@ -111,7 +91,7 @@ def get_random_int(value_schema: Dict[str, Any]) -> int:
 
 
 def get_random_float(value_schema: Dict[str, Any]) -> float:
-    """Generate a random float within the min/max range of the schema, is specified."""
+    """Generate a random float within the min/max range of the schema, if specified."""
     # Python floats are already double precision, so no check for "format"
     minimum = value_schema.get("minimum")
     maximum = value_schema.get("maximum")
@@ -127,22 +107,24 @@ def get_random_float(value_schema: Dict[str, Any]) -> float:
         if maximum < minimum:
             raise ValueError(f"maximum of {maximum} is less than minimum of {minimum}")
     # for simplicity's sake, exclude both boundaries if one boundary is exclusive
-    while value_schema.get("exclusiveMinimum", False) or value_schema.get(
+    exclusive = value_schema.get("exclusiveMinimum", False) or value_schema.get(
         "exclusiveMaximum", False
-    ):
+    )
+    if exclusive:
         if minimum == maximum:
             raise ValueError(
                 f"maximum of {maximum} is equal to minimum of {minimum} and "
                 f"exclusiveMinimum or exclusiveMaximum is True"
             )
+    while exclusive:
         result = uniform(minimum, maximum)
-        if minimum < result < maximum:
+        if minimum < result < maximum:  # pragma: no cover
             return result
     return uniform(minimum, maximum)
 
 
 def get_random_string(value_schema: Dict[str, Any]) -> str:
-    """Generate a random string within the min/max length in the schema, is specified."""
+    """Generate a random string within the min/max length in the schema, if specified."""
     minimum = value_schema.get("minLength", 0)
     maximum = value_schema.get("maxLength", 36)
     if minimum > maximum:
@@ -153,6 +135,36 @@ def get_random_string(value_schema: Dict[str, Any]) -> str:
     if len(value) > maximum:
         value = value[:maximum]
     return value
+
+
+def get_invalid_value_from_constraint(
+    values_from_constraint: List[Any], value_type: str
+) -> Any:
+    # if IGNORE is in the values_from_constraints, the parameter needs to be
+    # ignored for an OK response so leaving the value at it's original value
+    # should result in the specified error response
+    if IGNORE in values_from_constraint:
+        return IGNORE
+    # if the value is forced True or False, return the opposite to invalidate
+    if len(values_from_constraint) == 1 and value_type == "boolean":
+        return not values_from_constraint[0]
+    if value_type not in ["string", "integer", "number", "array"]:
+        return None
+    invalid_values = 2 * values_from_constraint
+    # None for empty array
+    if not invalid_values:
+        return None
+    invalid_value = invalid_values.pop()
+    if value_type in ["integer", "number"]:
+        for value in invalid_values:
+            invalid_value = abs(invalid_value) + abs(value)
+        if not invalid_value:
+            invalid_value += 1
+        return invalid_value
+    for value in invalid_values:
+        invalid_value = invalid_value + value
+    # None for empty string
+    return invalid_value if invalid_value else None
 
 
 def get_invalid_value_from_enum(values: List[Any], value_type: str):
@@ -185,3 +197,29 @@ def get_invalid_value_from_enum(values: List[Any], value_type: str):
                 if invalid_value not in values:
                     return invalid_value
     return invalid_value
+
+
+def get_value_out_of_bounds(value_schema: Dict[str, Any], current_value: Any) -> Any:
+    value_type = value_schema["type"]
+
+    if value_type in ["integer", "number"]:
+        if minimum := value_schema.get("minimum"):
+            return minimum - 1
+        if maximum := value_schema.get("maximum"):
+            return maximum + 1
+        if exclusive_minimum := value_schema.get("exclusiveMinimum"):
+            return exclusive_minimum
+        if exclusive_maximum := value_schema.get("exclusiveMaximum"):
+            return exclusive_maximum
+    if value_type == "string":
+        # if there is a minimum length, send 1 character less
+        if minimum := value_schema.get("minLength", 0):
+            return current_value[0 : minimum - 1]
+        # if there is a maximum length, send 1 character more
+        if maximum := value_schema.get("maxLength"):
+            invalid_value = current_value if current_value else "x"
+            # add random characters from the current value to prevent adding new characters
+            while len(invalid_value) <= maximum:
+                invalid_value += choice(invalid_value)
+            return invalid_value
+    return None

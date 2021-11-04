@@ -148,7 +148,7 @@ class DtoBase(ABC):
                 values_from_constraint=values_from_constraint,
             )
             return properties
-        return properties
+        return properties  # pragma: no cover
 
 
 @dataclass
