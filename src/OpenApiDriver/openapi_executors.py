@@ -169,71 +169,7 @@ class OpenapiExecutors:
         headers = request_data.headers
         dto = request_data.dto
         json_data = asdict(dto)
-        # in case of a status code indicating an error, ensure the error occurs
-        if status_code >= 400:
-            data_relations = dto.get_relations_for_error_code(status_code)
-            parameter_relations = dto.get_parameter_relations_for_error_code(
-                status_code
-            )
-            if data_relations and parameter_relations:
-                if choice([True, False]):
-                    json_data = self.invalidate_json_data(
-                        data_relations=data_relations,
-                        json_data=json_data,
-                        schema=request_data.dto_schema,
-                        url=url,
-                        method=method,
-                        dto=dto,
-                        status_code=status_code,
-                    )
-                else:
-                    params, headers = self.invalidate_parameters(
-                        params=params,
-                        headers=headers,
-                        relations=parameter_relations,
-                        parameters=request_data.parameters,
-                        status_code=status_code,
-                    )
-            elif data_relations:
-                json_data = self.invalidate_json_data(
-                    data_relations=data_relations,
-                    json_data=json_data,
-                    schema=request_data.dto_schema,
-                    url=url,
-                    method=method,
-                    dto=dto,
-                    status_code=status_code,
-                )
-            elif parameter_relations:
-                params, headers = self.invalidate_parameters(
-                    params=params,
-                    headers=headers,
-                    relations=parameter_relations,
-                    parameters=request_data.parameters,
-                    status_code=status_code,
-                )
-            elif status_code == self.invalid_property_default_response:
-                json_data = self.invalidate_json_data(
-                    data_relations=data_relations,
-                    json_data=json_data,
-                    schema=request_data.dto_schema,
-                    url=url,
-                    method=method,
-                    dto=dto,
-                    status_code=status_code,
-                )
-                params, headers = self.invalidate_parameters(
-                    params=params,
-                    headers=headers,
-                    relations=parameter_relations,
-                    parameters=request_data.parameters,
-                    status_code=status_code,
-                )
-            else:
-                logger.error(
-                    f"No Dto mapping found to cause status_code {status_code}."
-                )
-
+        # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
             get_params = get_request_data.params
@@ -243,6 +179,85 @@ class OpenapiExecutors:
             )
             if response.ok:
                 original_data = response.json()
+        # in case of a status code indicating an error, ensure the error occurs
+        if status_code >= 400:
+            data_relations = dto.get_relations_for_error_code(status_code)
+            parameter_relations = dto.get_parameter_relations_for_error_code(
+                status_code
+            )
+            invalidation_keyword_data = {
+                "invalidate_json_data": [
+                    "invalidate_json_data",
+                    data_relations,
+                    json_data,
+                    request_data.dto_schema,
+                    url,
+                    method,
+                    dto,
+                    status_code,
+                ],
+                "invalidate_parameters": [
+                    "invalidate_parameters",
+                    params,
+                    headers,
+                    parameter_relations,
+                    request_data.parameters,
+                    status_code,
+                ],
+            }
+            invalidation_keywords = []
+            if data_relations:
+                invalidation_keywords.append("invalidate_json_data")
+            if parameter_relations:
+                invalidation_keywords.append("invalidate_parameters")
+            if invalidation_keywords:
+                if (
+                    invalidation_keyword := choice(invalidation_keywords)
+                ) == "invalidate_json_data":
+                    json_data = run_keyword(
+                        *invalidation_keyword_data[invalidation_keyword]
+                    )
+                else:
+                    params, headers = run_keyword(
+                        *invalidation_keyword_data[invalidation_keyword]
+                    )
+            # if there are no relations to invalide and the status_code is the default
+            # response_code for invalid properties, invalidate all properties
+            elif status_code == self.invalid_property_default_response:
+                json_data = run_keyword(
+                    *invalidation_keyword_data["invalidate_json_data"]
+                )
+                params, headers = run_keyword(
+                    *invalidation_keyword_data["invalidate_parameters"]
+                )
+            else:
+                logger.error(
+                    f"No Dto mapping found to cause status_code {status_code}."
+                )
+        run_keyword(
+            "perform_validated_request",
+            endpoint,
+            method,
+            status_code,
+            url,
+            params,
+            headers,
+            json_data,
+            original_data,
+        )
+
+    @keyword
+    def perform_validated_request(
+        self,
+        endpoint: str,
+        method: str,
+        status_code: int,
+        url: str,
+        params: Dict[str, Any],
+        headers: Dict[str, str],
+        json_data: Dict[str, Any],
+        original_data: Optional[Dict[str, Any]] = None,
+    ) -> None:
         response = run_keyword(
             "authorized_request", url, method, params, headers, json_data
         )
@@ -265,24 +280,31 @@ class OpenapiExecutors:
                 f"Response status_code {response.status_code} was not {status_code}"
             )
         run_keyword("validate_response", endpoint, response, original_data)
-        if method == "DELETE" and response.ok:
+        if method == "DELETE":
             get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
             get_params = get_request_data.params
             get_headers = get_request_data.headers
-            response = run_keyword(
+            get_response = run_keyword(
                 "authorized_request", url, "GET", get_params, get_headers
             )
             if response.ok:
-                raise AssertionError(
-                    f"Resource still exists after deletion. Url was {url}"
-                )
-            # if the endpoint supports GET, 404 is expected, if not 405 is expected
-            if response.status_code not in [404, 405]:
-                logger.warning(
-                    f"Unexpected response after deleting resource: Status_code "
-                    f"{response.status_code} was received after trying to get {url} "
-                    f"after sucessfully deleting it."
-                )
+                if get_response.ok:
+                    raise AssertionError(
+                        f"Resource still exists after deletion. Url was {url}"
+                    )
+                # if the endpoint supports GET, 404 is expected, if not 405 is expected
+                if get_response.status_code not in [404, 405]:
+                    logger.warning(
+                        f"Unexpected response after deleting resource: Status_code "
+                        f"{get_response.status_code} was received after trying to get {url} "
+                        f"after sucessfully deleting it."
+                    )
+            else:
+                if not get_response.ok:
+                    raise AssertionError(
+                        f"Resource could not be retrieved after failed deletion. "
+                        f"Url was {url}, status_code was {get_response.status_code}"
+                    )
 
     @keyword
     def get_valid_url(self, endpoint: str, method: str) -> str:
@@ -589,6 +611,7 @@ class OpenapiExecutors:
         # TODO: add support for header / query parameters that can be invalidated
         return None
 
+    @keyword
     def invalidate_json_data(
         self,
         data_relations: List[Relation],
@@ -623,6 +646,7 @@ class OpenapiExecutors:
             )
         return json_data
 
+    @keyword
     def invalidate_parameters(
         self,
         params: Dict[str, Any],
