@@ -16,3 +16,30 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
+
+      - name: Install poetry
+        uses: dschep/install-poetry-action@v1.2
+
+      - name: Cache poetry virtualenv
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: ~/.virtualenvs
+          key: poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            poetry-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Set poetry config
+        run: |
+          poetry config settings.virtualenvs.in-project false
+          poetry config settings.virtualenvs.path ~/.virtualenvs
+
+      - name: Install dependencies
+        run: poetry install
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Start testserver
+        run: poetry run invoke testserver
+
+      - name: Run tests
+        run: poetry run invoke tests
