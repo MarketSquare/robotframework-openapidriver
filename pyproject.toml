@@ -17,7 +17,7 @@ classifiers = [
     "Framework :: Robot Framework",
 ]
 packages = [
-    { include = "openapidriver", from = "src" },
+    { include = "OpenApiDriver", from = "src" },
 ]
 
 [tool.poetry.dependencies]
