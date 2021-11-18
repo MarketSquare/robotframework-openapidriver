@@ -95,8 +95,19 @@ def libspec(context):
 
 @task
 def readme(context):
+#     front_matter = (
+# r"""---
+# ![[Unit-tests](https://img.shields.io/github/workflow/status/MarketSquare/robotframework-openapidriver/Unit%20tests/main)](https://github.com/MarketSquare/robotframework-openapidriver/actions?query=workflow%3A%22Unit+tests%22 "GitHub Workflow Unit Tests Status")
+# ![Codecov](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapidriver/main "Code coverage on master branch")
+# ![PyPI](https://img.shields.io/pypi/v/robotframework-openapidriver?label=version "PyPI package version")
+# ![Python versions](https://img.shields.io/pypi/pyversions/robotframework-openapidriver "Supported Python versions")
+# ![Licence](https://img.shields.io/pypi/l/robotframework-openapidriver "PyPI - License")
+# ---
+# """)
+    front_matter = """---\n---\n"""
     with open(f"{project_root}/docs/README.md", "w", encoding="utf-8") as readme:
         doc_string = openapidriver.__doc__
+        readme.write(front_matter)
         readme.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
 
 
