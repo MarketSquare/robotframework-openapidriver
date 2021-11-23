@@ -58,6 +58,9 @@ exclude_lines = [
     "@abstract"
 ]
 
+[tool.mypy]
+show_error_codes = true
+
 [[tool.mypy.overrides]]
 module = [
     "DataDriver.*",
