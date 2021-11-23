@@ -66,7 +66,7 @@ def format_code(context):
 @task
 def libdoc(context):
     json_file = f"{project_root}/tests/files/petstore_openapi.json"
-    source = f"{project_root}/src/OpenApiDriver/openapidriver.py::{json_file}"
+    source = f"OpenApiDriver::{json_file}"
     target = f"{project_root}/docs/openapidriver.html"
     cmd = [
         "python",
@@ -81,7 +81,7 @@ def libdoc(context):
 @task
 def libspec(context):
     json_file = f"{project_root}/tests/files/petstore_openapi.json"
-    source = f"{project_root}/src/OpenApiDriver/openapidriver.py::{json_file}"
+    source = f"OpenApiDriver::{json_file}"
     target = f"{project_root}/src/OpenApiDriver/openapidriver.libspec"
     cmd = [
         "python",
@@ -95,15 +95,15 @@ def libspec(context):
 
 @task
 def readme(context):
-#     front_matter = (
-# r"""---
-# ![[Unit-tests](https://img.shields.io/github/workflow/status/MarketSquare/robotframework-openapidriver/Unit%20tests/main)](https://github.com/MarketSquare/robotframework-openapidriver/actions?query=workflow%3A%22Unit+tests%22 "GitHub Workflow Unit Tests Status")
-# ![Codecov](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapidriver/main "Code coverage on master branch")
-# ![PyPI](https://img.shields.io/pypi/v/robotframework-openapidriver?label=version "PyPI package version")
-# ![Python versions](https://img.shields.io/pypi/pyversions/robotframework-openapidriver "Supported Python versions")
-# ![Licence](https://img.shields.io/pypi/l/robotframework-openapidriver "PyPI - License")
-# ---
-# """)
+    #     front_matter = (
+    # r"""---
+    # ![[Unit-tests](https://img.shields.io/github/workflow/status/MarketSquare/robotframework-openapidriver/Unit%20tests/main)](https://github.com/MarketSquare/robotframework-openapidriver/actions?query=workflow%3A%22Unit+tests%22 "GitHub Workflow Unit Tests Status")
+    # ![Codecov](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapidriver/main "Code coverage on master branch")
+    # ![PyPI](https://img.shields.io/pypi/v/robotframework-openapidriver?label=version "PyPI package version")
+    # ![Python versions](https://img.shields.io/pypi/pyversions/robotframework-openapidriver "Supported Python versions")
+    # ![Licence](https://img.shields.io/pypi/l/robotframework-openapidriver "PyPI - License")
+    # ---
+    # """)
     front_matter = """---\n---\n"""
     with open(f"{project_root}/docs/README.md", "w", encoding="utf-8") as readme:
         doc_string = openapidriver.__doc__
