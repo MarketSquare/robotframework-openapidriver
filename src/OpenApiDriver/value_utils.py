@@ -18,12 +18,10 @@ def get_valid_value(value_schema: Dict[str, Any]) -> Any:
 
     if value_type == "boolean":
         return bool(getrandbits(1))
-    # Use int32 integers if "format" does not specify int64
     if value_type == "integer":
         return get_random_int(value_schema=value_schema)
     if value_type == "number":
         return get_random_float(value_schema=value_schema)
-    # TODO: byte, binary, date, date-time based on "format"
     if value_type == "string":
         return get_random_string(value_schema=value_schema)
     raise NotImplementedError(f"Type '{value_type}' is currently not supported")
@@ -125,6 +123,7 @@ def get_random_float(value_schema: Dict[str, Any]) -> float:
 
 def get_random_string(value_schema: Dict[str, Any]) -> str:
     """Generate a random string within the min/max length in the schema, if specified."""
+    # TODO: byte, binary, date, date-time based on "format"
     minimum = value_schema.get("minLength", 0)
     maximum = value_schema.get("maxLength", 36)
     if minimum > maximum:
@@ -140,6 +139,10 @@ def get_random_string(value_schema: Dict[str, Any]) -> str:
 def get_invalid_value_from_constraint(
     values_from_constraint: List[Any], value_type: str
 ) -> Any:
+    """
+    Return a value of the same type as the values in the values_from_constraints that
+    is not in the values_from_constraints, if possible. Otherwise returns None.
+    """
     # if IGNORE is in the values_from_constraints, the parameter needs to be
     # ignored for an OK response so leaving the value at it's original value
     # should result in the specified error response
@@ -148,7 +151,10 @@ def get_invalid_value_from_constraint(
     # if the value is forced True or False, return the opposite to invalidate
     if len(values_from_constraint) == 1 and value_type == "boolean":
         return not values_from_constraint[0]
-    if value_type not in ["string", "integer", "number", "array"]:
+    if (
+        value_type not in ["string", "integer", "number", "array"]
+        or not values_from_constraint
+    ):
         return None
     invalid_values = 2 * values_from_constraint
     # None for empty array
@@ -200,6 +206,10 @@ def get_invalid_value_from_enum(values: List[Any], value_type: str):
 
 
 def get_value_out_of_bounds(value_schema: Dict[str, Any], current_value: Any) -> Any:
+    """
+    Return a value just outside the value or length range if specified in the
+    provided schema, otherwise None is returned.
+    """
     value_type = value_schema["type"]
 
     if value_type in ["integer", "number"]:

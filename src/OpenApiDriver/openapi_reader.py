@@ -33,7 +33,7 @@ class OpenApiReader(AbstractReaderClass):
     def get_data_from_source(self) -> List[TestCaseData]:
         test_data: List[TestCaseData] = []
 
-        endpoints = get_endpoints_from_source(getattr(self, "source", None))
+        endpoints = _get_endpoints_from_source(getattr(self, "source", None))
         if ignored_endpoints := getattr(self, "ignored_endpoints", None):
             for endpoint in ignored_endpoints:
                 endpoints.pop(endpoint)
@@ -77,7 +77,7 @@ class OpenApiReader(AbstractReaderClass):
                                 "${method}": method.upper(),
                                 "${status_code}": response,
                             },
-                            tags=get_tag_list(
+                            tags=_get_tag_list(
                                 tags=tag_list,
                                 method=method,
                                 response=response,
@@ -87,7 +87,7 @@ class OpenApiReader(AbstractReaderClass):
         return test_data
 
 
-def get_endpoints_from_source(source: Optional[str]) -> Dict[str, Any]:
+def _get_endpoints_from_source(source: Optional[str]) -> Dict[str, Any]:
     try:
         parser = ResolvingParser(source, backend="openapi-spec-validator")
     except (ResolutionError, AssertionError) as exception:
@@ -98,7 +98,7 @@ def get_endpoints_from_source(source: Optional[str]) -> Dict[str, Any]:
     return endpoints
 
 
-def get_tag_list(tags: List[str], method: str, response: str) -> List[str]:
+def _get_tag_list(tags: List[str], method: str, response: str) -> List[str]:
     tags.append(f"Method: {method.upper()}")
     tags.append(f"Response: {response}")
     return tags

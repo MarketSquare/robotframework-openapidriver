@@ -1,7 +1,4 @@
 # region: docstring
-# --- directly after """ is required to prevent the generated README.md from staring with
-# a blank line, which invalides the  front matter that GitHub Pages (Jekyll) uses to
-# generate the README.html.
 """
 # OpenApiDriver for Robot Framework®
 
@@ -76,6 +73,12 @@ module also implements a number of keywords.
 Details about the Keywords can be found
 [here](https://marketsquare.github.io/robotframework-openapidriver/openapidriver.html).
 
+The OpenApiDriver also support handling of relations between resources within the scope
+of the API being validated as well as handling dependencies on resources outside the
+scope of the API. In addition there is support for handling restrictions on the values
+of parameters and properties.
+Details about the `mappings_path` variable usage can be found
+[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.md).
 ---
 ## Limitations
 
@@ -134,7 +137,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
     ROBOT_LIBRARY_VERSION = __version__
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         source: str,
         ignored_endpoints: Optional[List[str]] = None,
@@ -264,7 +267,3 @@ class OpenApiDriver(DataDriver, DynamicCore):
     # accepts an AbstractReaderClass subclass as reader_class argument
     def _data_reader(self) -> AbstractReaderClass:
         return OpenApiReader(self.reader_config)
-
-
-# Support Robot Framework import mechanism
-openapidriver = OpenApiDriver  # pylint: disable=invalid-name

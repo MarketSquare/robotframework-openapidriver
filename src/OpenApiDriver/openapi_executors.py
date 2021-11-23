@@ -1,8 +1,9 @@
-"""Module containing the keywords and core logic to perform automatic OpenAPI contract validation."""
+"""Module containing the classes to perform automatic OpenAPI contract validation."""
 # TODO: support ${itemId} mapping instead of only "id"
 
 import json as _json
 import sys
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field, make_dataclass
 from enum import Enum
 from itertools import zip_longest
@@ -47,6 +48,8 @@ logger = getLogger(__name__)
 
 
 class ValidationLevel(str, Enum):
+    """The available levels for the response_validation parameter."""
+
     DISABLED = "DISABLED"
     INFO = "INFO"
     WARN = "WARN"
@@ -55,15 +58,19 @@ class ValidationLevel(str, Enum):
 
 @dataclass
 class RequestData:
-    dto: Union[Dto, DefaultDto] = DefaultDto
+    """Helper class to manage parameters used when making requests."""
+
+    dto: Union[Dto, DefaultDto] = DefaultDto()
     dto_schema: Dict[str, Any] = field(default_factory=dict)
     parameters: List[Dict[str, Any]] = field(default_factory=list)
     params: Dict[str, Any] = field(default_factory=dict)
     headers: Dict[str, Any] = field(default_factory=dict)
 
 
-class OpenapiExecutors:
-    def __init__(
+class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
+    """Main class providing the keywords and core logic to perform endpoint validations."""
+
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         source: str,
         origin: str = "",
@@ -123,6 +130,16 @@ class OpenapiExecutors:
 
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:
+        """
+        Perform a request for `method` on the `endpoint`, with no authorization.
+
+        This keyword only passes if the response code is 401: Unauthorized.
+
+        Any authorization parameters used to initialize the library are
+        ignored for this request.
+        > Note: No headers or (json) body are send with the request. For security
+        reasons, the authorization validation should be checked first.
+        """
         url: str = run_keyword("get_valid_url", endpoint, method)
         response = self.session.request(
             method=method,
@@ -135,6 +152,21 @@ class OpenapiExecutors:
     def test_invalid_url(
         self, endpoint: str, method: str, expected_status_code: int = 404
     ) -> None:
+        """
+        Perform a request for the provided 'endpoint' and 'method' where the url for
+        the `endpoint` is invalidated.
+
+        This keyword will be `SKIPPED` if the endpoint contains no parts that
+        can be invalidated.
+
+        The optional `expected_status_code` parameter (default: 404) can be set to the
+        expected status code for APIs that do not return a 404 on invalid urls.
+
+        > Note: Depending on API design, the url may be validated before or after
+        validation of headers, query parameters and / or (json) body. By default, no
+        parameters are send with the request. The `require_body_for_invalid_url`
+        parameter can be set to `True` if needed.
+        """
         valid_url: str = run_keyword("get_valid_url", endpoint, method)
 
         if not (url := run_keyword("get_invalidated_url", valid_url)):
@@ -160,6 +192,16 @@ class OpenapiExecutors:
 
     @keyword
     def test_endpoint(self, endpoint: str, method: str, status_code: int) -> None:
+        """
+        Validate that performing the `method` operation on `endpoint` results in a
+        `status_code` response.
+
+        This is the main keyword to be used in the `Test Template` keyword when using
+        the OpenApiDriver.
+
+        The keyword calls other keywords to generate the neccesary data to perform
+        the desired operation and validate the response against the openapi document.
+        """
         json_data: Optional[Dict[str, Any]] = None
         original_data: Optional[Dict[str, Any]] = None
 
@@ -186,10 +228,9 @@ class OpenapiExecutors:
                 status_code
             )
             invalidation_keyword_data = {
-                "invalidate_json_data": [
-                    "invalidate_json_data",
+                "get_invalid_json_data": [
+                    "get_invalid_json_data",
                     data_relations,
-                    json_data,
                     request_data.dto_schema,
                     url,
                     method,
@@ -207,13 +248,13 @@ class OpenapiExecutors:
             }
             invalidation_keywords = []
             if data_relations:
-                invalidation_keywords.append("invalidate_json_data")
+                invalidation_keywords.append("get_invalid_json_data")
             if parameter_relations:
                 invalidation_keywords.append("invalidate_parameters")
             if invalidation_keywords:
                 if (
                     invalidation_keyword := choice(invalidation_keywords)
-                ) == "invalidate_json_data":
+                ) == "get_invalid_json_data":
                     json_data = run_keyword(
                         *invalidation_keyword_data[invalidation_keyword]
                     )
@@ -225,7 +266,7 @@ class OpenapiExecutors:
             # response_code for invalid properties, invalidate all properties
             elif status_code == self.invalid_property_default_response:
                 json_data = run_keyword(
-                    *invalidation_keyword_data["invalidate_json_data"]
+                    *invalidation_keyword_data["get_invalid_json_data"]
                 )
                 params, headers = run_keyword(
                     *invalidation_keyword_data["invalidate_parameters"]
@@ -258,6 +299,11 @@ class OpenapiExecutors:
         json_data: Dict[str, Any],
         original_data: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """
+        This keyword first calls the Authorized Request keyword, then the Validate
+        Response keyword and finally validates is, for `DELETE` operations, whether
+        the target resource was indeed deleted (OK response) or not (error responses).
+        """
         response = run_keyword(
             "authorized_request", url, method, params, headers, json_data
         )
@@ -308,6 +354,16 @@ class OpenapiExecutors:
 
     @keyword
     def get_valid_url(self, endpoint: str, method: str) -> str:
+        """
+        This keyword returns a valid url for the given `endpoint` and `method`.
+
+        If the `endpoint` contains path parameters the Get Valid Id For Endpoint
+        keyword will be executed to retrieve valid ids for the path parameters.
+
+        > Note: if valid ids cannot be retrieved within the scope of the API, the
+        `PathPropertiesConstraint` Relation can be used. More information can be found
+        [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.md).
+        """
         dto_class = self.get_dto_class(endpoint=endpoint, method=method)
         relations = dto_class.get_relations()
         paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
@@ -331,6 +387,12 @@ class OpenapiExecutors:
 
     @keyword
     def get_valid_id_for_endpoint(self, endpoint: str, method: str) -> str:
+        """
+        Support keyword that returns the `id` for an existing resource at `endpoint`.
+
+        To prevent resource conflicts with other test cases, a new resource is created
+        (POST) if possible.
+        """
         url: str = run_keyword("get_valid_url", endpoint, method)
         # Try to create a new resource to prevent conflicts caused by
         # operations performed on the same resource by other test cases
@@ -382,17 +444,25 @@ class OpenapiExecutors:
             response.ok
         ), f"get_valid_id_for_endpoint received status_code {response.status_code}"
         response_data = response.json()
-        prepared_body: bytes = response.request.body
-        send_json: Dict[str, Any] = _json.loads(prepared_body.decode("UTF-8"))
+        if prepared_body := response.request.body:
+            if isinstance(prepared_body, bytes):
+                send_json = _json.loads(prepared_body.decode("UTF-8"))
+            else:
+                send_json = _json.loads(prepared_body)
+        else:
+            send_json = None
+        # no support for retrieving an id from an array returned on a POST request
+        if isinstance(response_data, list):
+            raise NotImplementedError(
+                f"Unexpected response body for POST request: expected an object but "
+                f"received an array ({response_data})"
+            )
         # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
         # instead of a newly created resource. In this case, the send_json must be
         # in the array of the 'array_item' property on {id}
         send_path: str = response.request.path_url
-        if isinstance(response_data, dict):
-            response_path: Optional[str] = response_data.get("href", None)
-        else:
-            response_path = None
-        if response_path and send_path not in response_path:
+        response_path: Optional[str] = response_data.get("href", None)
+        if response_path and (send_path not in response_path) and send_json:
             property_to_check = send_path.replace(response_path, "")[1:]
             item_list: List[Dict[str, Any]] = response_data[property_to_check]
             # Use the (mandatory) id to get the POSTed resource from the list
@@ -426,7 +496,7 @@ class OpenapiExecutors:
 
         if (body_spec := method_spec.get("requestBody", None)) is None:
             if dto_class == DefaultDto:
-                dto_instance = DefaultDto()
+                dto_instance: Dto = DefaultDto()
             else:
                 dto_class = make_dataclass(
                     cls_name=method_spec["operationId"],
@@ -447,10 +517,10 @@ class OpenapiExecutors:
             raise NotImplementedError(f"content_type '{content_type}' not supported")
         content_schema = body_spec["content"][content_type]["schema"]
         # TODO: is resolve_schema still needed?
-        resolved_schema: Dict[str, Any] = self.resolve_schema(content_schema)
-        dto_data = self.get_dto_data(
+        resolved_schema: Dict[str, Any] = self._resolve_schema(content_schema)
+        dto_data = self.get_json_data_for_dto_class(
             schema=resolved_schema,
-            dto=dto_class,
+            dto_class=dto_class,
             operation_id=method_spec.get("operationId"),
         )
         if dto_data is None:
@@ -464,7 +534,7 @@ class OpenapiExecutors:
                 fields=fields,
                 bases=(dto_class,),
             )
-            dto_instance = dto_class(**dto_data)
+            dto_instance = dto_class(**dto_data)  # type: ignore[call-arg]
         return RequestData(
             dto=dto_instance,
             dto_schema=resolved_schema,
@@ -474,6 +544,11 @@ class OpenapiExecutors:
         )
 
     def get_parametrized_endpoint(self, endpoint: str) -> str:
+        """
+        Get the parametrized endpoint as found in the `paths` section of the openapi
+        document from a (partially) resolved endpoint.
+        """
+
         def match_parts(parts: List[str], spec_parts: List[str]) -> bool:
             for part, spec_part in zip_longest(parts, spec_parts, fillvalue="Filler"):
                 if part == "Filler" or spec_part == "Filler":
@@ -521,11 +596,15 @@ class OpenapiExecutors:
         return result
 
     @keyword
-    def get_dto_data(
-        self, schema: Dict[str, Any], dto: Type[Dto], operation_id: str
+    def get_json_data_for_dto_class(
+        self, schema: Dict[str, Any], dto_class: Type[Dto], operation_id: str
     ) -> Optional[Dict[str, Any]]:
+        """
+        Generate a valid (json-compatible) dict for all the `dto_class` properties.
+        """
+
         def get_constrained_values(property_name: str) -> List[Any]:
-            relations = dto.get_relations()
+            relations = dto_class.get_relations()
             values = [
                 c.values
                 for c in relations
@@ -538,7 +617,7 @@ class OpenapiExecutors:
             return values.pop() if values else []
 
         def get_dependent_id(property_name: str, operation_id: str) -> Optional[str]:
-            relations = dto.get_relations()
+            relations = dto_class.get_relations()
             # multiple get paths are possible based on the operation being performed
             id_get_paths = [
                 (d.get_path, d.operation_id)
@@ -580,9 +659,9 @@ class OpenapiExecutors:
                 continue
             if property_type == "object":
                 default_dto = self.get_dto_class(endpoint="", method="")
-                object_data = self.get_dto_data(
+                object_data = self.get_json_data_for_dto_class(
                     schema=value_schema,
-                    dto=default_dto,
+                    dto_class=default_dto,
                     operation_id="",
                 )
                 json_data[property_name] = object_data
@@ -592,6 +671,10 @@ class OpenapiExecutors:
 
     @keyword
     def get_invalidated_url(self, valid_url: str) -> Optional[str]:
+        """
+        Return an url with all the path parameters in the `valid_url` replaced by a
+        random UUID. If the `valid_url` does not contain any parameters, None is returned.
+        """
         endpoint = valid_url.replace(self.base_url, "")
         endpoint_parts = endpoint.split("/")
         # first part will be '' since an endpoint starts with /
@@ -612,16 +695,22 @@ class OpenapiExecutors:
         return None
 
     @keyword
-    def invalidate_json_data(
+    def get_invalid_json_data(
         self,
         data_relations: List[Relation],
-        json_data: Dict[str, Any],
         schema: Dict[str, Any],
         url: str,
         method: str,
         dto: Dto,
         status_code: int,
     ) -> Dict[str, Any]:
+        """
+        Return `json_data` based on the `dto` that will cause the provided `status_code`
+        for the `method` operation on the `url`.
+
+        > Note: applicable UniqueProperyValueConstraint and IdReference Relations are
+            considered before changes to `json_data` are made.
+        """
         if not data_relations:
             if not schema:
                 raise AssertionError(
@@ -635,9 +724,12 @@ class OpenapiExecutors:
             return json_data
         resource_relation = choice(data_relations)
         if isinstance(resource_relation, UniquePropertyValueConstraint):
-            json_data = run_keyword("ensure_conflict", url, method, dto, status_code)
+            json_data = run_keyword(
+                "get_json_data_with_conflict", url, method, dto, status_code
+            )
         elif isinstance(resource_relation, IdReference):
             run_keyword("ensure_in_use", url, resource_relation)
+            json_data = asdict(dto)
         else:
             json_data = dto.get_invalidated_data(
                 schema=schema,
@@ -655,6 +747,10 @@ class OpenapiExecutors:
         parameters: List[Dict[str, Any]],
         status_code: int,
     ) -> Tuple[Dict[str, Any], Dict[str, str]]:
+        """
+        Returns a version of `params, headers` that has been modified to cause the
+        provided `status_code`.
+        """
         if not params and not headers:
             return params, headers
         if any([params, headers]) and not parameters:
@@ -662,7 +758,9 @@ class OpenapiExecutors:
                 "Could not invalidate parameters: parameters list was empty."
             )
             return params, headers
-
+        # ensure we're not modifying mutable arguments
+        params = deepcopy(params)
+        headers = deepcopy(headers)
         relations_for_status_code = [
             r
             for r in relations
@@ -705,6 +803,10 @@ class OpenapiExecutors:
 
     @keyword
     def ensure_in_use(self, url: str, resource_relation: IdReference) -> None:
+        """
+        Ensure that the `id` of the resource referenced by the `url` is used by the
+        resource defined by the `resource_relation`.
+        """
         endpoint = url.replace(self.base_url, "")
         endpoint_parts = endpoint.split("/")
         # first part will be '' since an endpoint starts with /
@@ -734,73 +836,59 @@ class OpenapiExecutors:
             response.raise_for_status()
 
     @keyword
-    def ensure_conflict(
+    def get_json_data_with_conflict(
         self, url: str, method: str, dto: Dto, conflict_status_code: int
     ) -> Dict[str, Any]:
+        """
+        Return `json_data` based on the `UniqueProperyValueConstraint` that must be
+        returned by the `get_relations` implementation on the `dto` for the given
+        `conflict_status_code`.
+        """
         json_data = asdict(dto)
-        for relation in dto.get_relations():
-            if isinstance(relation, UniquePropertyValueConstraint):
-                json_data[relation.property_name] = relation.value
-                # create a new resource that the original request will conflict with
-                if method in ["PATCH", "PUT"]:
-                    post_url_parts = url.split("/")[:-1]
-                    post_url = "/".join(post_url_parts)
-                    # the PATCH or PUT may use a different dto than required for POST
-                    # so a valid POST dto must be constructed
-                    endpoint = post_url.replace(self.base_url, "")
-                    request_data = self.get_request_data(
-                        endpoint=endpoint, method="POST"
-                    )
-                    post_json = asdict(request_data.dto)
-                    for key in post_json.keys():
-                        if key in json_data:
-                            post_json[key] = json_data.get(key)
-                else:
-                    post_url = url
-                    post_json = json_data
+        unique_property_value_constraints = [
+            r
+            for r in dto.get_relations()
+            if isinstance(r, UniquePropertyValueConstraint)
+        ]
+        for relation in unique_property_value_constraints:
+            json_data[relation.property_name] = relation.value
+            # create a new resource that the original request will conflict with
+            if method in ["PATCH", "PUT"]:
+                post_url_parts = url.split("/")[:-1]
+                post_url = "/".join(post_url_parts)
+                # the PATCH or PUT may use a different dto than required for POST
+                # so a valid POST dto must be constructed
                 endpoint = post_url.replace(self.base_url, "")
                 request_data = self.get_request_data(endpoint=endpoint, method="POST")
-                params = request_data.params
-                headers = request_data.headers
-                response: Response = run_keyword(
-                    "authorized_request", post_url, "POST", params, headers, post_json
-                )
-                # conflicting resource may already exist
-                assert (
-                    response.ok or response.status_code == conflict_status_code
-                ), f"ensure_conflict received {response.status_code}: {response.json()}"
-                return json_data
-        endpoint = url.replace(self.base_url, "")
-        request_data = self.get_request_data(endpoint=endpoint, method="GET")
-        params = request_data.params
-        headers = request_data.headers
-        response = run_keyword("authorized_request", url, "GET", params, headers)
-        if response.ok:
-            response_json = response.json()
-            if isinstance(response_json, dict):
-                # update the values in the json_data with the values from the response
-                for key in json_data.keys():
-                    if key in response_json.keys():
-                        json_data[key] = response_json[key]
-                return json_data
-        # couldn't retrieve a resource to conflict with, so create one instead
-        request_data = self.get_request_data(endpoint=endpoint, method="POST")
-        params = request_data.params
-        headers = request_data.headers
-        response = run_keyword(
-            "authorized_request", url, "POST", params, headers, json_data
+                post_json = asdict(request_data.dto)
+                for key in post_json.keys():
+                    if key in json_data:
+                        post_json[key] = json_data.get(key)
+            else:
+                post_url = url
+                post_json = json_data
+            endpoint = post_url.replace(self.base_url, "")
+            request_data = self.get_request_data(endpoint=endpoint, method="POST")
+            params = request_data.params
+            headers = request_data.headers
+            response: Response = run_keyword(
+                "authorized_request", post_url, "POST", params, headers, post_json
+            )
+            # conflicting resource may already exist
+            assert (
+                response.ok or response.status_code == conflict_status_code
+            ), f"get_json_data_with_conflict received {response.status_code}: {response.json()}"
+            return json_data
+        raise ValueError(
+            f"No UniquePropertyValueConstraint in the get_relations list on dto {dto}."
         )
-        assert (
-            response.ok
-        ), f"ensure_conflict received {response.status_code}: {response.json()}"
-        return json_data
 
-    def resolve_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
+    def _resolve_schema(self, schema: Dict[str, Any]) -> Dict[str, Any]:
         # schema is mutable, so copy to prevent mutation of original schema argument
         resolved_schema: Dict[str, Any] = schema.copy()
         if schema_parts := resolved_schema.pop("allOf", None):
             for schema_part in schema_parts:
-                resolved_part = self.resolve_schema(schema_part)
+                resolved_part = self._resolve_schema(schema_part)
                 resolved_schema = self._merge_schemas(resolved_schema, resolved_part)
         return resolved_schema
 
@@ -832,9 +920,19 @@ class OpenapiExecutors:
         response: Response,
         original_data: Optional[Dict[str, Any]] = None,
     ) -> None:
+        """
+        Validate the `response` by performing the following validations:
+        - validate the `response` against the openapi schema for the `endpoint`
+        - validate that the response does not contain extra properties
+        - validate that a href, if present, refers to the correct resource
+        - validate that the value for a property that is in the response is equal to
+            the property value that was send
+        - validate that no `original_data` is preserved when performing a PUT operation
+        - validate that a PATCH operation only updates the provided properties
+        """
         if response.status_code == 204:
             assert not response.content
-            return
+            return None
         # validate the response against the schema
         openapi_request = RequestsOpenAPIRequest(response.request)
         openapi_response = RequestsOpenAPIResponse(response)
@@ -855,9 +953,16 @@ class OpenapiExecutors:
                 else:
                     logger.info(validation_error)
 
-        response_spec = self.get_response_spec(
+        request_method = response.request.method
+        if request_method is None:
+            logger.warning(
+                f"Could not validate response for endpoint {endpoint}; no method found "
+                f"on the request property of the provided response."
+            )
+            return None
+        response_spec = self._get_response_spec(
             endpoint=endpoint,
-            method=response.request.method,
+            method=request_method,
             status_code=response.status_code,
         )
         # content should be a single key/value entry, so use tuple assignment
@@ -873,11 +978,11 @@ class OpenapiExecutors:
         json_response = response.json()
 
         response_schema = response_spec["content"][content_type]["schema"]
-        resolved_schema = self.resolve_schema(response_schema)
+        resolved_schema = self._resolve_schema(response_schema)
         if list_item_schema := resolved_schema.get("items"):
             if not isinstance(json_response, list):
                 raise AssertionError(
-                    f"Response schema violation: the schema specifies an array / list as "
+                    f"Response schema violation: the schema specifies an array as "
                     f"response type but the response was of type {type(json_response)}."
                 )
             # at present, only lists of resource objects are supported
@@ -893,7 +998,7 @@ class OpenapiExecutors:
                 )
             # no further validation; value validation of individual resources should
             # be performed on the endpoints for the specific resource
-            return
+            return None
 
         run_keyword(
             "validate_resource_properties", json_response, resolved_schema["properties"]
@@ -914,22 +1019,18 @@ class OpenapiExecutors:
         # every property that was sucessfully send and that is in the response
         # schema must have the value that was send
         if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
-            self.validate_send_response(response=response, original_data=original_data)
-        # ensure string properties are not empty
-        failed_keys: List[str] = []
-        for key, value in json_response.items():
-            if isinstance(value, str) and value.isspace():
-                failed_keys.append(key)
-        if failed_keys:
-            raise AssertionError(
-                f"Properties {', '.join(failed_keys)} contain a whitespace value"
-            )
+            run_keyword("validate_send_response", response, original_data)
+        return None
 
     @staticmethod
     @keyword
     def validate_resource_properties(
         resource: Dict[str, Any], schema_properties: Dict[str, Any]
     ) -> None:
+        """
+        Validate that the 'resource' does not contain any properties that are not
+        defined in the `schema_properties`.
+        """
         if resource.keys() != schema_properties.keys():
             expected_property_names = sorted(schema_properties.keys())
             property_names_in_resource = sorted(resource.keys())
@@ -945,9 +1046,24 @@ class OpenapiExecutors:
     def validate_send_response(
         response: Response, original_data: Optional[Dict[str, Any]] = None
     ) -> None:
+        """
+        Validate that each property that was send that is in the response has the value
+        that was send.
+        In case a PATCH request, validate that only the properties that were patched
+        have changed and that other properties are still at their pre-patch values.
+        """
         reference = response.json()
-        prepared_body: bytes = response.request.body
-        send_json: Dict[str, Any] = _json.loads(prepared_body.decode("UTF-8"))
+        if prepared_body := response.request.body:
+            if isinstance(prepared_body, bytes):
+                send_json = _json.loads(prepared_body.decode("UTF-8"))
+            else:
+                send_json = _json.loads(prepared_body)
+        else:
+            logger.warning(
+                "Could not validate send response; the body of the request property "
+                "on the provided response was None."
+            )
+            return None
         # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
         # instead of a newly created resource. In this case, the send_json must be
         # in the array of the 'array_item' property on {id}
@@ -967,16 +1083,10 @@ class OpenapiExecutors:
             # sometimes, a property in the request is not in the response, e.g. a password
             if key not in reference.keys():
                 continue
-            if value is None:
+            if value is not None:
                 # if a None value is send, the target property should be cleared or
-                # reverted to the default value which depends on its type
-                assert reference[key] in [None, [], 1, False, ""], (
-                    f"Received value for {key} '{reference[key]}' does not "
-                    f"match '{value}' in the {response.request.method} request"
-                    f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                    f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
-                )
-            else:
+                # reverted to the default value (which cannot be specified in the
+                # openapi document)
                 assert reference[key] == value, (
                     f"Received value for {key} '{reference[key]}' does not "
                     f"match '{value}' in the {response.request.method} request"
@@ -993,8 +1103,9 @@ class OpenapiExecutors:
                         f"\nPre-patch: {_json.dumps(original_data, indent=4, sort_keys=True)}"
                         f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
                     )
+        return None
 
-    def get_response_spec(
+    def _get_response_spec(
         self, endpoint: str, method: str, status_code: int
     ) -> Dict[str, Any]:
         method = method.lower()
@@ -1011,6 +1122,12 @@ class OpenapiExecutors:
         headers: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
     ) -> Response:
+        """
+        Perform a request using the security token or authentication set in the library.
+
+        > Note: provided username / password or auth objects take precedence over token
+            based security
+        """
         # if both an auth object and a token are available, auth takes precedence
         if self.security_token and not self.auth:
             security_header = {"Authorization": self.security_token}
@@ -1027,7 +1144,3 @@ class OpenapiExecutors:
         )
         logger.debug(f"Response text: {response.text}")
         return response
-
-
-# Support Robot Framework import mechanism
-openapi_executors = OpenapiExecutors  # pylint: disable=invalid-name

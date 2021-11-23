@@ -82,21 +82,25 @@ class DtoBase(ABC):
 
     @staticmethod
     def get_parameter_relations() -> List[Relation]:
+        """Return the list of Relations for the header and query parameters."""
         return []
 
-    @staticmethod
-    def get_relations() -> List[Relation]:
-        return []
-
-    def get_relations_for_error_code(self, error_code: int) -> List[Relation]:
+    def get_parameter_relations_for_error_code(self, error_code: int) -> List[Relation]:
+        """Return the list of Relations associated with the given error_code."""
         relations: List[Relation] = [
-            r for r in self.get_relations() if r.error_code == error_code
+            r for r in self.get_parameter_relations() if r.error_code == error_code
         ]
         return relations
 
-    def get_parameter_relations_for_error_code(self, error_code: int) -> List[Relation]:
+    @staticmethod
+    def get_relations() -> List[Relation]:
+        """Return the list of Relations for the (json) body."""
+        return []
+
+    def get_relations_for_error_code(self, error_code: int) -> List[Relation]:
+        """Return the list of Relations associated with the given error_code."""
         relations: List[Relation] = [
-            r for r in self.get_parameter_relations() if r.error_code == error_code
+            r for r in self.get_relations() if r.error_code == error_code
         ]
         return relations
 
@@ -106,7 +110,7 @@ class DtoBase(ABC):
         status_code: int,
         invalid_property_default_code: int,
     ) -> Dict[str, Any]:
-
+        """Return a data set with one of the properties set to an invalid value or type."""
         properties: Dict[str, Any] = self.__dict__
 
         relations = [r for r in self.get_relations() if r.error_code == status_code]
