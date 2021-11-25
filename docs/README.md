@@ -79,7 +79,7 @@ of the API being validated as well as handling dependencies on resources outside
 scope of the API. In addition there is support for handling restrictions on the values
 of parameters and properties.
 Details about the `mappings_path` variable usage can be found
-[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.md).
+[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).
 
 ---
 ## Limitations

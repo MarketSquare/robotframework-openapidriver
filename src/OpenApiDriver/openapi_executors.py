@@ -362,7 +362,7 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
 
         > Note: if valid ids cannot be retrieved within the scope of the API, the
         `PathPropertiesConstraint` Relation can be used. More information can be found
-        [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.md).
+        [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).
         """
         dto_class = self.get_dto_class(endpoint=endpoint, method=method)
         relations = dto_class.get_relations()
