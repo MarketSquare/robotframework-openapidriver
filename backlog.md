@@ -1,3 +1,9 @@
+- add invalid_value and invalid_value_error_code to PropertyValueConstraint
+- move loading source to openapidriver.py init
+- split openapi_executors
+    - test and validation keywords
+    - request builder keywords in openapi_core -> reusable package
+- support generator for PathPropertiesConstraint and PropertyValueConstraint
 - change random property invalidation to full coverage
     - loop over all properties, return list with each invalidated data set
     - remove every required property
@@ -5,8 +11,6 @@
     - invalid type for each property
     - perform request for each invalidated data set and perform all validations
     - fail test case on first fail or continue?
-- support for API key in headers
-- support for header invalidation -> 400 / 422?
 - source / origin / base_path default from openapi doc
 - support alternative id property names
 - support running test cases in random order
