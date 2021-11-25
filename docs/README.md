@@ -74,6 +74,13 @@ module also implements a number of keywords.
 Details about the Keywords can be found
 [here](https://marketsquare.github.io/robotframework-openapidriver/openapidriver.html).
 
+The OpenApiDriver also support handling of relations between resources within the scope
+of the API being validated as well as handling dependencies on resources outside the
+scope of the API. In addition there is support for handling restrictions on the values
+of parameters and properties.
+Details about the `mappings_path` variable usage can be found
+[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.md).
+
 ---
 ## Limitations
 

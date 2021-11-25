@@ -21,7 +21,7 @@ class get_dto_class:
     def __init__(self, mappings_module_name: str) -> None:
         try:
             mappings_module = import_module(mappings_module_name)
-            self.dto_mapping: Dict[Tuple[str, str], Any] = mappings_module.DTO_MAPPING
+            self.dto_mapping: Dict[Tuple[str, str], Any] = mappings_module.DTO_MAPPING  # type: ignore[attr-defined]
         except (ImportError, AttributeError, ValueError) as exception:
             logger.debug(f"DTO_MAPPING was not imported: {exception}")
             self.dto_mapping = {}

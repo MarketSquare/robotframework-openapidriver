@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapidriver"
-version = "2.1.0-alpha.1"
+version = "2.1.0-alpha.3"
 description = "A library for contract-testing OpenAPI / Swagger APIs."
 license = "Apache-2.0"
 authors = ["Robin Mackaij"]
@@ -17,7 +17,7 @@ classifiers = [
     "Framework :: Robot Framework",
 ]
 packages = [
-    { include = "openapidriver", from = "src" },
+    { include = "OpenApiDriver", from = "src" },
 ]
 
 [tool.poetry.dependencies]
@@ -57,6 +57,9 @@ exclude_lines = [
     "pragma: no cover",
     "@abstract"
 ]
+
+[tool.mypy]
+show_error_codes = true
 
 [[tool.mypy.overrides]]
 module = [
