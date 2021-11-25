@@ -605,7 +605,7 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
 
         def get_constrained_values(property_name: str) -> List[Any]:
             relations = dto_class.get_relations()
-            values = [
+            values_list = [
                 c.values
                 for c in relations
                 if (
@@ -614,7 +614,7 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
                 )
             ]
             # values should be empty or contain 1 list of allowed values
-            return values.pop() if values else []
+            return values_list.pop() if values_list else []
 
         def get_dependent_id(property_name: str, operation_id: str) -> Optional[str]:
             relations = dto_class.get_relations()
@@ -650,6 +650,9 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
             value_schema = schema["properties"][property_name]
             property_type = value_schema["type"]
             if constrained_values := get_constrained_values(property_name):
+                # do not add properties that are configured to be ignored
+                if IGNORE in constrained_values:
+                    continue
                 json_data[property_name] = choice(constrained_values)
                 continue
             if dependent_id := get_dependent_id(
