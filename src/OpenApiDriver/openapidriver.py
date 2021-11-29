@@ -106,8 +106,11 @@ from typing import List, Optional, Union
 
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
+from prance import ResolvingParser
+from prance.util.url import ResolutionError
 from requests.auth import AuthBase
 from robotlibcore import DynamicCore
+from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiDriver.openapi_executors import OpenapiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
@@ -235,12 +238,23 @@ class OpenApiDriver(DataDriver, DynamicCore):
         ignored_endpoints = ignored_endpoints if ignored_endpoints else []
         ignored_responses = ignored_responses if ignored_responses else []
         ignored_testcases = ignored_testcases if ignored_testcases else []
+        try:
+            parser = ResolvingParser(source, backend="openapi-spec-validator")
+        except ResolutionError as exception:
+            BuiltIn().fatal_error(
+                f"Exception while trying to load openapi spec from source: {exception}"
+            )
+        if (openapi_spec := parser.specification) is None:  # pragma: no cover
+            BuiltIn().fatal_error(
+                "Source was loaded, but no specification was present after parsing."
+            )
+        endpoints = openapi_spec["paths"]
         DataDriver.__init__(
             self,
             # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
             # reader_class=OpenApiReader
             reader_class="openapi_reader",
-            source=source,
+            endpoints=endpoints,
             ignored_endpoints=ignored_endpoints,
             ignored_responses=ignored_responses,
             ignored_testcases=ignored_testcases,
@@ -249,7 +263,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
 
         mappings_path = Path(mappings_path).as_posix()
         openapi_executors = OpenapiExecutors(
-            source=source,
+            openapi_specification=openapi_spec,
             origin=origin,
             base_path=base_path,
             mappings_path=mappings_path,
