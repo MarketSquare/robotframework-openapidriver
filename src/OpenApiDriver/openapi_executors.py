@@ -20,8 +20,6 @@ from openapi_core.contrib.requests import (
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
 from openapi_core.validation.response.validators import ResponseValidator
-from prance import ResolvingParser
-from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from robot.api import SkipExecution
@@ -72,7 +70,7 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
-        source: str,
+        openapi_specification: Dict[str, Any],
         origin: str = "",
         base_path: str = "",
         mappings_path: Union[str, Path] = "",
@@ -85,14 +83,8 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
         require_body_for_invalid_url: bool = False,
         invalid_property_default_response: int = 422,
     ) -> None:
-        try:
-            parser = ResolvingParser(source, backend="openapi-spec-validator")
-        except ResolutionError as exception:
-            BuiltIn().fatal_error(
-                f"Exception while trying to load openapi spec from source: {exception}"
-            )
-        self.openapi_doc: Dict[str, Any] = parser.specification
-        validation_spec = create_spec(self.openapi_doc)
+        self.openapi_spec: Dict[str, Any] = openapi_specification
+        validation_spec = create_spec(self.openapi_spec)
         self.response_validator = ResponseValidator(
             spec=validation_spec,
             base_url=base_path,
@@ -480,7 +472,7 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
         # against the parametrized endpoints in the paths section.
         spec_endpoint = self.get_parametrized_endpoint(endpoint)
         try:
-            method_spec = self.openapi_doc["paths"][spec_endpoint][method]
+            method_spec = self.openapi_spec["paths"][spec_endpoint][method]
         except KeyError as exception:
             raise NotImplementedError(
                 f"method '{method}' not suported on '{spec_endpoint}"
@@ -561,12 +553,12 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
         # trailing '/' should not be matched
         if len(endpoint_parts) > 2 and endpoint_parts[-1] == "":
             endpoint_parts.pop(-1)
-        spec_endpoints: List[str] = {**self.openapi_doc}["paths"].keys()
+        spec_endpoints: List[str] = {**self.openapi_spec}["paths"].keys()
         for spec_endpoint in spec_endpoints:
             spec_endpoint_parts = spec_endpoint.split("/")
             if match_parts(endpoint_parts, spec_endpoint_parts):
                 return spec_endpoint
-        raise ValueError(f"{endpoint} not matched to openapi_doc path")
+        raise ValueError(f"{endpoint} not matched to openapi_spec path")
 
     @staticmethod
     def get_parameter_data(
@@ -1113,7 +1105,7 @@ class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
     ) -> Dict[str, Any]:
         method = method.lower()
         status = str(status_code)
-        spec = {**self.openapi_doc}["paths"][endpoint][method]["responses"][status]
+        spec = {**self.openapi_spec}["paths"][endpoint][method]["responses"][status]
         return spec
 
     @keyword

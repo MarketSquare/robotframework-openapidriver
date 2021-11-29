@@ -33,7 +33,7 @@ class OpenApiReader(AbstractReaderClass):
     def get_data_from_source(self) -> List[TestCaseData]:
         test_data: List[TestCaseData] = []
 
-        endpoints = _get_endpoints_from_source(getattr(self, "source", None))
+        endpoints = getattr(self, "endpoints")
         if ignored_endpoints := getattr(self, "ignored_endpoints", None):
             for endpoint in ignored_endpoints:
                 endpoints.pop(endpoint)
@@ -85,17 +85,6 @@ class OpenApiReader(AbstractReaderClass):
                         ),
                     )
         return test_data
-
-
-def _get_endpoints_from_source(source: Optional[str]) -> Dict[str, Any]:
-    try:
-        parser = ResolvingParser(source, backend="openapi-spec-validator")
-    except (ResolutionError, AssertionError) as exception:
-        BuiltIn().fatal_error(
-            f"Exception while trying to load openapi spec from source: {exception}"
-        )
-    endpoints: Dict[str, Any] = parser.specification["paths"]
-    return endpoints
 
 
 def _get_tag_list(tags: List[str], method: str, response: str) -> List[str]:

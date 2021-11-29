@@ -1,5 +1,4 @@
 - replace 'How it works' with 'Getting started'
-- move loading source to openapidriver.py init
 - split openapi_executors
     - test and validation keywords
     - request builder keywords in openapi_core -> reusable package
