@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 from typing import Callable, Dict, List, Optional
 from uuid import uuid4
@@ -65,6 +66,7 @@ class EmployeeDetails(BaseModel):
     # login_name: constr(strip_whitespace=True, min_length=1, max_length=20)
     employee_number: int
     wagegroup_id: str
+    date_of_birth: datetime.date
     parttime_day: Optional[WeekDay]
 
 
@@ -72,6 +74,7 @@ class Employee(BaseModel):
     name: str
     # login_name: constr(strip_whitespace=True, min_length=1, max_length=20)
     wagegroup_id: str
+    date_of_birth: datetime.date
     parttime_day: Optional[WeekDay]
 
 
@@ -80,6 +83,7 @@ class EmployeeUpdate(BaseModel):
     # login_name: Optional[constr(strip_whitespace=True, min_length=1, max_length=20)]
     employee_number: Optional[int]
     wagegroup_id: Optional[str]
+    date_of_birth: Optional[datetime.date]
     parttime_day: Optional[WeekDay]
 
 
@@ -199,13 +203,19 @@ def delete_wagegroup(wagegroup_id: str) -> None:
     "/employees",
     status_code=201,
     response_model=EmployeeDetails,
-    responses={451: {"model": Detail}},
+    responses={403: {"model": Detail}, 451: {"model": Detail}},
 )
 def post_employee(employee: Employee) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
     if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(
             status_code=451, detail=f"Wage group with id {wagegroup_id} does not exist."
+        )
+    today = datetime.date.today()
+    employee_age = today - employee.date_of_birth
+    if employee_age.days < 18 * 365:
+        raise HTTPException(
+            status_code=403, detail="An employee must be at least 18 years old."
         )
     new_employee = EmployeeDetails(
         id=uuid4().hex,

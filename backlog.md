@@ -1,4 +1,4 @@
-- add invalid_value and invalid_value_error_code to PropertyValueConstraint
+- replace 'How it works' with 'Getting started'
 - move loading source to openapidriver.py init
 - split openapi_executors
     - test and validation keywords
@@ -11,9 +11,9 @@
     - invalid type for each property
     - perform request for each invalidated data set and perform all validations
     - fail test case on first fail or continue?
-- source / origin / base_path default from openapi doc
+- source / origin / base_path default from openapi doc?
 - support alternative id property names
-- support running test cases in random order
+- support running test cases in random order?
 - support * in ignored_endpoints for bulk filtering
 - warn for empty GET responses
 - suppress openapi_core debug logging

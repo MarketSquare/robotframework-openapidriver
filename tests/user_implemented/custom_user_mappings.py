@@ -40,6 +40,13 @@ class EmployeeDto(Dto):
                 get_path="/wagegroups",
                 error_code=451,
             ),
+            PropertyValueConstraint(
+                property_name="date_of_birth",
+                values=["1970-07-07", "1980-08-08", "1990-09-09"],
+                invalid_value="2020-02-20",
+                invalid_value_error_code=403,
+                error_code=422,
+            ),
         ]
         return relations
 
@@ -75,6 +82,7 @@ DTO_MAPPING: Dict[Tuple[Any, Any], Any] = {
     ("/wagegroups", "post"): WagegroupDto,
     ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDto,
     ("/employees", "post"): EmployeeDto,
+    ("/employees/{employee_id}", "patch"): EmployeeDto,
     ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
     ("/message", "get"): MessageDto,
 }

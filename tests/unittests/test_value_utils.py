@@ -301,6 +301,13 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
         )
         self.assertEqual(value, None)
 
+        values = [[], []]
+        value = value_utils.get_invalid_value_from_constraint(
+            values_from_constraint=values,
+            value_type="array",
+        )
+        self.assertEqual(value, None)
+
 
 class TestInvalidValueFromEnum(unittest.TestCase):
     def test_string(self):

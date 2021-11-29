@@ -190,7 +190,7 @@ Note how this example reuses the `EmployeeDto` to model the uniqueness constrain
 The OpenApiDriver uses the `type` information in the openapi document to generate random data of the correct type to perform the operations that need it.
 While this works in many situations (e.g. a random `string` for a `name`), there can be additional restrictions to a value that cannot be specified in an openapi document.
 
-In our example, the `date_of_birth` must be a string in a specific format, e.g. 1995/03/27.
+In our example, the `date_of_birth` must be a string in a specific format, e.g. 1995-03-27.
 This type of constraint can be modeled as follows:
 ```python
 class EmployeeDto(Dto):
@@ -199,7 +199,7 @@ class EmployeeDto(Dto):
         relations = [
             PropertyValueConstraint(
                 property_name="date_of_birth",
-                values=["1995/03/27", "1980/10/02"],
+                values=["1995-03-27", "1980-10-02"],
                 error_code=422,
             ),
         ]
@@ -211,7 +211,30 @@ DTO_MAPPING = {
     ("/employees/${employee_id}", "patch"): EmployeeDto,
 }
 ```
-> Note: in a next release, the `PropertyValueConstraint` will be extended with an `error_value` attribute to support e.g. a scenario where the `date_of_birth` in our example must mean the Employee being created is 18 years or older.
+Now in addition, there could also be the restriction that the Employee must be 18 years or older.
+To support additional restrictions like these, the `PropertyValueConstraint` supports two additional properties: `error_value` and `invalid_value_error_code`:
+```python
+class EmployeeDto(Dto):
+    @staticmethod
+    def get_relations():
+        relations = [
+            PropertyValueConstraint(
+                property_name="date_of_birth",
+                values=["1995-03-27", "1980-10-02"],
+                error_code=422,
+                invalid_value="2020-02-20",
+                invalid_value_error_code=403,
+            ),
+        ]
+        return relations
+
+DTO_MAPPING = {
+    ("/employees", "post"): EmployeeDto,
+    ("/employees/${employee_id}", "put"): EmployeeDto,
+    ("/employees/${employee_id}", "patch"): EmployeeDto,
+}
+```
+So now if an incorrectly formatted date is send a 422 response is expected, but when `2020-02-20` is send the expected repsonse is 403.
 
 ---
 
