@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-11-29T15:43:41Z" specversion="3" source="openapidriver.py" lineno="150">
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-11-29T16:02:02Z" specversion="3" source="openapidriver.py" lineno="150">
 <version>2.2.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;
 &lt;p&gt;Most of the provided keywords are for internal use by the library (for example to ensure the result logs provide insight into the executed steps) but a number of them are intended to be used as &lt;code&gt;Test Template&lt;/code&gt; or within the &lt;code&gt;Keyword&lt;/code&gt; that serves as the &lt;code&gt;Test Template&lt;/code&gt;.&lt;/p&gt;
@@ -114,7 +114,7 @@
 &lt;h4&gt;base_path&lt;/h4&gt;
 &lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;mappings_path&lt;/h4&gt;
-&lt;p&gt;See [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html)&lt;/p&gt;
+&lt;p&gt;See &lt;a href="https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html"&gt;here&lt;/a&gt;.&lt;/p&gt;
 &lt;h4&gt;username&lt;/h4&gt;
 &lt;p&gt;The username to be used for Basic Authentication.&lt;/p&gt;
 &lt;h4&gt;password&lt;/h4&gt;
