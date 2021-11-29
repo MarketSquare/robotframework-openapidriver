@@ -14,6 +14,8 @@ from OpenApiDriver import value_utils
 
 logger = getLogger(__name__)
 
+NOT_SET = object()
+
 
 class ResourceRelation(ABC):
     """ABC for all resource relations or restrictions within the API."""
@@ -37,6 +39,8 @@ class PropertyValueConstraint(ResourceRelation):
 
     property_name: str
     values: List[Any]
+    invalid_value: Any = NOT_SET
+    invalid_value_error_code: int = 422
     error_code: int = 422
 
 
@@ -88,7 +92,10 @@ class DtoBase(ABC):
     def get_parameter_relations_for_error_code(self, error_code: int) -> List[Relation]:
         """Return the list of Relations associated with the given error_code."""
         relations: List[Relation] = [
-            r for r in self.get_parameter_relations() if r.error_code == error_code
+            r
+            for r in self.get_parameter_relations()
+            if r.error_code == error_code
+            or getattr(r, "invalid_value_error_code", None) == error_code
         ]
         return relations
 
@@ -100,7 +107,10 @@ class DtoBase(ABC):
     def get_relations_for_error_code(self, error_code: int) -> List[Relation]:
         """Return the list of Relations associated with the given error_code."""
         relations: List[Relation] = [
-            r for r in self.get_relations() if r.error_code == error_code
+            r
+            for r in self.get_relations()
+            if r.error_code == error_code
+            or getattr(r, "invalid_value_error_code", None) == error_code
         ]
         return relations
 
@@ -113,7 +123,12 @@ class DtoBase(ABC):
         """Return a data set with one of the properties set to an invalid value or type."""
         properties: Dict[str, Any] = self.__dict__
 
-        relations = [r for r in self.get_relations() if r.error_code == status_code]
+        relations = [
+            r
+            for r in self.get_relations()
+            if r.error_code == status_code
+            or getattr(r, "invalid_value_error_code", None) == status_code
+        ]
         if status_code == invalid_property_default_code:
             property_names = list(properties.keys())
         else:
@@ -139,6 +154,21 @@ class DtoBase(ABC):
 
             value_schema = schema["properties"][property_name]
             current_value = properties[property_name]
+
+            invalid_value_from_constraint = [
+                r.invalid_value
+                for r in relations
+                if isinstance(r, PropertyValueConstraint)
+                and r.property_name == property_name
+                and r.invalid_value_error_code == status_code
+            ]
+            if (
+                invalid_value_from_constraint
+                and invalid_value_from_constraint[0] is not NOT_SET
+            ):
+                properties[property_name] = invalid_value_from_constraint[0]
+                return properties
+
             values_from_constraint = [
                 r.values
                 for r in relations
