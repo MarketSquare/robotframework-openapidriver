@@ -157,9 +157,6 @@ def get_invalid_value_from_constraint(
     ):
         return None
     invalid_values = 2 * values_from_constraint
-    # None for empty array
-    if not invalid_values:
-        return None
     invalid_value = invalid_values.pop()
     if value_type in ["integer", "number"]:
         for value in invalid_values:
