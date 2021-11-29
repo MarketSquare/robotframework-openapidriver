@@ -1,4 +1,3 @@
-- replace 'How it works' with 'Getting started'
 - split openapi_executors
     - test and validation keywords
     - request builder keywords in openapi_core -> reusable package
