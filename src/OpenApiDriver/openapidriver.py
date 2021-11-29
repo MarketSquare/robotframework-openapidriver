@@ -13,11 +13,13 @@ For more information about the DataDriver library, see
 https://github.com/Snooz82/robotframework-datadriver.
 
 ---
+
 > Note: OpenApiDriver is currently in early development so there are currently
 restrictions / limitations that you may encounter when using this library to run
 tests against an API. See [Limitations](#limitations) for details.
 
 ---
+
 ## Installation
 
 If you already have Python >= 3.8 with pip installed, you can simply run:
@@ -25,6 +27,7 @@ If you already have Python >= 3.8 with pip installed, you can simply run:
 ``pip install --upgrade robotframework-openapidriver``
 
 ---
+
 ## OpenAPI (aka Swagger)
 
 The OpenAPI Specification (OAS) defines a standard, language-agnostic interface
@@ -34,43 +37,65 @@ The OpenApiDriver module implements a reader class that generates a test case fo
 each endpoint, method and response that is defined in an OpenAPI document, typically
 an openapi.json or openapi.yaml file.
 
----
-## How it works
+> Note: OpenApiDriver is designed for APIs based on the OAS v3
+The library has not been tested for APIs based on the OAS v2.
 
-If the source file has the .json or .yaml extension, it will be loaded by the
-library (using the prance library under the hood) and the test cases will be generated.
+---
+
+## Getting started
+
+Before trying to use OpenApiDriver to run automatic validations on the target API
+it's recommended to first ensure that the openapi document for the API is valid
+under the OAS.
+
+This can be done using the command line interface of a package that is installed as
+a prerequisite for OpenApiDriver.
+Both a local openapi.json or openapi.yaml file or one hosted by the API server
+can be checked.
+
+```shell
+prance validate http://localhost:8000/openapi.json
+Processing "http://localhost:8000/openapi.json"...
+ -> Resolving external references.
+Validates OK as OpenAPI 3.0.2!
+
+prance validate /tests/files/petstore_openapi.yaml
+Processing "/tests/files/petstore_openapi.yaml"...
+ -> Resolving external references.
+Validates OK as OpenAPI 3.0.2!
+```
+
+You'll have to change the url or file reference to the location of the openapi
+document for your API.
+
+If the openapi document passes this validation, the next step is trying to do a test
+run with a minimal test suite.
+The example below can be used, with `source` and `origin` altered to fit your situation.
 
 ``` robotframework
 *** Settings ***
 Library            OpenApiDriver
-...                    source=openapi.json
-Test Template      Do Nothing
-
+...                    source=http://localhost:8000/openapi.json
+...                    origin=http://localhost:8000
+Test Template      Validate Using Test Endpoint Keyword
 
 *** Test Cases ***
-Some OpenAPI test for ${method} on ${endpoint} where ${status_code} is expected
+Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
 
-*** Keywords *** ***
-Do Nothing
+*** Keywords ***
+Validate Using Test Endpoint Keyword
     [Arguments]    ${endpoint}    ${method}    ${status_code}
-    No Operation
+    Test Endpoint
+    ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+
 ```
 
-It is also possible to load the openapi.json / openapi.yaml directly from the
-server by using the url instead of a local file:
-
-``` robotframework
-*** Settings ***
-Library            OpenApiDriver
-...                    source=http://127.0.0.1:8000/openapi.json
-```
-
-Since the OpenAPI document is essentially a contract that specifies what operations are
-supported and what data needs to be send and will be returned, it is possible to
-automatically validate the API against this contract. For this purpose, the openapi
-module also implements a number of keywords.
-
-Details about the Keywords can be found
+Running the above suite for the first time is likely to result in some
+errors / failed testes.
+You should look at the Robot Framework log.html to determine the seasons
+for the failing tests.
+Depending on the reasons for the failures, there's different solutions possible.
+Details about the OpenApiDriver library parameters what you may need can be found
 [here](https://marketsquare.github.io/robotframework-openapidriver/openapidriver.html).
 
 The OpenApiDriver also support handling of relations between resources within the scope
@@ -81,6 +106,7 @@ Details about the `mappings_path` variable usage can be found
 [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).
 
 ---
+
 ## Limitations
 
 There are currently a number of limitations to supported API structures, supported
@@ -133,6 +159,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
     serves as the ``Test Template``.
 
     The following Keywords are intended to be used in Test Suites:
+
     - ``Test Endpoint``
     - ``Test Invalid Url``
     - ``Test Unauthorized``
@@ -190,7 +217,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         openapi document. E.g. ``/petshop/v2``.
 
         === mappings_path ===
-
+        See [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html)
 
         === username ===
         The username to be used for Basic Authentication.
@@ -209,6 +236,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         By default, a ``WARN`` is logged when the Response received after a Request does not
         comply with the schema as defined in the openapi document for the given operation. The
         following values are supported:
+
         - ``DISABLED``: All Response validation errors will be ignored
         - ``INFO``: Any Response validation erros will be logged at ``INFO`` level
         - ``WARN``: Any Response validation erros will be logged at ``WARN`` level
