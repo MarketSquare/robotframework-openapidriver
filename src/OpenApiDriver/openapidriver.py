@@ -217,7 +217,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         openapi document. E.g. ``/petshop/v2``.
 
         === mappings_path ===
-        See [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html)
+        See [https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html | here].
 
         === username ===
         The username to be used for Basic Authentication.
