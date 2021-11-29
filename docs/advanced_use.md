@@ -11,6 +11,7 @@ To support automatic validation of API endpoints where such relations apply, Ope
 
 ## Taking a custom mappings file into use
 To take a custom mappings file into use, the absolute path to it has to be passed to OpenApiDriver as the `mappings_path` parameter:
+
 ```robot framework
 *** Settings ***
 Library             OpenApiDriver
@@ -19,6 +20,7 @@ Library             OpenApiDriver
 ...                 mappings_path=${root}/tests/custom_user_mappings.py
 ...
 ```
+
 > Note: An absolute path is required.
 > In the example above, `${root}` is a global variable that holds the absolute path to the repository root.
 
@@ -26,6 +28,7 @@ Library             OpenApiDriver
 Just like custom Robot Framework libraries, the mappings file has to be implemented in Python.
 Since this Python file is imported by the OpenApiDriver, it has to follow a fixed format (more technically, implement a certain interface).
 The bare minimum implementation of a mappings.py file looks like this:
+
 ```python
 from OpenApiDriver import (
     IGNORE,
@@ -50,6 +53,7 @@ DTO_MAPPING = {
 }
 
 ```
+
 There are 3 main parts in this mappings file:
 
 1. The import section.
@@ -90,6 +94,7 @@ This Wagegroup also has a number of required properties: name and hourly rate.
 To add an Employee, a `wagegroup_id` is required, the `id` of a Wagegroup resource that is already present in the system.
 
 Since a typical REST API generates this `id` for a new resource and returns that `id` as part of the `post` response, the required `wagegroup_id` can be obtained by posting a new Wagegroup. This relation can be implemented as follows:
+
 ```python
 class EmployeeDto(Dto):
     @staticmethod
@@ -107,6 +112,7 @@ DTO_MAPPING = {
     ("/employees", "post"): EmployeeDto
 }
 ```
+
 Notice that the `get_path` of the `IdDependency` is not named `post_path` instead.
 This is deliberate for two reasons:
 
@@ -131,6 +137,7 @@ To prevent this, an API typically returns an `error_code` when such a `delete` o
 This `error_code` should be described as one of the `responses` in the openapi document for the `delete` operation of the `/wagegroups/${wagegroup_id}` path.
 
 To verify that the specified `error_code` indeed occurs when attempting to `delete` the Wagegroup, we can implement the following dependency:
+
 ```python
 class WagegroupDto(Dto):
     @staticmethod
@@ -161,6 +168,7 @@ In our example, the required `employee_number` must be chosen from the "free" nu
 When a number is chosen that is already in use, the API should return the `error_code` specified in the openapi document for the operation (typically `post`, `put` and `patch`) on the endpoint.
 
 To verify that the specified `error_code` occurs when attempting to `post` an Employee with an `employee_number` that is already in use, we can implement the following dependency:
+
 ```python
 class EmployeeDto(Dto):
     @staticmethod
@@ -180,6 +188,7 @@ DTO_MAPPING = {
     ("/employees/${employee_id}", "patch"): EmployeeDto,
 }
 ```
+
 Note how this example reuses the `EmployeeDto` to model the uniqueness constraint for all the operations (`post`, `put` and `patch`) that all relate to the same `employee_number`.
 
 ---
@@ -192,6 +201,7 @@ While this works in many situations (e.g. a random `string` for a `name`), there
 
 In our example, the `date_of_birth` must be a string in a specific format, e.g. 1995-03-27.
 This type of constraint can be modeled as follows:
+
 ```python
 class EmployeeDto(Dto):
     @staticmethod
@@ -211,8 +221,10 @@ DTO_MAPPING = {
     ("/employees/${employee_id}", "patch"): EmployeeDto,
 }
 ```
+
 Now in addition, there could also be the restriction that the Employee must be 18 years or older.
 To support additional restrictions like these, the `PropertyValueConstraint` supports two additional properties: `error_value` and `invalid_value_error_code`:
+
 ```python
 class EmployeeDto(Dto):
     @staticmethod
@@ -234,6 +246,7 @@ DTO_MAPPING = {
     ("/employees/${employee_id}", "patch"): EmployeeDto,
 }
 ```
+
 So now if an incorrectly formatted date is send a 422 response is expected, but when `2020-02-20` is send the expected repsonse is 403.
 
 ---
@@ -256,6 +269,7 @@ Unfortunately, this structure / pattern does not apply to every endpoint, not ev
 Imagine we want to extend the API from our example with an endpoint that returns all the Employees that have their birthday at a given date:
 `/birthdays/${month}/${date}`.
 It should be clear that the OpenApiDriver won't be able to acquire a valid `month` and `date`. The `PathPropertiesConstraint` can be used in this case:
+
 ```python
 class BirthdaysDto(Dto):
     @staticmethod
@@ -283,6 +297,7 @@ Some addresses however have an address extension, e.g. 1234AB 42 <sup>2.C</sup>.
 The extension may not be limited to a fixed pattern / range and if an address has an extension, in many cases the address without an extension part is invalid.
 
 To prevent OpenApiDriver from generating invalid combinations of path and query parameters in this type of endpoint, the `IGNORE` special value can be used to ensure the related query parameter is never send in a request.
+
 ```python
 class EnergyLabelDto(Dto):
     @staticmethod
@@ -307,6 +322,7 @@ DTO_MAPPING = {
     ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto
 }
 ```
+
 Note that in this example, the `get_parameter_relations()` method is implemented.
 This method works mostly the same as the `get_relations()` method but applies to headers and query parameters.
 
