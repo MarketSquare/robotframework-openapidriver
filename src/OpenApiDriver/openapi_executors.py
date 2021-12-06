@@ -23,8 +23,8 @@ from openapi_core.validation.response.validators import ResponseValidator
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from robot.api import SkipExecution
+from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
-from robotlibcore import keyword
 
 from OpenApiDriver import value_utils
 from OpenApiDriver.dto_base import (
@@ -65,8 +65,13 @@ class RequestData:
     headers: Dict[str, Any] = field(default_factory=dict)
 
 
+@library
 class OpenapiExecutors:  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
+
+    ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
+    ROBOT_LIBRARY_SCOPE = "TEST SUITE"
+
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
