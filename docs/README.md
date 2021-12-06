@@ -25,7 +25,7 @@ tests against an API. See [Limitations](#limitations) for details.
 
 If you already have Python >= 3.8 with pip installed, you can simply run:
 
-``pip install --upgrade robotframework-openapidriver``
+`pip install --upgrade robotframework-openapidriver`
 
 ---
 
@@ -115,11 +115,11 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are currently supported.
-- The unique identifier for a resource as used in the ``paths`` section of the
-    openapi document is expected to be the ``id`` property on a resource of that type.
+- The unique identifier for a resource as used in the `paths` section of the
+    openapi document is expected to be the `id` property on a resource of that type.
 - Limited support for query strings and headers.
 - Limited support for authentication
-    - ``username`` and ``password`` can be passed as parameters to use Basic Authentication
+    - `username` and `password` can be passed as parameters to use Basic Authentication
     - A [requests AuthBase instance](https://docs.python-requests.org/en/latest/api/#authentication)
         can be passed and it will be used as provided.
     - No support for per-endpoint authorization levels (just simple 401 validation).
