@@ -139,7 +139,7 @@ from robot.api.deco import library
 from robot.libraries.BuiltIn import BuiltIn
 from robotlibcore import DynamicCore
 
-from OpenApiDriver.openapi_executors import OpenapiExecutors, ValidationLevel
+from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
 
 try:
@@ -170,7 +170,6 @@ class OpenApiDriver(DataDriver, DynamicCore):
     ROBOT_LIBRARY_VERSION = __version__
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
     ROBOT_LIBRARY_SCOPE = "TEST SUITE"
-
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -294,7 +293,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         )
 
         mappings_path = Path(mappings_path).as_posix()
-        openapi_executors = OpenapiExecutors(
+        openapi_executors = OpenApiExecutors(
             openapi_specification=openapi_spec,
             origin=origin,
             base_path=base_path,
