@@ -24,7 +24,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from robotlibcore import DynamicCore
 
 from OpenApiDriver.dto_utils import get_dto_class
-from OpenApiDriver.openapi_core import OpenApiCore, resolve_schema
+from OpenApiDriver.openapi_libcore import OpenApiLibCore, resolve_schema
 
 run_keyword = BuiltIn().run_keyword
 
@@ -98,7 +98,7 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
             sys.path.pop()
         else:
             self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
-        openapi_core = OpenApiCore(
+        openapi_lubcore = OpenApiLibCore(
             openapi_specification=openapi_specification,
             origin=origin,
             base_path=base_path,
@@ -108,7 +108,7 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
             security_token=security_token,
             auth=auth,
         )
-        DynamicCore.__init__(self, [openapi_core])
+        DynamicCore.__init__(self, [openapi_libcore])
 
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:

@@ -82,7 +82,7 @@ class RequestData:
 
 
 @library
-class OpenApiCore:  # pylint: disable=too-many-instance-attributes
+class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to interact with an OpenAPI."""
 
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
