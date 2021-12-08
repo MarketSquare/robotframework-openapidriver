@@ -24,7 +24,7 @@ from robot.libraries.BuiltIn import BuiltIn
 from robotlibcore import DynamicCore
 
 from OpenApiDriver.dto_utils import get_dto_class
-from OpenApiDriver.openapi_libcore import OpenApiLibCore, resolve_schema
+from OpenApiDriver.openapi_libcore import OpenApiLibCore, RequestData, resolve_schema
 
 run_keyword = BuiltIn().run_keyword
 
@@ -98,7 +98,7 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
             sys.path.pop()
         else:
             self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
-        openapi_lubcore = OpenApiLibCore(
+        openapi_libcore = OpenApiLibCore(
             openapi_specification=openapi_specification,
             origin=origin,
             base_path=base_path,
@@ -185,24 +185,19 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
         the desired operation and validate the response against the openapi document.
         """
         json_data: Optional[Dict[str, Any]] = None
-        original_data: Optional[Dict[str, Any]] = None
+        original_data = None
 
         url: str = run_keyword("get_valid_url", endpoint, method)
-        request_data = self.get_request_data(method=method, endpoint=endpoint)
+        request_data: RequestData = self.get_request_data(
+            method=method, endpoint=endpoint
+        )
+        dto = request_data.dto
         params = request_data.params
         headers = request_data.headers
-        dto = request_data.dto
         json_data = asdict(dto)
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
-            get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
-            get_params = get_request_data.params
-            get_headers = get_request_data.headers
-            response: Response = run_keyword(
-                "authorized_request", url, "GET", get_params, get_headers
-            )
-            if response.ok:
-                original_data = response.json()
+            original_data = self.get_original_data(endpoint=endpoint, url=url)
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= 400:
             data_relations = dto.get_relations_for_error_code(status_code)
@@ -257,6 +252,32 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
                 logger.error(
                     f"No Dto mapping found to cause status_code {status_code}."
                 )
+        if status_code < 300 and (
+            request_data.has_optional_properties
+            or request_data.has_optional_params
+            or request_data.has_optional_headers
+        ):
+            logger.info("Performing request without optional properties and parameters")
+            url_ = run_keyword("get_valid_url", endpoint, method)
+            request_data = self.get_request_data(method=method, endpoint=endpoint)
+            params_ = request_data.get_required_params()
+            headers_ = request_data.get_required_headers()
+            json_data_ = request_data.get_required_properties_dict()
+            if method == "PATCH":
+                original_data_ = self.get_original_data(endpoint=endpoint, url=url_)
+            else:
+                original_data_ = None
+            run_keyword(
+                "perform_validated_request",
+                endpoint,
+                method,
+                status_code,
+                url_,
+                params_,
+                headers_,
+                json_data_,
+                original_data_,
+            )
         run_keyword(
             "perform_validated_request",
             endpoint,
@@ -268,6 +289,23 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
             json_data,
             original_data,
         )
+
+    def get_original_data(self, endpoint: str, url: str) -> Optional[Dict[str, Any]]:
+        """
+        Attempt to GET the current data for the given url and return it.
+
+        If the GET request fails, None is returned.
+        """
+        original_data = None
+        get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
+        get_params = get_request_data.params
+        get_headers = get_request_data.headers
+        response: Response = run_keyword(
+            "authorized_request", url, "GET", get_params, get_headers
+        )
+        if response.ok:
+            original_data = response.json()
+        return original_data
 
     @keyword
     def perform_validated_request(
