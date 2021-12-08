@@ -67,7 +67,7 @@ class EmployeeDetails(BaseModel):
     employee_number: int
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: Optional[WeekDay]
+    parttime_day: Optional[WeekDay] = None
 
 
 class Employee(BaseModel):
@@ -75,16 +75,16 @@ class Employee(BaseModel):
     # login_name: constr(strip_whitespace=True, min_length=1, max_length=20)
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: Optional[WeekDay]
+    parttime_day: Optional[WeekDay] = None
 
 
 class EmployeeUpdate(BaseModel):
-    name: Optional[str]
+    name: Optional[str] = None
     # login_name: Optional[constr(strip_whitespace=True, min_length=1, max_length=20)]
-    employee_number: Optional[int]
-    wagegroup_id: Optional[str]
-    date_of_birth: Optional[datetime.date]
-    parttime_day: Optional[WeekDay]
+    employee_number: Optional[int] = None
+    wagegroup_id: Optional[str] = None
+    date_of_birth: Optional[datetime.date] = None
+    parttime_day: Optional[WeekDay] = None
 
 
 WAGE_GROUPS: Dict[str, WageGroup] = {}
@@ -256,7 +256,7 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetail
 
 @app.get("/available_employees", status_code=200, response_model=List[EmployeeDetails])
 def get_available_employees(weekday: WeekDay = Query(...)) -> List[EmployeeDetails]:
-    return [e for e in EMPLOYEES.values() if e.parttime_day != weekday]
+    return [e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday]
 
 
 def main():
