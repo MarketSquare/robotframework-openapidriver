@@ -81,7 +81,8 @@ Relation = Union[
 ]
 
 
-class DtoBase(ABC):
+@dataclass
+class Dto(ABC):
     """Base class for the Dto class."""
 
     @staticmethod
@@ -183,12 +184,3 @@ class DtoBase(ABC):
             )
             return properties
         return properties  # pragma: no cover
-
-
-@dataclass
-class DataClassMixin:
-    """Mixin to add dataclass functionality to an ABC."""
-
-
-class Dto(DataClassMixin, DtoBase):
-    """Abstract base class to support custom mappings of resource dependencies."""
