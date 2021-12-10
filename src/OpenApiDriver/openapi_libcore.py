@@ -3,7 +3,7 @@
 import json as _json
 import sys
 from copy import deepcopy
-from dataclasses import asdict, dataclass, field, Field, make_dataclass
+from dataclasses import Field, asdict, dataclass, field, make_dataclass
 from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
@@ -83,7 +83,9 @@ class RequestData:
     @property
     def has_optional_properties(self) -> bool:
         properties = asdict(self.dto).keys()
-        in_required_func: Callable[[str], bool] = lambda x: x in self.dto_schema.get("required", [])
+        in_required_func: Callable[[str], bool] = lambda x: x in self.dto_schema.get(
+            "required", []
+        )
         return not all(map(in_required_func, properties))
 
     @property
@@ -355,13 +357,15 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if dto_data is None:
             dto_instance = DefaultDto()
         else:
-            fields: List[Union[str, Tuple[str, type], Tuple[str, type, Optional[Field[Any]]]]] = []
+            fields: List[
+                Union[str, Tuple[str, type], Tuple[str, type, Field[Any]]]
+            ] = []
             for key, value in dto_data.items():
                 required_properties = resolved_schema.get("required", [])
                 if key in required_properties:
                     fields.append((key, type(value)))
                 else:
-                    fields.append((key, type(value), field(default=None)))
+                    fields.append((key, type(value), field(default=None)))  # type: ignore[arg-type]
             dto_class = make_dataclass(
                 cls_name=method_spec["operationId"],
                 fields=fields,
