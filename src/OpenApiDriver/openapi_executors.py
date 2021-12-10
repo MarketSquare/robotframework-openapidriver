@@ -21,7 +21,6 @@ from requests.auth import AuthBase, HTTPBasicAuth
 from robot.api import SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
-from robotlibcore import DynamicCore
 
 from OpenApiDriver.dto_utils import get_dto_class
 from OpenApiDriver.openapi_libcore import OpenApiLibCore, RequestData, resolve_schema
@@ -42,7 +41,7 @@ class ValidationLevel(str, Enum):
 
 
 @library
-class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attributes
+class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
@@ -98,7 +97,7 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
             sys.path.pop()
         else:
             self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
-        openapi_libcore = OpenApiLibCore(
+        super().__init__(
             openapi_specification=openapi_specification,
             origin=origin,
             base_path=base_path,
@@ -108,7 +107,6 @@ class OpenApiExecutors(DynamicCore):  # pylint: disable=too-many-instance-attrib
             security_token=security_token,
             auth=auth,
         )
-        DynamicCore.__init__(self, [openapi_libcore])
 
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:
