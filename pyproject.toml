@@ -93,3 +93,6 @@ disable = ["W1203"]
 
 [tool.pylint.'FORMAT CHECKER']
 max-line-length=120
+
+[tool.pylint.'SIMILARITIES CHECKER']
+ignore-imports="yes"
