@@ -256,7 +256,9 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetail
 
 @app.get("/available_employees", status_code=200, response_model=List[EmployeeDetails])
 def get_available_employees(weekday: WeekDay = Query(...)) -> List[EmployeeDetails]:
-    return [e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday]
+    return [
+        e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday
+    ]
 
 
 def main():
