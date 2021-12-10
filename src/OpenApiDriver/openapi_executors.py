@@ -23,7 +23,12 @@ from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiDriver.dto_utils import get_dto_class
-from OpenApiDriver.openapi_libcore import OpenApiLibCore, RequestData, resolve_schema
+from OpenApiDriver.openapi_libcore import (
+    OpenApiLibCore,
+    RequestData,
+    RequestValues,
+    resolve_schema,
+)
 
 run_keyword = BuiltIn().run_keyword
 
@@ -189,18 +194,17 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         request_data: RequestData = self.get_request_data(
             method=method, endpoint=endpoint
         )
-        dto = request_data.dto
         params = request_data.params
         headers = request_data.headers
-        json_data = asdict(dto)
+        json_data = asdict(request_data.dto)
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(endpoint=endpoint, url=url)
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= 400:
-            data_relations = dto.get_relations_for_error_code(status_code)
-            parameter_relations = dto.get_parameter_relations_for_error_code(
-                status_code
+            data_relations = request_data.dto.get_relations_for_error_code(status_code)
+            parameter_relations = (
+                request_data.dto.get_parameter_relations_for_error_code(status_code)
             )
             invalidation_keyword_data = {
                 "get_invalid_json_data": [
@@ -209,7 +213,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     request_data.dto_schema,
                     url,
                     method,
-                    dto,
+                    request_data.dto,
                     status_code,
                 ],
                 "invalidate_parameters": [
@@ -250,43 +254,47 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 logger.error(
                     f"No Dto mapping found to cause status_code {status_code}."
                 )
+        run_keyword(
+            "perform_validated_request",
+            endpoint,
+            status_code,
+            RequestValues(
+                url=url,
+                method=method,
+                params=params,
+                headers=headers,
+                json_data=json_data,
+            ),
+            original_data,
+        )
         if status_code < 300 and (
             request_data.has_optional_properties
             or request_data.has_optional_params
             or request_data.has_optional_headers
         ):
             logger.info("Performing request without optional properties and parameters")
-            url_ = run_keyword("get_valid_url", endpoint, method)
+            url = run_keyword("get_valid_url", endpoint, method)
             request_data = self.get_request_data(method=method, endpoint=endpoint)
-            params_ = request_data.get_required_params()
-            headers_ = request_data.get_required_headers()
-            json_data_ = request_data.get_required_properties_dict()
+            params = request_data.get_required_params()
+            headers = request_data.get_required_headers()
+            json_data = request_data.get_required_properties_dict()
             if method == "PATCH":
-                original_data_ = self.get_original_data(endpoint=endpoint, url=url_)
+                original_data = self.get_original_data(endpoint=endpoint, url=url)
             else:
-                original_data_ = None
+                original_data = None
             run_keyword(
                 "perform_validated_request",
                 endpoint,
-                method,
                 status_code,
-                url_,
-                params_,
-                headers_,
-                json_data_,
-                original_data_,
+                RequestValues(
+                    url=url,
+                    method=method,
+                    params=params,
+                    headers=headers,
+                    json_data=json_data,
+                ),
+                original_data,
             )
-        run_keyword(
-            "perform_validated_request",
-            endpoint,
-            method,
-            status_code,
-            url,
-            params,
-            headers,
-            json_data,
-            original_data,
-        )
 
     def get_original_data(self, endpoint: str, url: str) -> Optional[Dict[str, Any]]:
         """
@@ -309,12 +317,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
     def perform_validated_request(
         self,
         endpoint: str,
-        method: str,
         status_code: int,
-        url: str,
-        params: Dict[str, Any],
-        headers: Dict[str, str],
-        json_data: Dict[str, Any],
+        request_values: RequestValues,
         original_data: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
@@ -323,7 +327,12 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         the target resource was indeed deleted (OK response) or not (error responses).
         """
         response = run_keyword(
-            "authorized_request", url, method, params, headers, json_data
+            "authorized_request",
+            request_values.url,
+            request_values.method,
+            request_values.params,
+            request_values.headers,
+            request_values.json_data,
         )
         if response.status_code != status_code:
             if not response.ok:
@@ -338,37 +347,37 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 logger.error(f"Failed to get json body from response: {exception}")
                 response_json = {}
             logger.info(
-                f"\nSend: {_json.dumps(json_data, indent=4, sort_keys=True)}"
+                f"\nSend: {_json.dumps(request_values.json_data, indent=4, sort_keys=True)}"
                 f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
             )
             raise AssertionError(
                 f"Response status_code {response.status_code} was not {status_code}"
             )
         run_keyword("validate_response", endpoint, response, original_data)
-        if method == "DELETE":
+        if request_values.method == "DELETE":
             get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
             get_params = get_request_data.params
             get_headers = get_request_data.headers
             get_response = run_keyword(
-                "authorized_request", url, "GET", get_params, get_headers
+                "authorized_request", request_values.url, "GET", get_params, get_headers
             )
             if response.ok:
                 if get_response.ok:
                     raise AssertionError(
-                        f"Resource still exists after deletion. Url was {url}"
+                        f"Resource still exists after deletion. Url was {request_values.url}"
                     )
                 # if the endpoint supports GET, 404 is expected, if not 405 is expected
                 if get_response.status_code not in [404, 405]:
                     logger.warning(
                         f"Unexpected response after deleting resource: Status_code "
-                        f"{get_response.status_code} was received after trying to get {url} "
+                        f"{get_response.status_code} was received after trying to get {request_values.url} "
                         f"after sucessfully deleting it."
                     )
             else:
                 if not get_response.ok:
                     raise AssertionError(
                         f"Resource could not be retrieved after failed deletion. "
-                        f"Url was {url}, status_code was {get_response.status_code}"
+                        f"Url was {request_values.url}, status_code was {get_response.status_code}"
                     )
 
     @keyword
@@ -392,24 +401,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             assert not response.content
             return None
         # validate the response against the schema
-        openapi_request = RequestsOpenAPIRequest(response.request)
-        openapi_response = RequestsOpenAPIResponse(response)
-        validation_result = self.response_validator.validate(
-            request=openapi_request,
-            response=openapi_response,
-        )
-        if self.disable_server_validation:
-            validation_result.errors = [
-                e for e in validation_result.errors if not isinstance(e, ServerNotFound)
-            ]
-        if self.response_validation == ValidationLevel.STRICT:
-            validation_result.raise_for_errors()
-        if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
-            for validation_error in validation_result.errors:
-                if self.response_validation == ValidationLevel.WARN:
-                    logger.warning(validation_error)
-                else:
-                    logger.info(validation_error)
+        self._validate_response_against_spec(response)
 
         request_method = response.request.method
         if request_method is None:
@@ -418,6 +410,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 f"on the request property of the provided response."
             )
             return None
+
         response_spec = self._get_response_spec(
             endpoint=endpoint,
             method=request_method,
@@ -433,11 +426,12 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 f"Content-Type '{response.headers['Content-Type']}' of the response "
                 f"is not '{content_type}' as specified in the OpenAPI document."
             )
-        json_response = response.json()
 
-        response_schema = response_spec["content"][content_type]["schema"]
-        resolved_schema = resolve_schema(response_schema)
-        if list_item_schema := resolved_schema.get("items"):
+        json_response = response.json()
+        response_schema = resolve_schema(
+            response_spec["content"][content_type]["schema"]
+        )
+        if list_item_schema := response_schema.get("items"):
             if not isinstance(json_response, list):
                 raise AssertionError(
                     f"Response schema violation: the schema specifies an array as "
@@ -459,26 +453,45 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             return None
 
         run_keyword(
-            "validate_resource_properties", json_response, resolved_schema["properties"]
+            "validate_resource_properties", json_response, response_schema["properties"]
         )
         # ensure the href is valid if present in the response
         if href := json_response.get("href"):
-            url = f"{self.origin}{href}"
-            endpoint = url.replace(self.base_url, "")
-            request_data = self.get_request_data(endpoint=endpoint, method="GET")
-            params = request_data.params
-            headers = request_data.headers
-            get_response = self.authorized_request(
-                url=url, method="GET", params=params, headers=headers
-            )
-            assert (
-                get_response.json() == json_response
-            ), f"{get_response.json()} not equal to original {json_response}"
+            self._assert_href_is_valid(href, json_response)
         # every property that was sucessfully send and that is in the response
         # schema must have the value that was send
         if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
             run_keyword("validate_send_response", response, original_data)
         return None
+
+    def _assert_href_is_valid(self, href: str, json_response: Dict[str, Any]):
+        url = f"{self.origin}{href}"
+        endpoint = url.replace(self.base_url, "")
+        request_data = self.get_request_data(endpoint=endpoint, method="GET")
+        params = request_data.params
+        headers = request_data.headers
+        get_response = run_keyword("authorized_request", url, "GET", params, headers)
+        assert (
+            get_response.json() == json_response
+        ), f"{get_response.json()} not equal to original {json_response}"
+
+    def _validate_response_against_spec(self, response: Response):
+        validation_result = self.response_validator.validate(
+            request=RequestsOpenAPIRequest(response.request),
+            response=RequestsOpenAPIResponse(response),
+        )
+        if self.disable_server_validation:
+            validation_result.errors = [
+                e for e in validation_result.errors if not isinstance(e, ServerNotFound)
+            ]
+        if self.response_validation == ValidationLevel.STRICT:
+            validation_result.raise_for_errors()
+        if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
+            for validation_error in validation_result.errors:
+                if self.response_validation == ValidationLevel.WARN:
+                    logger.warning(validation_error)
+                else:
+                    logger.info(validation_error)
 
     @staticmethod
     @keyword

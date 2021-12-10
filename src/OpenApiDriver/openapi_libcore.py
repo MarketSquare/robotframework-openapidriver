@@ -71,6 +71,17 @@ def merge_schemas(first: Dict[str, Any], second: Dict[str, Any]) -> Dict[str, An
 
 
 @dataclass
+class RequestValues:
+    """Helper class to hold parameter values needed to make a request."""
+
+    url: str
+    method: str
+    params: Optional[Dict[str, Any]]
+    headers: Optional[Dict[str, str]]
+    json_data: Optional[Dict[str, Any]]
+
+
+@dataclass
 class RequestData:
     """Helper class to manage parameters used when making requests."""
 
@@ -729,8 +740,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         url: str,
         method: str,
         params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, Any]] = None,
-        json: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
+        json_data: Optional[Dict[str, Any]] = None,
     ) -> Response:
         """
         Perform a request using the security token or authentication set in the library.
@@ -748,7 +759,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             method=method,
             params=params,
             headers=headers,
-            json=json,
+            json=json_data,
             auth=self.auth,
             verify=False,
         )
