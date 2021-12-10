@@ -170,7 +170,7 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
     ROBOT_LIBRARY_SCOPE = "TEST SUITE"
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         source: str,
         ignored_endpoints: Optional[List[str]] = None,
