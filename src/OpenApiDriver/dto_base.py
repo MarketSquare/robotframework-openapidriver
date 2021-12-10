@@ -17,7 +17,7 @@ logger = getLogger(__name__)
 NOT_SET = object()
 
 
-class ResourceRelation(ABC):
+class ResourceRelation(ABC):  # pylint: disable=too-few-public-methods
     """ABC for all resource relations or restrictions within the API."""
 
     property_name: str
