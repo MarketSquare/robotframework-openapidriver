@@ -1,7 +1,6 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
 import json as _json
-import sys
 from dataclasses import asdict
 from enum import Enum
 from logging import getLogger
@@ -9,20 +8,17 @@ from pathlib import Path
 from random import choice
 from typing import Any, Dict, List, Optional, Union
 
-from openapi_core import create_spec
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
-from openapi_core.validation.response.validators import ResponseValidator
 from requests import Response
-from requests.auth import AuthBase, HTTPBasicAuth
+from requests.auth import AuthBase
 from robot.api import SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiDriver.dto_utils import get_dto_class
 from OpenApiDriver.openapi_libcore import (
     OpenApiLibCore,
     RequestData,
@@ -52,7 +48,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
     ROBOT_LIBRARY_SCOPE = "TEST SUITE"
 
-    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         openapi_specification: Dict[str, Any],
         origin: str = "",
@@ -67,41 +63,6 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         require_body_for_invalid_url: bool = False,
         invalid_property_default_response: int = 422,
     ) -> None:
-        self.openapi_spec: Dict[str, Any] = openapi_specification
-        validation_spec = create_spec(self.openapi_spec)
-        self.response_validator = ResponseValidator(
-            spec=validation_spec,
-            base_url=base_path,
-        )
-        self.origin = origin
-        self.base_url = f"{self.origin}{base_path}"
-        # only username and password, security_token or auth object should be provided
-        # if multiple are provided, username and password take precendence
-        self.security_token = security_token
-        self.auth = auth
-        if username and password:
-            self.auth = HTTPBasicAuth(username, password)
-        self.response_validation = response_validation
-        self.disable_server_validation = disable_server_validation
-        self.require_body_for_invalid_url = require_body_for_invalid_url
-        self.invalid_property_default_response = invalid_property_default_response
-        if mappings_path and str(mappings_path) != ".":
-            mappings_path = Path(mappings_path)
-            if not mappings_path.is_file():
-                logger.warning(
-                    f"mappings_path '{mappings_path}' is not a Python module."
-                )
-            # intermediate variable to ensure path.append is possible so we'll never
-            # path.pop a location that we didn't append
-            mappings_folder = str(mappings_path.parent)
-            sys.path.append(mappings_folder)
-            mappings_module_name = mappings_path.stem
-            self.get_dto_class = get_dto_class(
-                mappings_module_name=mappings_module_name
-            )
-            sys.path.pop()
-        else:
-            self.get_dto_class = get_dto_class(mappings_module_name="no_mapping")
         super().__init__(
             openapi_specification=openapi_specification,
             origin=origin,
@@ -112,6 +73,10 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             security_token=security_token,
             auth=auth,
         )
+        self.response_validation = response_validation
+        self.disable_server_validation = disable_server_validation
+        self.require_body_for_invalid_url = require_body_for_invalid_url
+        self.invalid_property_default_response = invalid_property_default_response
 
     @keyword
     def test_unauthorized(self, endpoint: str, method: str) -> None:
