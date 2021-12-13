@@ -164,7 +164,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         json_data = asdict(request_data.dto)
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
-            original_data = self.get_original_data(endpoint=endpoint, url=url)
+            original_data = self.get_original_data(url=url)
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= 400:
             data_relations = request_data.dto.get_relations_for_error_code(status_code)
@@ -244,7 +244,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             headers = request_data.get_required_headers()
             json_data = request_data.get_required_properties_dict()
             if method == "PATCH":
-                original_data = self.get_original_data(endpoint=endpoint, url=url)
+                original_data = self.get_original_data(url=url)
             else:
                 original_data = None
             run_keyword(
@@ -261,13 +261,14 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 original_data,
             )
 
-    def get_original_data(self, endpoint: str, url: str) -> Optional[Dict[str, Any]]:
+    def get_original_data(self, url: str) -> Optional[Dict[str, Any]]:
         """
         Attempt to GET the current data for the given url and return it.
 
         If the GET request fails, None is returned.
         """
         original_data = None
+        endpoint = self.get_parameterized_endpoint_from_url(url)
         get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
         get_params = get_request_data.params
         get_headers = get_request_data.headers
