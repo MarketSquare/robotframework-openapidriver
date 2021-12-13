@@ -137,7 +137,6 @@ from prance.util.url import ResolutionError
 from requests.auth import AuthBase
 from robot.api.deco import library
 from robot.libraries.BuiltIn import BuiltIn
-from robotlibcore import DynamicCore
 
 from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
@@ -149,7 +148,7 @@ except:  # pragma: no cover
 
 
 @library
-class OpenApiDriver(DataDriver, DynamicCore):
+class OpenApiDriver(DataDriver, OpenApiExecutors):
     # region: docstring
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]
@@ -171,7 +170,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
     ROBOT_LIBRARY_SCOPE = "TEST SUITE"
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
         source: str,
         ignored_endpoints: Optional[List[str]] = None,
@@ -293,7 +292,8 @@ class OpenApiDriver(DataDriver, DynamicCore):
         )
 
         mappings_path = Path(mappings_path).as_posix()
-        openapi_executors = OpenApiExecutors(
+        OpenApiExecutors.__init__(
+            self,
             openapi_specification=openapi_spec,
             origin=origin,
             base_path=base_path,
@@ -307,7 +307,6 @@ class OpenApiDriver(DataDriver, DynamicCore):
             require_body_for_invalid_url=require_body_for_invalid_url,
             invalid_property_default_response=invalid_property_default_response,
         )
-        DynamicCore.__init__(self, [openapi_executors])
 
     # FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
     # accepts an AbstractReaderClass subclass as reader_class argument
