@@ -93,6 +93,7 @@ class RequestData:
 
     @property
     def has_optional_properties(self) -> bool:
+        """Whether or not the dto data (json data) contains optional properties."""
         properties = asdict(self.dto).keys()
         in_required_func: Callable[[str], bool] = lambda x: x in self.dto_schema.get(
             "required", []
@@ -101,6 +102,7 @@ class RequestData:
 
     @property
     def has_optional_params(self) -> bool:
+        """Whether or not any of the query parameters are optional."""
         optional_params = [
             p.get("name")
             for p in self.parameters
@@ -111,6 +113,7 @@ class RequestData:
 
     @property
     def has_optional_headers(self) -> bool:
+        """Whether or not any of the headers are optional."""
         optional_headers = [
             p.get("name")
             for p in self.parameters
@@ -120,6 +123,7 @@ class RequestData:
         return any(map(in_optional_headers, self.headers))
 
     def get_required_properties_dict(self) -> Dict[str, Any]:
+        """Get the json-compatible dto data containing only the required properties."""
         required_properties = self.dto_schema.get("required", [])
         required_properties_dict: Dict[str, Any] = {}
         for key, value in asdict(self.dto).items():
@@ -128,12 +132,14 @@ class RequestData:
         return required_properties_dict
 
     def get_required_params(self) -> Dict[str, str]:
+        """Get the params dict containing only the required query parameters."""
         required_parameters = [
             p.get("name") for p in self.parameters if p.get("required")
         ]
         return {k: v for k, v in self.params.items() if k in required_parameters}
 
     def get_required_headers(self) -> Dict[str, str]:
+        """Get the headers dict containing only the required headers."""
         required_parameters = [
             p.get("name") for p in self.parameters if p.get("required")
         ]
@@ -238,42 +244,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         # Try to create a new resource to prevent conflicts caused by
         # operations performed on the same resource by other test cases
         request_data = self.get_request_data(endpoint=endpoint, method="POST")
-        params = request_data.params
-        headers = request_data.headers
-        dto = request_data.dto
-        try:
-            json_data = asdict(dto)
-            response: Response = run_keyword(
-                "authorized_request", url, "POST", params, headers, json_data
-            )
-        except NotImplementedError as exception:
-            logger.debug(f"get_valid_id_for_endpoint POST failed: {exception}")
+
+        response: Response = run_keyword(
+            "authorized_request",
+            url,
+            "POST",
+            request_data.get_required_params(),
+            request_data.get_required_headers(),
+            request_data.get_required_properties_dict(),
+        )
+        if response.status_code == 405:
             # For endpoints that do no support POST, try to get an existing id using GET
             try:
-                request_data = self.get_request_data(endpoint=endpoint, method="GET")
-                params = request_data.params
-                headers = request_data.headers
-                response = run_keyword(
-                    "authorized_request", url, "GET", params, headers
-                )
-                assert response.ok
-                response_data: Union[
-                    Dict[str, Any], List[Dict[str, Any]]
-                ] = response.json()
-                if isinstance(response_data, list):
-                    valid_ids: List[str] = [item["id"] for item in response_data]
-                    logger.debug(
-                        f"get_valid_id_for_endpoint: returning choice from list {valid_ids}"
-                    )
-                    return choice(valid_ids)
-                if valid_id := response_data.get("id"):
-                    logger.debug(f"get_valid_id_for_endpoint: returning {valid_id}")
-                    return valid_id
-                valid_ids = [item["id"] for item in response_data["items"]]
-                logger.debug(
-                    f"get_valid_id_for_endpoint: returning choice from items {valid_ids}"
-                )
-                return choice(valid_ids)
+                valid_id = choice(run_keyword("get_ids_for_endpoint", url))
+                return valid_id
             except Exception as exception:
                 logger.debug(
                     f"Failed to get a valid id using GET on {url}"
@@ -315,27 +299,49 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return valid_id
 
     @keyword
+    def get_ids_for_endpoint(self, url: str) -> List[str]:
+        """
+        Perform a GET request on the `url` and return the list of resource
+        `ids` from the response.
+        """
+        endpoint = self.get_parameterized_endpoint_from_url(url)
+        request_data = self.get_request_data(endpoint=endpoint, method="GET")
+        response = run_keyword(
+            "authorized_request",
+            url,
+            "GET",
+            request_data.get_required_params(),
+            request_data.get_required_headers(),
+        )
+        assert response.ok
+        response_data: Union[Dict[str, Any], List[Dict[str, Any]]] = response.json()
+        if isinstance(response_data, list):
+            valid_ids: List[str] = [item["id"] for item in response_data]
+            return valid_ids
+        if valid_id := response_data.get("id"):
+            return [valid_id]
+        valid_ids = [item["id"] for item in response_data["items"]]
+        return valid_ids
+
+    @keyword
     def get_request_data(self, endpoint: str, method: str) -> RequestData:
         """Return an object with valid request data for body, headers and query params."""
         method = method.lower()
         # The endpoint can contain already resolved Ids that have to be matched
         # against the parametrized endpoints in the paths section.
         spec_endpoint = self.get_parametrized_endpoint(endpoint)
+        dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
         try:
             method_spec = self.openapi_spec["paths"][spec_endpoint][method]
-        except KeyError as exception:
-            raise NotImplementedError(
-                f"method '{method}' not suported on '{spec_endpoint}"
-            ) from exception
-        dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
+        except KeyError:
+            logger.warning(
+                f"method '{method}' not suported on '{spec_endpoint}, using empty spec."
+            )
+            method_spec = {}
 
-        parameters = method_spec.get("parameters", [])
-        parameter_relations = dto_class.get_parameter_relations()
-        query_params = [p for p in parameters if p.get("in") == "query"]
-        header_params = [p for p in parameters if p.get("in") == "header"]
-        params = self.get_parameter_data(query_params, parameter_relations)
-        headers = self.get_parameter_data(header_params, parameter_relations)
-
+        parameters, params, headers = self.get_request_parameters(
+            dto_class=dto_class, method_spec=method_spec
+        )
         if (body_spec := method_spec.get("requestBody", None)) is None:
             if dto_class == DefaultDto:
                 dto_instance: Dto = DefaultDto()
@@ -352,31 +358,16 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 params=params,
                 headers=headers,
             )
-        # Content should be a single key/value entry, so use tuple assignment
-        (content_type,) = body_spec["content"].keys()
-        if content_type != "application/json":
-            # At present no supported for other types.
-            raise NotImplementedError(f"content_type '{content_type}' not supported")
-        content_schema = body_spec["content"][content_type]["schema"]
-        # TODO: is resolve_schema still needed?
-        resolved_schema: Dict[str, Any] = resolve_schema(content_schema)
+        content_schema = self.get_content_schema(body_spec)
         dto_data = self.get_json_data_for_dto_class(
-            schema=resolved_schema,
+            schema=content_schema,
             dto_class=dto_class,
             operation_id=method_spec.get("operationId"),
         )
         if dto_data is None:
             dto_instance = DefaultDto()
         else:
-            fields: List[
-                Union[str, Tuple[str, type], Tuple[str, type, Field[Any]]]
-            ] = []
-            for key, value in dto_data.items():
-                required_properties = resolved_schema.get("required", [])
-                if key in required_properties:
-                    fields.append((key, type(value)))
-                else:
-                    fields.append((key, type(value), field(default=None)))  # type: ignore[arg-type]
+            fields = self.get_fields_from_dto_data(content_schema, dto_data)
             dto_class = make_dataclass(
                 cls_name=method_spec["operationId"],
                 fields=fields,
@@ -385,11 +376,50 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             dto_instance = dto_class(**dto_data)  # type: ignore[call-arg]
         return RequestData(
             dto=dto_instance,
-            dto_schema=resolved_schema,
+            dto_schema=content_schema,
             parameters=parameters,
             params=params,
             headers=headers,
         )
+
+    @staticmethod
+    def get_fields_from_dto_data(
+        content_schema: Dict[str, Any], dto_data: Dict[str, Any]
+    ):
+        """Get a dataclasses fields list based on the content_schema and dto_data."""
+        fields: List[Union[str, Tuple[str, type], Tuple[str, type, Field[Any]]]] = []
+        for key, value in dto_data.items():
+            required_properties = content_schema.get("required", [])
+            if key in required_properties:
+                fields.append((key, type(value)))
+            else:
+                fields.append((key, type(value), field(default=None)))  # type: ignore[arg-type]
+        return fields
+
+    def get_request_parameters(
+        self, dto_class: Union[Dto, Type[Dto]], method_spec: Dict[str, Any]
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any], Dict[str, str]]:
+        """Get the methods parameter spec and params and headers with valid data."""
+        parameters = method_spec.get("parameters", [])
+        parameter_relations = dto_class.get_parameter_relations()
+        query_params = [p for p in parameters if p.get("in") == "query"]
+        header_params = [p for p in parameters if p.get("in") == "header"]
+        params = self.get_parameter_data(query_params, parameter_relations)
+        headers = self.get_parameter_data(header_params, parameter_relations)
+        return parameters, params, headers
+
+    @staticmethod
+    def get_content_schema(body_spec: Dict[str, Any]):
+        """Get the content schema from the requestBody spec."""
+        # Content should be a single key/value entry, so use tuple assignment
+        (content_type,) = body_spec["content"].keys()
+        if content_type != "application/json":
+            # At present no supported for other types.
+            raise NotImplementedError(f"content_type '{content_type}' not supported")
+        content_schema = body_spec["content"][content_type]["schema"]
+        # TODO: is resolve_schema still needed?
+        resolved_schema: Dict[str, Any] = resolve_schema(content_schema)
+        return resolved_schema
 
     def get_parametrized_endpoint(self, endpoint: str) -> str:
         """
@@ -526,11 +556,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         Return an url with all the path parameters in the `valid_url` replaced by a
         random UUID. If the `valid_url` does not contain any parameters, None is returned.
         """
-        endpoint = valid_url.replace(self.base_url, "")
-        endpoint_parts = endpoint.split("/")
-        # first part will be '' since an endpoint starts with /
-        endpoint_parts.pop(0)
-        parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
+        parameterized_endpoint = self.get_parameterized_endpoint_from_url(valid_url)
         parameterized_url = self.base_url + parameterized_endpoint
         valid_url_parts = list(reversed(valid_url.split("/")))
         parameterized_parts = reversed(parameterized_url.split("/"))
@@ -544,6 +570,18 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 return invalid_url
         # TODO: add support for header / query parameters that can be invalidated
         return None
+
+    @keyword
+    def get_parameterized_endpoint_from_url(self, url: str):
+        """
+        Return the endpoint as found in the `paths` section based on the given `url`.
+        """
+        endpoint = url.replace(self.base_url, "")
+        endpoint_parts = endpoint.split("/")
+        # first part will be '' since an endpoint starts with /
+        endpoint_parts.pop(0)
+        parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
+        return parameterized_endpoint
 
     @keyword
     def get_invalid_json_data(
@@ -667,16 +705,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             resource_id = endpoint_parts[-1]
         else:
             resource_id = ""
-        post_endpoint = resource_relation.post_path
-        property_name = resource_relation.property_name
-        request_data = self.get_request_data(method="POST", endpoint=post_endpoint)
+        request_data = self.get_request_data(
+            method="POST", endpoint=resource_relation.post_path
+        )
         params = request_data.params
         headers = request_data.headers
         dto = request_data.dto
         json_data = asdict(dto)
         if resource_id:
-            json_data[property_name] = resource_id
-        post_url: str = run_keyword("get_valid_url", post_endpoint, "POST")
+            json_data[resource_relation.property_name] = resource_id
+        post_url: str = run_keyword(
+            "get_valid_url",
+            resource_relation.post_path,
+            "POST",
+        )
         response: Response = run_keyword(
             "authorized_request", post_url, "POST", params, headers, json_data
         )
@@ -720,10 +762,13 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 post_json = json_data
             endpoint = post_url.replace(self.base_url, "")
             request_data = self.get_request_data(endpoint=endpoint, method="POST")
-            params = request_data.params
-            headers = request_data.headers
             response: Response = run_keyword(
-                "authorized_request", post_url, "POST", params, headers, post_json
+                "authorized_request",
+                post_url,
+                "POST",
+                request_data.params,
+                request_data.headers,
+                post_json,
             )
             # conflicting resource may already exist
             assert (
