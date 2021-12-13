@@ -3,12 +3,12 @@
 import json as _json
 import sys
 from copy import deepcopy
-from dataclasses import asdict, dataclass, field, make_dataclass
+from dataclasses import asdict, dataclass, field, Field, make_dataclass
 from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
 from random import choice
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 from uuid import uuid4
 
 from openapi_core import create_spec
@@ -79,6 +79,52 @@ class RequestData:
     parameters: List[Dict[str, Any]] = field(default_factory=list)
     params: Dict[str, Any] = field(default_factory=dict)
     headers: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def has_optional_properties(self) -> bool:
+        properties = asdict(self.dto).keys()
+        in_required_func: Callable[[str], bool] = lambda x: x in self.dto_schema.get("required", [])
+        return not all(map(in_required_func, properties))
+
+    @property
+    def has_optional_params(self) -> bool:
+        optional_params = [
+            p.get("name")
+            for p in self.parameters
+            if p.get("in") == "query" and not p.get("required")
+        ]
+        in_optional_params: Callable[[str], bool] = lambda x: x in optional_params
+        return any(map(in_optional_params, self.params))
+
+    @property
+    def has_optional_headers(self) -> bool:
+        optional_headers = [
+            p.get("name")
+            for p in self.parameters
+            if p.get("in") == "header" and not p.get("required")
+        ]
+        in_optional_headers: Callable[[str], bool] = lambda x: x in optional_headers
+        return any(map(in_optional_headers, self.headers))
+
+    def get_required_properties_dict(self) -> Dict[str, Any]:
+        required_properties = self.dto_schema.get("required", [])
+        required_properties_dict: Dict[str, Any] = {}
+        for key, value in asdict(self.dto).items():
+            if key in required_properties:
+                required_properties_dict[key] = value
+        return required_properties_dict
+
+    def get_required_params(self) -> Dict[str, str]:
+        required_parameters = [
+            p.get("name") for p in self.parameters if p.get("required")
+        ]
+        return {k: v for k, v in self.params.items() if k in required_parameters}
+
+    def get_required_headers(self) -> Dict[str, str]:
+        required_parameters = [
+            p.get("name") for p in self.parameters if p.get("required")
+        ]
+        return {k: v for k, v in self.headers.items() if k in required_parameters}
 
 
 @library
@@ -309,9 +355,13 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if dto_data is None:
             dto_instance = DefaultDto()
         else:
-            fields: List[Tuple[str, type]] = []
+            fields: List[Union[str, Tuple[str, type], Tuple[str, type, Optional[Field[Any]]]]] = []
             for key, value in dto_data.items():
-                fields.append((key, type(value)))
+                required_properties = resolved_schema.get("required", [])
+                if key in required_properties:
+                    fields.append((key, type(value)))
+                else:
+                    fields.append((key, type(value), field(default=None)))
             dto_class = make_dataclass(
                 cls_name=method_spec["operationId"],
                 fields=fields,
