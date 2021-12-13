@@ -24,7 +24,7 @@ tests against an API. See [Limitations](#limitations) for details.
 
 If you already have Python >= 3.8 with pip installed, you can simply run:
 
-``pip install --upgrade robotframework-openapidriver``
+`pip install --upgrade robotframework-openapidriver`
 
 ---
 
@@ -114,11 +114,11 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are currently supported.
-- The unique identifier for a resource as used in the ``paths`` section of the
-    openapi document is expected to be the ``id`` property on a resource of that type.
+- The unique identifier for a resource as used in the `paths` section of the
+    openapi document is expected to be the `id` property on a resource of that type.
 - Limited support for query strings and headers.
 - Limited support for authentication
-    - ``username`` and ``password`` can be passed as parameters to use Basic Authentication
+    - `username` and `password` can be passed as parameters to use Basic Authentication
     - A [requests AuthBase instance](https://docs.python-requests.org/en/latest/api/#authentication)
         can be passed and it will be used as provided.
     - No support for per-endpoint authorization levels (just simple 401 validation).
@@ -135,6 +135,7 @@ from DataDriver.AbstractReaderClass import AbstractReaderClass
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
 from requests.auth import AuthBase
+from robot.api.deco import library
 from robot.libraries.BuiltIn import BuiltIn
 from robotlibcore import DynamicCore
 
@@ -147,6 +148,7 @@ except:  # pragma: no cover
     __version__ = "unknown"
 
 
+@library
 class OpenApiDriver(DataDriver, DynamicCore):
     # region: docstring
     """
@@ -167,6 +169,8 @@ class OpenApiDriver(DataDriver, DynamicCore):
     # endregion
     ROBOT_LIBRARY_VERSION = __version__
     ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
+    ROBOT_LIBRARY_SCOPE = "TEST SUITE"
+
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -226,7 +230,7 @@ class OpenApiDriver(DataDriver, DynamicCore):
         The password to be used for Basic Authentication.
 
         === security_token ===
-        The token to be used for token based security using the `Authorization` header.
+        The token to be used for token based security using the ``Authorization`` header.
 
         === auth ===
         A [https://docs.python-requests.org/en/latest/api/#authentication | requests AuthBase instance]
