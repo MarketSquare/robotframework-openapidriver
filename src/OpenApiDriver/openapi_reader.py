@@ -1,11 +1,8 @@
 """Module holding the OpenApiReader reader_class implementation."""
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Union
 
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
-from prance import ResolvingParser
-from prance.util.url import ResolutionError
-from robot.libraries.BuiltIn import BuiltIn
 
 
 # pylint: disable=too-few-public-methods

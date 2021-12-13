@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-11-29T16:02:02Z" specversion="3" source="openapidriver.py" lineno="150">
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2021-12-06T13:41:12Z" specversion="3" source="openapidriver.py" lineno="152">
 <version>2.2.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;
 &lt;p&gt;Most of the provided keywords are for internal use by the library (for example to ensure the result logs provide insight into the executed steps) but a number of them are intended to be used as &lt;code&gt;Test Template&lt;/code&gt; or within the &lt;code&gt;Keyword&lt;/code&gt; that serves as the &lt;code&gt;Test Template&lt;/code&gt;.&lt;/p&gt;
@@ -12,7 +12,7 @@
 <tags>
 </tags>
 <inits>
-<init name="Init" lineno="171">
+<init name="Init" lineno="174">
 <arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, ignore_fastapi_default_422: bool = False, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
@@ -120,7 +120,7 @@
 &lt;h4&gt;password&lt;/h4&gt;
 &lt;p&gt;The password to be used for Basic Authentication.&lt;/p&gt;
 &lt;h4&gt;security_token&lt;/h4&gt;
-&lt;p&gt;The token to be used for token based security using the &lt;span class="name"&gt;Authorization&lt;/span&gt; header.&lt;/p&gt;
+&lt;p&gt;The token to be used for token based security using the &lt;code&gt;Authorization&lt;/code&gt; header.&lt;/p&gt;
 &lt;h4&gt;auth&lt;/h4&gt;
 &lt;p&gt;A &lt;a href="https://docs.python-requests.org/en/latest/api/#authentication"&gt;requests AuthBase instance&lt;/a&gt; to be used for authentication instead of the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;response_validation&lt;/h4&gt;
@@ -141,7 +141,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Authorized Request" source="openapi_executors.py" lineno="1112">
+<kw name="Authorized Request" source="openapi_core.py" lineno="673">
 <arguments repr="url: str, method: str, params: Dict[str, typing.Any] | None = None, headers: Dict[str, typing.Any] | None = None, json: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -174,7 +174,7 @@
 &lt;p&gt;&amp;gt; Note: provided username / password or auth objects take precedence over token based security&lt;/p&gt;</doc>
 <shortdoc>Perform a request using the security token or authentication set in the library.</shortdoc>
 </kw>
-<kw name="Ensure In Use" source="openapi_executors.py" lineno="800">
+<kw name="Ensure In Use" source="openapi_core.py" lineno="591">
 <arguments repr="url: str, resource_relation: IdReference">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -188,7 +188,7 @@
 <doc>&lt;p&gt;Ensure that the &lt;span class="name"&gt;id&lt;/span&gt; of the resource referenced by the &lt;span class="name"&gt;url&lt;/span&gt; is used by the resource defined by the &lt;span class="name"&gt;resource_relation&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Ensure that the `id` of the resource referenced by the `url` is used by the resource defined by the `resource_relation`.</shortdoc>
 </kw>
-<kw name="Get Invalid Json Data" source="openapi_executors.py" lineno="693">
+<kw name="Get Invalid Json Data" source="openapi_core.py" lineno="484">
 <arguments repr="data_relations: List[typing.Union[OpenApiDriver.dto_base.IdDependency, OpenApiDriver.dto_base.IdReference, OpenApiDriver.dto_base.PathPropertiesConstraint, OpenApiDriver.dto_base.PropertyValueConstraint, OpenApiDriver.dto_base.UniquePropertyValueConstraint]], schema: Dict[str, typing.Any], url: str, method: str, dto: Dto, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="data_relations: List[typing.Union[OpenApiDriver.dto_base.IdDependency, OpenApiDriver.dto_base.IdReference, OpenApiDriver.dto_base.PathPropertiesConstraint, OpenApiDriver.dto_base.PropertyValueConstraint, OpenApiDriver.dto_base.UniquePropertyValueConstraint]]">
 <name>data_relations</name>
@@ -219,7 +219,7 @@
 &lt;p&gt;&amp;gt; Note: applicable UniqueProperyValueConstraint and IdReference Relations are considered before changes to &lt;span class="name"&gt;json_data&lt;/span&gt; are made.&lt;/p&gt;</doc>
 <shortdoc>Return `json_data` based on the `dto` that will cause the provided `status_code` for the `method` operation on the `url`.</shortdoc>
 </kw>
-<kw name="Get Invalidated Url" source="openapi_executors.py" lineno="668">
+<kw name="Get Invalidated Url" source="openapi_core.py" lineno="459">
 <arguments repr="valid_url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="valid_url: str">
 <name>valid_url</name>
@@ -229,7 +229,7 @@
 <doc>&lt;p&gt;Return an url with all the path parameters in the &lt;span class="name"&gt;valid_url&lt;/span&gt; replaced by a random UUID. If the &lt;span class="name"&gt;valid_url&lt;/span&gt; does not contain any parameters, None is returned.&lt;/p&gt;</doc>
 <shortdoc>Return an url with all the path parameters in the `valid_url` replaced by a random UUID. If the `valid_url` does not contain any parameters, None is returned.</shortdoc>
 </kw>
-<kw name="Get Json Data For Dto Class" source="openapi_executors.py" lineno="591">
+<kw name="Get Json Data For Dto Class" source="openapi_core.py" lineno="382">
 <arguments repr="schema: Dict[str, typing.Any], dto_class: Type[OpenApiDriver.dto_base.Dto], operation_id: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema: Dict[str, typing.Any]">
 <name>schema</name>
@@ -247,7 +247,7 @@
 <doc>&lt;p&gt;Generate a valid (json-compatible) dict for all the &lt;span class="name"&gt;dto_class&lt;/span&gt; properties.&lt;/p&gt;</doc>
 <shortdoc>Generate a valid (json-compatible) dict for all the `dto_class` properties.</shortdoc>
 </kw>
-<kw name="Get Json Data With Conflict" source="openapi_executors.py" lineno="834">
+<kw name="Get Json Data With Conflict" source="openapi_core.py" lineno="625">
 <arguments repr="url: str, method: str, dto: Dto, conflict_status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -269,7 +269,21 @@
 <doc>&lt;p&gt;Return &lt;span class="name"&gt;json_data&lt;/span&gt; based on the &lt;span class="name"&gt;UniqueProperyValueConstraint&lt;/span&gt; that must be returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementation on the &lt;span class="name"&gt;dto&lt;/span&gt; for the given &lt;span class="name"&gt;conflict_status_code&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Return `json_data` based on the `UniqueProperyValueConstraint` that must be returned by the `get_relations` implementation on the `dto` for the given `conflict_status_code`.</shortdoc>
 </kw>
-<kw name="Get Valid Id For Endpoint" source="openapi_executors.py" lineno="381">
+<kw name="Get Request Data" source="openapi_core.py" lineno="259">
+<arguments repr="endpoint: str, method: str">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
+<name>endpoint</name>
+<type>str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type>str</type>
+</arg>
+</arguments>
+<doc>&lt;p&gt;Return an object with valid request data for body, headers and query params.&lt;/p&gt;</doc>
+<shortdoc>Return an object with valid request data for body, headers and query params.</shortdoc>
+</kw>
+<kw name="Get Valid Id For Endpoint" source="openapi_core.py" lineno="171">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -284,7 +298,7 @@
 &lt;p&gt;To prevent resource conflicts with other test cases, a new resource is created (POST) if possible.&lt;/p&gt;</doc>
 <shortdoc>Support keyword that returns the `id` for an existing resource at `endpoint`.</shortdoc>
 </kw>
-<kw name="Get Valid Url" source="openapi_executors.py" lineno="348">
+<kw name="Get Valid Url" source="openapi_core.py" lineno="138">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -300,7 +314,7 @@
 &lt;p&gt;&amp;gt; Note: if valid ids cannot be retrieved within the scope of the API, the &lt;span class="name"&gt;PathPropertiesConstraint&lt;/span&gt; Relation can be used. More information can be found [here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).&lt;/p&gt;</doc>
 <shortdoc>This keyword returns a valid url for the given `endpoint` and `method`.</shortdoc>
 </kw>
-<kw name="Invalidate Parameters" source="openapi_executors.py" lineno="737">
+<kw name="Invalidate Parameters" source="openapi_core.py" lineno="528">
 <arguments repr="params: Dict[str, typing.Any], headers: Dict[str, str], relations: List[typing.Union[OpenApiDriver.dto_base.IdDependency, OpenApiDriver.dto_base.IdReference, OpenApiDriver.dto_base.PathPropertiesConstraint, OpenApiDriver.dto_base.PropertyValueConstraint, OpenApiDriver.dto_base.UniquePropertyValueConstraint]], parameters: List[typing.Dict[str, typing.Any]], status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="params: Dict[str, typing.Any]">
 <name>params</name>
@@ -326,7 +340,7 @@
 <doc>&lt;p&gt;Returns a version of &lt;span class="name"&gt;params, headers&lt;/span&gt; that has been modified to cause the provided &lt;span class="name"&gt;status_code&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Returns a version of `params, headers` that has been modified to cause the provided `status_code`.</shortdoc>
 </kw>
-<kw name="Perform Validated Request" source="openapi_executors.py" lineno="283">
+<kw name="Perform Validated Request" source="openapi_executors.py" lineno="273">
 <arguments repr="endpoint: str, method: str, status_code: int, url: str, params: Dict[str, typing.Any], headers: Dict[str, str], json_data: Dict[str, typing.Any], original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -366,7 +380,7 @@
 <doc>&lt;p&gt;This keyword first calls the Authorized Request keyword, then the Validate Response keyword and finally validates is, for &lt;span class="name"&gt;DELETE&lt;/span&gt; operations, whether the target resource was indeed deleted (OK response) or not (error responses).&lt;/p&gt;</doc>
 <shortdoc>This keyword first calls the Authorized Request keyword, then the Validate Response keyword and finally validates is, for `DELETE` operations, whether the target resource was indeed deleted (OK response) or not (error responses).</shortdoc>
 </kw>
-<kw name="Test Endpoint" source="openapi_executors.py" lineno="186">
+<kw name="Test Endpoint" source="openapi_executors.py" lineno="176">
 <arguments repr="endpoint: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -386,7 +400,7 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="openapi_executors.py" lineno="144">
+<kw name="Test Invalid Url" source="openapi_executors.py" lineno="134">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -408,7 +422,7 @@
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="openapi_executors.py" lineno="124">
+<kw name="Test Unauthorized" source="openapi_executors.py" lineno="114">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -424,7 +438,7 @@
 &lt;p&gt;Any authorization parameters used to initialize the library are ignored for this request. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the authorization validation should be checked first.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for `method` on the `endpoint`, with no authorization.</shortdoc>
 </kw>
-<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="1022">
+<kw name="Validate Resource Properties" source="openapi_executors.py" lineno="449">
 <arguments repr="resource: Dict[str, typing.Any], schema_properties: Dict[str, typing.Any]">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="resource: Dict[str, typing.Any]">
 <name>resource</name>
@@ -435,10 +449,10 @@
 <type>Dict[str, typing.Any]</type>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Validate that the 'resource' does not contain any properties that are not defined in the &lt;span class="name"&gt;schema_properties&lt;/span&gt;.&lt;/p&gt;</doc>
-<shortdoc>Validate that the 'resource' does not contain any properties that are not defined in the `schema_properties`.</shortdoc>
+<doc>&lt;p&gt;Validate that the &lt;span class="name"&gt;resource&lt;/span&gt; does not contain any properties that are not defined in the &lt;span class="name"&gt;schema_properties&lt;/span&gt;.&lt;/p&gt;</doc>
+<shortdoc>Validate that the `resource` does not contain any properties that are not defined in the `schema_properties`.</shortdoc>
 </kw>
-<kw name="Validate Response" source="openapi_executors.py" lineno="912">
+<kw name="Validate Response" source="openapi_executors.py" lineno="339">
 <arguments repr="endpoint: str, response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -466,7 +480,7 @@
 &lt;/ul&gt;</doc>
 <shortdoc>Validate the `response` by performing the following validations: - validate the `response` against the openapi schema for the `endpoint` - validate that the response does not contain extra properties - validate that a href, if present, refers to the correct resource - validate that the value for a property that is in the response is equal to     the property value that was send - validate that no `original_data` is preserved when performing a PUT operation - validate that a PATCH operation only updates the provided properties</shortdoc>
 </kw>
-<kw name="Validate Send Response" source="openapi_executors.py" lineno="1041">
+<kw name="Validate Send Response" source="openapi_executors.py" lineno="468">
 <arguments repr="response: Response, original_data: Dict[str, typing.Any] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
