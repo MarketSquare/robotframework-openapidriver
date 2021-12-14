@@ -9,7 +9,7 @@ readme =  "./docs/README.md"
 homepage = "https://github.com/MarketSquare/robotframework-openapidriver"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Testing",
@@ -66,7 +66,6 @@ module = [
     "prance.*",
     "robot.*",
     "openapi_core.*",
-    "robotlibcore",
     "uvicorn",
     "invoke",
 ]
