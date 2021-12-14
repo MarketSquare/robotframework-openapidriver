@@ -28,6 +28,7 @@ requests = "*"
 prance = "*"
 openapi-core = "*"
 openapi-spec-validator = "*"
+robotframework-openapi-libcore = "^1.0.0-alpha.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
@@ -66,6 +67,7 @@ module = [
     "prance.*",
     "robot.*",
     "openapi_core.*",
+    "OpenApiLibCore.*",
     "uvicorn",
     "invoke",
 ]

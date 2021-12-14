@@ -13,18 +13,19 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
-from requests import Response
-from requests.auth import AuthBase
-from robot.api import SkipExecution
-from robot.api.deco import keyword, library
-from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiDriver.openapi_libcore import (
+# TODO: OpenApiLibCore.openapi_libcore -> OpenApiLibCore
+from OpenApiLibCore.openapi_libcore import (
     OpenApiLibCore,
     RequestData,
     RequestValues,
     resolve_schema,
 )
+from requests import Response
+from requests.auth import AuthBase
+from robot.api import SkipExecution
+from robot.api.deco import keyword, library
+from robot.libraries.BuiltIn import BuiltIn
 
 run_keyword = BuiltIn().run_keyword
 
