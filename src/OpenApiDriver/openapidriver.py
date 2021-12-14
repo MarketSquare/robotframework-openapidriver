@@ -132,11 +132,8 @@ from typing import List, Optional, Union
 
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
-from prance import ResolvingParser
-from prance.util.url import ResolutionError
 from requests.auth import AuthBase
 from robot.api.deco import library
-from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
@@ -148,7 +145,7 @@ except:  # pragma: no cover
 
 
 @library
-class OpenApiDriver(DataDriver, OpenApiExecutors):
+class OpenApiDriver(OpenApiExecutors, DataDriver):
     # region: docstring
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]
@@ -268,33 +265,11 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
         ignored_endpoints = ignored_endpoints if ignored_endpoints else []
         ignored_responses = ignored_responses if ignored_responses else []
         ignored_testcases = ignored_testcases if ignored_testcases else []
-        try:
-            parser = ResolvingParser(source, backend="openapi-spec-validator")
-        except ResolutionError as exception:
-            BuiltIn().fatal_error(
-                f"Exception while trying to load openapi spec from source: {exception}"
-            )
-        if (openapi_spec := parser.specification) is None:  # pragma: no cover
-            BuiltIn().fatal_error(
-                "Source was loaded, but no specification was present after parsing."
-            )
-        endpoints = openapi_spec["paths"]
-        DataDriver.__init__(
-            self,
-            # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
-            # reader_class=OpenApiReader
-            reader_class="openapi_reader",
-            endpoints=endpoints,
-            ignored_endpoints=ignored_endpoints,
-            ignored_responses=ignored_responses,
-            ignored_testcases=ignored_testcases,
-            ignore_fastapi_default_422=ignore_fastapi_default_422,
-        )
 
         mappings_path = Path(mappings_path).as_posix()
         OpenApiExecutors.__init__(
             self,
-            openapi_specification=openapi_spec,
+            source=source,
             origin=origin,
             base_path=base_path,
             mappings_path=mappings_path,
@@ -306,6 +281,19 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
             disable_server_validation=disable_server_validation,
             require_body_for_invalid_url=require_body_for_invalid_url,
             invalid_property_default_response=invalid_property_default_response,
+        )
+
+        endpoints = self.openapi_spec["paths"]
+        DataDriver.__init__(
+            self,
+            # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
+            # reader_class=OpenApiReader
+            reader_class="openapi_reader",
+            endpoints=endpoints,
+            ignored_endpoints=ignored_endpoints,
+            ignored_responses=ignored_responses,
+            ignored_testcases=ignored_testcases,
+            ignore_fastapi_default_422=ignore_fastapi_default_422,
         )
 
     # FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver

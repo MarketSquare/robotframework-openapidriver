@@ -13,6 +13,8 @@ from uuid import uuid4
 
 from openapi_core import create_spec
 from openapi_core.validation.response.validators import ResponseValidator
+from prance import ResolvingParser
+from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from robot.api.deco import keyword, library
@@ -155,7 +157,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
-        openapi_specification: Dict[str, Any],
+        source: str,
         origin: str = "",
         base_path: str = "",
         mappings_path: Union[str, Path] = "",
@@ -165,7 +167,17 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         auth: Optional[AuthBase] = None,
         invalid_property_default_response: int = 422,
     ) -> None:
-        self.openapi_spec: Dict[str, Any] = openapi_specification
+        try:
+            parser = ResolvingParser(source, backend="openapi-spec-validator")
+        except ResolutionError as exception:
+            BuiltIn().fatal_error(
+                f"Exception while trying to load openapi spec from source: {exception}"
+            )
+        if (openapi_spec := parser.specification) is None:  # pragma: no cover
+            BuiltIn().fatal_error(
+                "Source was loaded, but no specification was present after parsing."
+            )
+        self.openapi_spec: Dict[str, Any] = openapi_spec
         validation_spec = create_spec(self.openapi_spec)
         self.response_validator = ResponseValidator(
             spec=validation_spec,

@@ -50,7 +50,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        openapi_specification: Dict[str, Any],
+        source: str,
         origin: str = "",
         base_path: str = "",
         mappings_path: Union[str, Path] = "",
@@ -64,7 +64,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         invalid_property_default_response: int = 422,
     ) -> None:
         super().__init__(
-            openapi_specification=openapi_specification,
+            source=source,
             origin=origin,
             base_path=base_path,
             mappings_path=mappings_path,
