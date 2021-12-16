@@ -7,7 +7,7 @@ from DataDriver.ReaderConfig import TestCaseData
 
 # pylint: disable=too-few-public-methods
 class Test:
-    """Helper class to support ignoreing endpoints when generating the test cases."""
+    """Helper class to support ignoring endpoints when generating the test cases."""
 
     def __init__(self, endpoint: str, method: str, response: Union[str, int]):
         self.endpoint = endpoint
