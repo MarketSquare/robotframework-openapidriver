@@ -42,12 +42,9 @@ class ValidationLevel(str, Enum):
     STRICT = "STRICT"
 
 
-@library
+@library(scope="TEST SUITE", doc_format="ROBOT")
 class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
-
-    ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
-    ROBOT_LIBRARY_SCOPE = "TEST SUITE"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
