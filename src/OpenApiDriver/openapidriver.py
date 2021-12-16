@@ -105,7 +105,7 @@ scope of the API. In addition there is support for handling restrictions on the 
 of parameters and properties.
 
 Details about the `mappings_path` variable usage can be found
-[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).
+[here](https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html).
 
 ---
 
@@ -144,28 +144,12 @@ except:  # pragma: no cover
     __version__ = "unknown"
 
 
-@library
+@library(scope="TEST SUITE", version=__version__, doc_format="ROBOT")
 class OpenApiDriver(OpenApiExecutors, DataDriver):
-    # region: docstring
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]
     for an introduction and examples.
-
-    Most of the provided keywords are for internal use by the library (for example to
-    ensure the result logs provide insight into the executed steps) but a number of
-    them are intended to be used as ``Test Template`` or within the ``Keyword`` that
-    serves as the ``Test Template``.
-
-    The following Keywords are intended to be used in Test Suites:
-
-    - ``Test Endpoint``
-    - ``Test Invalid Url``
-    - ``Test Unauthorized``
     """
-    # endregion
-    ROBOT_LIBRARY_VERSION = __version__
-    ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
-    ROBOT_LIBRARY_SCOPE = "TEST SUITE"
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
@@ -216,7 +200,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         openapi document. E.g. ``/petshop/v2``.
 
         === mappings_path ===
-        See [https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html | here].
+        See [https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html | here].
 
         === username ===
         The username to be used for Basic Authentication.
@@ -300,3 +284,8 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     # accepts an AbstractReaderClass subclass as reader_class argument
     def _data_reader(self) -> AbstractReaderClass:
         return OpenApiReader(self.reader_config)
+
+    @staticmethod
+    def get_keyword_names():
+        """Curated keywords for libdoc and libspec."""
+        return ["test_unauthorized", "test_invalid_url", "test_endpoint"]
