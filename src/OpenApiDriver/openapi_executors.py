@@ -165,33 +165,24 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             original_data = self.get_original_data(url=url)
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= 400:
-            data_relations = request_data.dto.get_relations_for_error_code(status_code)
-            parameter_relations = (
-                request_data.dto.get_parameter_relations_for_error_code(status_code)
-            )
             invalidation_keyword_data = {
                 "get_invalid_json_data": [
                     "get_invalid_json_data",
-                    data_relations,
-                    request_data.dto_schema,
                     url,
                     method,
-                    request_data.dto,
                     status_code,
+                    request_data,
                 ],
                 "invalidate_parameters": [
                     "invalidate_parameters",
-                    params,
-                    headers,
-                    parameter_relations,
-                    request_data.parameters,
                     status_code,
+                    request_data,
                 ],
             }
             invalidation_keywords = []
-            if data_relations:
+            if request_data.dto.get_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalid_json_data")
-            if parameter_relations:
+            if request_data.dto.get_parameter_relations_for_error_code(status_code):
                 invalidation_keywords.append("invalidate_parameters")
             if invalidation_keywords:
                 if (
