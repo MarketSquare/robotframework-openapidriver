@@ -126,7 +126,6 @@ data types and properties. The following list details the most important ones:
 
 """
 # region
-from importlib.metadata import version
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -138,13 +137,8 @@ from robot.api.deco import library
 from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
 
-try:
-    __version__ = version("robotframework-openapidriver")
-except:  # pragma: no cover
-    __version__ = "unknown"
 
-
-@library(scope="TEST SUITE", version=__version__, doc_format="ROBOT")
+@library(scope="TEST SUITE", doc_format="ROBOT")
 class OpenApiDriver(OpenApiExecutors, DataDriver):
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]
@@ -285,6 +279,8 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     def _data_reader(self) -> AbstractReaderClass:
         return OpenApiReader(self.reader_config)
 
+
+class DocumentationGenerator(OpenApiDriver):
     @staticmethod
     def get_keyword_names():
         """Curated keywords for libdoc and libspec."""
