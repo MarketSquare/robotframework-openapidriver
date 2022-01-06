@@ -91,7 +91,7 @@ Validate Using Test Endpoint Keyword
 ```
 
 Running the above suite for the first time is likely to result in some
-errors / failed testes.
+errors / failed tests.
 You should look at the Robot Framework `log.html` to determine the reasons
 for the failing tests.
 Depending on the reasons for the failures, different solutions are possible.
@@ -125,7 +125,7 @@ data types and properties. The following list details the most important ones:
 - byte, binary, date, date-time string formats not supported yet.
 
 """
-# region
+# endregion
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -151,7 +151,6 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         ignored_endpoints: Optional[List[str]] = None,
         ignored_responses: Optional[List[int]] = None,
         ignored_testcases: Optional[List[List[str]]] = None,
-        ignore_fastapi_default_422: bool = False,
         origin: str = "",
         base_path: str = "",
         mappings_path: Union[str, Path] = "",
@@ -179,12 +178,6 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         A list of specific test cases that, if it would be generated, will be ignored.
         Specific test cases to ignore must be specified as a ``List`` of ``endpoint``,
         ``method`` and ``response``.
-
-        === ignore_fastapi_default_422 ===
-        The FastAPI framework generates an openapi.json that, by default, has a 422 response
-        for almost every endpoint. In some cases, this response can only be triggered by
-        request header invalidation, which is currently not supported. When testing a FastApi
-        webserver, you can set this argument to ``True``
 
         === origin ===
         The server (and port) of the target server. E.g. ``https://localhost:7000``
@@ -271,7 +264,6 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             ignored_endpoints=ignored_endpoints,
             ignored_responses=ignored_responses,
             ignored_testcases=ignored_testcases,
-            ignore_fastapi_default_422=ignore_fastapi_default_422,
         )
 
     # FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
@@ -281,7 +273,13 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
 
 
 class DocumentationGenerator(OpenApiDriver):
+    """Helper class to be able to generate curated libdoc and libspec documentation."""
+
     @staticmethod
     def get_keyword_names():
         """Curated keywords for libdoc and libspec."""
-        return ["test_unauthorized", "test_invalid_url", "test_endpoint"]
+        return [
+            "test_unauthorized",
+            "test_invalid_url",
+            "test_endpoint",
+        ]  # pragma: no cover
