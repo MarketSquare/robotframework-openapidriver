@@ -515,7 +515,7 @@ xls = ["pandas", "xlrd (>=1.2.0)", "openpyxl"]
 
 [[package]]
 name = "robotframework-openapi-libcore"
-version = "1.0.0a0"
+version = "1.0.2"
 description = "A Robot Framework library to facilitate library development for OpenAPI / Swagger APIs."
 category = "main"
 optional = false
@@ -710,7 +710,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "b17391a046d826fd5423a50f0a871ffd18cc55fb0f7ab67ad67b0018766d1c2e"
+content-hash = "cf8e39b62077db2f0f9a56c8cc6c9f0968a2c56cb498ab698f7de10c37d49cfb"
 
 [metadata.files]
 anyio = [
@@ -1043,8 +1043,8 @@ robotframework-datadriver = [
     {file = "robotframework_datadriver-1.5.0-py3-none-any.whl", hash = "sha256:58f5009fa2d91fba5cfdefe72927523538e10ecee2657808b927f39b63ef47b9"},
 ]
 robotframework-openapi-libcore = [
-    {file = "robotframework-openapi-libcore-1.0.0a0.tar.gz", hash = "sha256:4ef588a82983626da4406db4017cc079ed903a1fca6fe44190abebcaf77081e6"},
-    {file = "robotframework_openapi_libcore-1.0.0a0-py3-none-any.whl", hash = "sha256:9032a4acb62c3519c809268aaf58b45f1baa371fc153612af31363d1fc62fd73"},
+    {file = "robotframework-openapi-libcore-1.0.2.tar.gz", hash = "sha256:04c01c30bba66a778501310c45af2d976a8fdb78a2c2ac3f52df5be8b348efc1"},
+    {file = "robotframework_openapi_libcore-1.0.2-py3-none-any.whl", hash = "sha256:618480662a0cbc5f213f2c4e478554fbe192e97f554727f38733f8fd18ff4430"},
 ]
 robotframework-stacktrace = [
     {file = "robotframework-stacktrace-0.4.1.tar.gz", hash = "sha256:e96cb36e7e9ab55104c1f7d3606249a109e0a4c3bb6a0e294bff07d54ee6f6a5"},
