@@ -1,5 +1,6 @@
 import datetime
 from enum import Enum
+from sys import float_info
 from typing import Callable, Dict, List, Optional
 from uuid import uuid4
 
@@ -7,7 +8,7 @@ import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Request, Response
 from pydantic import BaseModel, confloat, conint, constr
 
-API_KEY = "OpenApiDriver"
+API_KEY = "OpenApiLibCore"
 API_KEY_NAME = "api_key"
 
 
@@ -25,6 +26,11 @@ app = FastAPI()
 #         return Response(status_code=401, content="Computer says no.")
 #     response = await call_next(request)
 #     return response
+
+
+REMOVE_ME: str = uuid4().hex
+DEPRECATED: int = uuid4().int
+DELTA = 1000 * float_info.epsilon
 
 
 class EnergyLabel(str, Enum):
@@ -46,6 +52,13 @@ class WeekDay(str, Enum):
     Friday = "Friday"
 
 
+class Wing(str, Enum):
+    N = "North"
+    E = "East"
+    S = "South"
+    W = "West"
+
+
 class Message(BaseModel):
     message: str
 
@@ -54,10 +67,16 @@ class Detail(BaseModel):
     detail: str
 
 
+class Event(BaseModel):
+    message: Message
+    details: List[Detail]
+
+
 class WageGroup(BaseModel):
     id: str
     # hourly_rate: confloat(ge=14.37, lt=50.00)
     hourly_rate: float
+    overtime_percentage: Optional[int] = DEPRECATED
 
 
 class EmployeeDetails(BaseModel):
@@ -98,7 +117,10 @@ ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
         },
     }
 }
-REMOVE_ME: str = uuid4().hex
+EVENTS: List[Event] = [
+    Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
+    Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
+]
 
 
 @app.get("/", status_code=200, response_model=Message)
@@ -108,7 +130,7 @@ def get_root(*, name_from_header: str = Header(""), title: str = Header("")) -> 
 
 
 @app.get(
-    "/message",
+    "/secret_message",
     status_code=200,
     response_model=Message,
     responses={401: {"model": Detail}, 403: {"model": Detail}},
@@ -123,6 +145,20 @@ def get_message(
     if seal is not REMOVE_ME:
         raise HTTPException(status_code=403, detail="Seal was not removed!")
     return Message(message="Welcome, agent HAL")
+
+
+# deliberate trailing /
+@app.get("/events/", status_code=200, response_model=List[Event])
+def get_events() -> List[Event]:
+    return EVENTS
+
+
+# deliberate trailing /
+@app.post("/events/", status_code=201, response_model=Event)
+def post_event(event: Event) -> Event:
+    event.details.append(Detail(detail=str(datetime.datetime.now())))
+    EVENTS.append(event)
+    return event
 
 
 @app.get(
@@ -147,11 +183,21 @@ def get_energy_label(
     "/wagegroups",
     status_code=201,
     response_model=WageGroup,
-    responses={418: {"model": Detail}},
+    responses={418: {"model": Detail}, 422: {"model": Detail}},
 )
 def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
     if wagegroup.id in WAGE_GROUPS.keys():
         raise HTTPException(status_code=418, detail="Wage group already exists.")
+    if not (0.99 - DELTA) < (wagegroup.hourly_rate % 1) < (0.99 + DELTA):
+        raise HTTPException(
+            status_code=422,
+            detail="Hourly rates must end with .99 for psychological reasons.",
+        )
+    if wagegroup.overtime_percentage != DEPRECATED:
+        raise HTTPException(
+            status_code=422, detail="Overtime percentage is deprecated."
+        )
+    wagegroup.overtime_percentage = None
     WAGE_GROUPS[wagegroup.id] = wagegroup
     return wagegroup
 
@@ -172,11 +218,23 @@ def get_wagegroup(wagegroup_id: str) -> WageGroup:
     "/wagegroups/{wagegroup_id}",
     status_code=200,
     response_model=WageGroup,
-    responses={404: {"model": Detail}},
+    responses={404: {"model": Detail}, 418: {"model": Detail}, 422: {"model": Detail}},
 )
 def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
     if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(status_code=404, detail="Wage group not found.")
+    if wagegroup.id in WAGE_GROUPS.keys():
+        raise HTTPException(status_code=418, detail="Wage group already exists.")
+    if not (0.99 - DELTA) < (wagegroup.hourly_rate % 1) < (0.99 + DELTA):
+        raise HTTPException(
+            status_code=422,
+            detail="Hourly rates must end with .99 for psychological reasons.",
+        )
+    if wagegroup.overtime_percentage != DEPRECATED:
+        raise HTTPException(
+            status_code=422, detail="Overtime percentage is deprecated."
+        )
+    wagegroup.overtime_percentage = None
     WAGE_GROUPS[wagegroup.id] = wagegroup
     return wagegroup
 
@@ -197,6 +255,18 @@ def delete_wagegroup(wagegroup_id: str) -> None:
             detail=f"Wage group still in use by {len(used_by)} employees.",
         )
     WAGE_GROUPS.pop(wagegroup_id)
+
+
+@app.get(
+    "/wagegroups/{wagegroup_id}/employees",
+    status_code=200,
+    response_model=List[EmployeeDetails],
+    responses={404: {"model": Detail}},
+)
+def get_employees_in_wagegroup(wagegroup_id: str) -> List[EmployeeDetails]:
+    if wagegroup_id not in WAGE_GROUPS.keys():
+        raise HTTPException(status_code=404, detail="Wage group not found.")
+    return [e for e in EMPLOYEES.values() if e.wagegroup_id == wagegroup_id]
 
 
 @app.post(
@@ -224,6 +294,15 @@ def post_employee(employee: Employee) -> EmployeeDetails:
     )
     EMPLOYEES[new_employee.id] = new_employee
     return new_employee
+
+
+@app.get(
+    "/employees",
+    status_code=200,
+    response_model=List[EmployeeDetails],
+)
+def get_employees() -> List[EmployeeDetails]:
+    return list(EMPLOYEES.values())
 
 
 @app.get(
