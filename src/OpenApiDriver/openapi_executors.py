@@ -13,14 +13,7 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
-
-# TODO: OpenApiLibCore.openapi_libcore -> OpenApiLibCore
-from OpenApiLibCore.openapi_libcore import (
-    OpenApiLibCore,
-    RequestData,
-    RequestValues,
-    resolve_schema,
-)
+from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
 from robot.api import SkipExecution
@@ -173,17 +166,18 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     status_code,
                     request_data,
                 ],
-                "invalidate_parameters": [
-                    "invalidate_parameters",
+                "get_invalidated_parameters": [
+                    "get_invalidated_parameters",
                     status_code,
                     request_data,
                 ],
             }
             invalidation_keywords = []
+
             if request_data.dto.get_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalid_json_data")
             if request_data.dto.get_parameter_relations_for_error_code(status_code):
-                invalidation_keywords.append("invalidate_parameters")
+                invalidation_keywords.append("get_invalidated_parameters")
             if invalidation_keywords:
                 if (
                     invalidation_keyword := choice(invalidation_keywords)
@@ -196,14 +190,28 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                         *invalidation_keyword_data[invalidation_keyword]
                     )
             # if there are no relations to invalide and the status_code is the default
-            # response_code for invalid properties, invalidate all properties
+            # response_code for invalid properties, invalidate properties instead
             elif status_code == self.invalid_property_default_response:
-                json_data = run_keyword(
-                    *invalidation_keyword_data["get_invalid_json_data"]
-                )
-                params, headers = run_keyword(
-                    *invalidation_keyword_data["invalidate_parameters"]
-                )
+                if (
+                    params
+                    or request_data.has_optional_params
+                    or request_data.headers_that_can_be_invalidated
+                ):
+                    params, headers = run_keyword(
+                        *invalidation_keyword_data["get_invalidated_parameters"]
+                    )
+                    if request_data.dto_schema:
+                        json_data = run_keyword(
+                            *invalidation_keyword_data["get_invalid_json_data"]
+                        )
+                elif request_data.dto_schema:
+                    json_data = run_keyword(
+                        *invalidation_keyword_data["get_invalid_json_data"]
+                    )
+                else:
+                    raise SkipExecution(
+                        "No properties or parameters can be invalidated."
+                    )
             else:
                 logger.error(
                     f"No Dto mapping found to cause status_code {status_code}."
@@ -232,10 +240,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
             json_data = request_data.get_required_properties_dict()
+            original_data = None
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)
-            else:
-                original_data = None
             run_keyword(
                 "perform_validated_request",
                 endpoint,
@@ -478,56 +485,77 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         In case a PATCH request, validate that only the properties that were patched
         have changed and that other properties are still at their pre-patch values.
         """
-        reference = response.json()
-        if prepared_body := response.request.body:
-            if isinstance(prepared_body, bytes):
-                send_json = _json.loads(prepared_body.decode("UTF-8"))
-            else:
-                send_json = _json.loads(prepared_body)
-        else:
+
+        def validate_array_response(
+            send_value: List[Any], received_value: List[Any]
+        ) -> None:
+            for item in send_value:
+                if item not in received_value:
+                    raise AssertionError(
+                        f"Received value for {send_property_name} '{received_value}' does "
+                        f"not contain '{item}' in the {response.request.method} request."
+                        f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
+                        f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
+                    )
+
+        if response.request.body is None:
             logger.warning(
                 "Could not validate send response; the body of the request property "
                 "on the provided response was None."
             )
             return None
+        if isinstance(response.request.body, bytes):
+            send_json = _json.loads(response.request.body.decode("UTF-8"))
+        else:
+            send_json = _json.loads(response.request.body)
+
+        response_data = response.json()
         # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
         # instead of a newly created resource. In this case, the send_json must be
         # in the array of the 'array_item' property on {id}
         send_path: str = response.request.path_url
-        response_path = reference.get("href", None)
+        response_path = response_data.get("href", None)
         if response_path and send_path not in response_path:
             property_to_check = send_path.replace(response_path, "")[1:]
-            if reference.get(property_to_check) and isinstance(
-                reference[property_to_check], list
+            if response_data.get(property_to_check) and isinstance(
+                response_data[property_to_check], list
             ):
-                item_list: List[Dict[str, Any]] = reference[property_to_check]
+                item_list: List[Dict[str, Any]] = response_data[property_to_check]
                 # Use the (mandatory) id to get the POSTed resource from the list
-                [reference] = [
+                [response_data] = [
                     item for item in item_list if item["id"] == send_json["id"]
                 ]
-        for key, value in send_json.items():
+        for send_property_name, send_value in send_json.items():
             # sometimes, a property in the request is not in the response, e.g. a password
-            if key not in reference.keys():
+            if send_property_name not in response_data.keys():
                 continue
-            if value is not None:
+            if send_value is not None:
                 # if a None value is send, the target property should be cleared or
                 # reverted to the default value (which cannot be specified in the
                 # openapi document)
-                assert reference[key] == value, (
-                    f"Received value for {key} '{reference[key]}' does not "
-                    f"match '{value}' in the {response.request.method} request"
+                received_value = response_data[send_property_name]
+                # In case of lists / arrays, the send values are often appended to
+                # existing data
+                if isinstance(received_value, list):
+                    validate_array_response(
+                        send_value=send_value, received_value=received_value
+                    )
+                    continue
+                assert response_data[send_property_name] == send_value, (
+                    f"Received value for {send_property_name} '{received_value}' does not "
+                    f"match '{send_value}' in the {response.request.method} request."
                     f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                    f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
+                    f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
                 )
         # In case of PATCH requests, ensure that only send properties have changed
         if original_data:
-            for key, value in original_data.items():
-                if key not in send_json.keys():
-                    assert value == reference[key], (
-                        f"Received value for {key} '{reference[key]}' does not "
-                        f"match '{value}' in the pre-patch data"
+            for send_property_name, send_value in original_data.items():
+                if send_property_name not in send_json.keys():
+                    assert send_value == response_data[send_property_name], (
+                        f"Received value for {send_property_name} '{response_data[send_property_name]}' does not "
+                        f"match '{send_value}' in the pre-patch data"
                         f"\nPre-patch: {_json.dumps(original_data, indent=4, sort_keys=True)}"
-                        f"\nGot: {_json.dumps(reference, indent=4, sort_keys=True)}"
+                        f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
                     )
         return None
 
