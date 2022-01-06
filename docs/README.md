@@ -92,7 +92,7 @@ Validate Using Test Endpoint Keyword
 ```
 
 Running the above suite for the first time is likely to result in some
-errors / failed testes.
+errors / failed tests.
 You should look at the Robot Framework `log.html` to determine the reasons
 for the failing tests.
 Depending on the reasons for the failures, different solutions are possible.
