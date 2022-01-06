@@ -66,7 +66,8 @@ def format_code(context):
 @task
 def libdoc(context):
     json_file = f"{project_root}/tests/files/petstore_openapi.json"
-    source = f"OpenApiDriver::{json_file}"
+    source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
+    # FIXME: replace DocumentationGenerator with OpenApiDriver in libspec
     target = f"{project_root}/docs/openapidriver.html"
     cmd = [
         "python",
@@ -81,7 +82,9 @@ def libdoc(context):
 @task
 def libspec(context):
     json_file = f"{project_root}/tests/files/petstore_openapi.json"
-    source = f"OpenApiDriver::{json_file}"
+    source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
+    # FIXME: replace DocumentationGenerator with OpenApiDriver in libspec
+    # and fix library version and docstring
     target = f"{project_root}/src/OpenApiDriver/openapidriver.libspec"
     cmd = [
         "python",

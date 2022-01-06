@@ -92,7 +92,7 @@ Validate Using Test Endpoint Keyword
 ```
 
 Running the above suite for the first time is likely to result in some
-errors / failed testes.
+errors / failed tests.
 You should look at the Robot Framework `log.html` to determine the reasons
 for the failing tests.
 Depending on the reasons for the failures, different solutions are possible.
@@ -106,7 +106,7 @@ scope of the API. In addition there is support for handling restrictions on the 
 of parameters and properties.
 
 Details about the `mappings_path` variable usage can be found
-[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).
+[here](https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html).
 
 ---
 

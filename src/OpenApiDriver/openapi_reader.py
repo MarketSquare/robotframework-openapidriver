@@ -7,7 +7,7 @@ from DataDriver.ReaderConfig import TestCaseData
 
 # pylint: disable=too-few-public-methods
 class Test:
-    """Helper class to support ignoreing endpoints when generating the test cases."""
+    """Helper class to support ignoring endpoints when generating the test cases."""
 
     def __init__(self, endpoint: str, method: str, response: Union[str, int]):
         self.endpoint = endpoint
@@ -42,22 +42,9 @@ class OpenApiReader(AbstractReaderClass):
             ignored_tests = [Test(*test) for test in ignored_testcases]
         else:
             ignored_tests = []
-        ignore_fastapi_default_422: bool = getattr(
-            self, "ignore_fastapi_default_422", False
-        )
         for endpoint, methods in endpoints.items():
             for method, method_data in reversed(methods.items()):
                 for response in method_data.get("responses"):
-                    # FastAPI also adds a 422 response to endpoints that do not take
-                    # parameters that can be invalidated. Since header-invalidation is
-                    # currently not supported, these endpoints can be filtered by a
-                    # generic flag
-                    if (
-                        response == "422"
-                        and method in ["get", "delete"]
-                        and ignore_fastapi_default_422
-                    ):
-                        continue
                     # default applies to all status codes that are not specified, in
                     # which case we don't know what to expect and thus can't verify
                     if (

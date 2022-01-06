@@ -91,7 +91,7 @@ Validate Using Test Endpoint Keyword
 ```
 
 Running the above suite for the first time is likely to result in some
-errors / failed testes.
+errors / failed tests.
 You should look at the Robot Framework `log.html` to determine the reasons
 for the failing tests.
 Depending on the reasons for the failures, different solutions are possible.
@@ -105,7 +105,7 @@ scope of the API. In addition there is support for handling restrictions on the 
 of parameters and properties.
 
 Details about the `mappings_path` variable usage can be found
-[here](https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html).
+[here](https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html).
 
 ---
 
@@ -125,50 +125,25 @@ data types and properties. The following list details the most important ones:
 - byte, binary, date, date-time string formats not supported yet.
 
 """
-# region
-from importlib.metadata import version
+# endregion
 from pathlib import Path
 from typing import List, Optional, Union
 
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
-from prance import ResolvingParser
-from prance.util.url import ResolutionError
 from requests.auth import AuthBase
 from robot.api.deco import library
-from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
 
-try:
-    __version__ = version("robotframework-openapidriver")
-except:  # pragma: no cover
-    __version__ = "unknown"
 
-
-@library
-class OpenApiDriver(DataDriver, OpenApiExecutors):
-    # region: docstring
+@library(scope="TEST SUITE", doc_format="ROBOT")
+class OpenApiDriver(OpenApiExecutors, DataDriver):
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]
     for an introduction and examples.
-
-    Most of the provided keywords are for internal use by the library (for example to
-    ensure the result logs provide insight into the executed steps) but a number of
-    them are intended to be used as ``Test Template`` or within the ``Keyword`` that
-    serves as the ``Test Template``.
-
-    The following Keywords are intended to be used in Test Suites:
-
-    - ``Test Endpoint``
-    - ``Test Invalid Url``
-    - ``Test Unauthorized``
     """
-    # endregion
-    ROBOT_LIBRARY_VERSION = __version__
-    ROBOT_LIBRARY_DOC_FORMAT = "ROBOT"
-    ROBOT_LIBRARY_SCOPE = "TEST SUITE"
 
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals
         self,
@@ -176,7 +151,6 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
         ignored_endpoints: Optional[List[str]] = None,
         ignored_responses: Optional[List[int]] = None,
         ignored_testcases: Optional[List[List[str]]] = None,
-        ignore_fastapi_default_422: bool = False,
         origin: str = "",
         base_path: str = "",
         mappings_path: Union[str, Path] = "",
@@ -205,12 +179,6 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
         Specific test cases to ignore must be specified as a ``List`` of ``endpoint``,
         ``method`` and ``response``.
 
-        === ignore_fastapi_default_422 ===
-        The FastAPI framework generates an openapi.json that, by default, has a 422 response
-        for almost every endpoint. In some cases, this response can only be triggered by
-        request header invalidation, which is currently not supported. When testing a FastApi
-        webserver, you can set this argument to ``True``
-
         === origin ===
         The server (and port) of the target server. E.g. ``https://localhost:7000``
 
@@ -219,7 +187,7 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
         openapi document. E.g. ``/petshop/v2``.
 
         === mappings_path ===
-        See [https://marketsquare.github.io/robotframework-openapidriver/advanced_use.html | here].
+        See [https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html | here].
 
         === username ===
         The username to be used for Basic Authentication.
@@ -268,33 +236,11 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
         ignored_endpoints = ignored_endpoints if ignored_endpoints else []
         ignored_responses = ignored_responses if ignored_responses else []
         ignored_testcases = ignored_testcases if ignored_testcases else []
-        try:
-            parser = ResolvingParser(source, backend="openapi-spec-validator")
-        except ResolutionError as exception:
-            BuiltIn().fatal_error(
-                f"Exception while trying to load openapi spec from source: {exception}"
-            )
-        if (openapi_spec := parser.specification) is None:  # pragma: no cover
-            BuiltIn().fatal_error(
-                "Source was loaded, but no specification was present after parsing."
-            )
-        endpoints = openapi_spec["paths"]
-        DataDriver.__init__(
-            self,
-            # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
-            # reader_class=OpenApiReader
-            reader_class="openapi_reader",
-            endpoints=endpoints,
-            ignored_endpoints=ignored_endpoints,
-            ignored_responses=ignored_responses,
-            ignored_testcases=ignored_testcases,
-            ignore_fastapi_default_422=ignore_fastapi_default_422,
-        )
 
         mappings_path = Path(mappings_path).as_posix()
         OpenApiExecutors.__init__(
             self,
-            openapi_specification=openapi_spec,
+            source=source,
             origin=origin,
             base_path=base_path,
             mappings_path=mappings_path,
@@ -308,7 +254,32 @@ class OpenApiDriver(DataDriver, OpenApiExecutors):
             invalid_property_default_response=invalid_property_default_response,
         )
 
+        endpoints = self.openapi_spec["paths"]
+        DataDriver.__init__(
+            self,
+            # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
+            # reader_class=OpenApiReader
+            reader_class="openapi_reader",
+            endpoints=endpoints,
+            ignored_endpoints=ignored_endpoints,
+            ignored_responses=ignored_responses,
+            ignored_testcases=ignored_testcases,
+        )
+
     # FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
     # accepts an AbstractReaderClass subclass as reader_class argument
     def _data_reader(self) -> AbstractReaderClass:
         return OpenApiReader(self.reader_config)
+
+
+class DocumentationGenerator(OpenApiDriver):
+    """Helper class to be able to generate curated libdoc and libspec documentation."""
+
+    @staticmethod
+    def get_keyword_names():
+        """Curated keywords for libdoc and libspec."""
+        return [
+            "test_unauthorized",
+            "test_invalid_url",
+            "test_endpoint",
+        ]  # pragma: no cover

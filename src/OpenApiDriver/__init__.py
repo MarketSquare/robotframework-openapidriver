@@ -10,7 +10,7 @@ The following classes and constants are exposed to be used by the library user:
 """
 from importlib.metadata import version
 
-from OpenApiDriver.dto_base import (
+from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
     IdReference,
@@ -19,8 +19,9 @@ from OpenApiDriver.dto_base import (
     Relation,
     UniquePropertyValueConstraint,
 )
+from OpenApiLibCore.value_utils import IGNORE
+
 from OpenApiDriver.openapidriver import OpenApiDriver
-from OpenApiDriver.value_utils import IGNORE
 
 try:
     __version__ = version("robotframework-openapidriver")

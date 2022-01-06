@@ -4,7 +4,6 @@ Library             OpenApiDriver
 ...                 origin=http://localhost:8000
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
-...                 ignore_fastapi_default_422=${TRUE}
 ...                 response_validation=INFO
 ...                 require_body_for_invalid_url=${TRUE}
 
