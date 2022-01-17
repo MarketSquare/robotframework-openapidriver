@@ -127,7 +127,7 @@ data types and properties. The following list details the most important ones:
 """
 # endregion
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from DataDriver import DataDriver
 from DataDriver.AbstractReaderClass import AbstractReaderClass
@@ -158,6 +158,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
+        extra_headers: Optional[Dict[str, str]] = None,
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         require_body_for_invalid_url: bool = False,
@@ -201,6 +202,11 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         === auth ===
         A [https://docs.python-requests.org/en/latest/api/#authentication | requests AuthBase instance]
         to be used for authentication instead of the ``username`` and ``password``.
+
+        === extra_headers ===
+        A dictionary with extra / custom headers that will be send with every request.
+        This parameter can be used to send headers that are not documented in the
+        openapi document.
 
         === response_validation ===
         By default, a ``WARN`` is logged when the Response received after a Request does not
@@ -248,6 +254,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             password=password,
             security_token=security_token,
             auth=auth,
+            extra_headers=extra_headers,
             response_validation=response_validation,
             disable_server_validation=disable_server_validation,
             require_body_for_invalid_url=require_body_for_invalid_url,
