@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring
+from importlib.metadata import version
 import pathlib
 import subprocess
 
@@ -7,6 +8,7 @@ from invoke import task
 from OpenApiDriver import openapidriver
 
 ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
+VERSION = version('robotframework-openapidriver')
 
 
 @task
@@ -66,14 +68,16 @@ def format_code(context):
 
 @task
 def libdoc(context):
+    print(f"Generating libdoc for library version {VERSION}")
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
     source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
-    # FIXME: replace DocumentationGenerator with OpenApiDriver in libspec
     target = f"{ROOT}/docs/openapidriver.html"
     cmd = [
         "python",
         "-m",
         "robot.libdoc",
+        "-n OpenApiDriver",
+        f"-v {VERSION}",
         source,
         target,
     ]
@@ -82,15 +86,16 @@ def libdoc(context):
 
 @task
 def libspec(context):
+    print(f"Generating libspec for library version {VERSION}")
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
     source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
-    # FIXME: replace DocumentationGenerator with OpenApiDriver in libspec
-    # and fix library version and docstring
     target = f"{ROOT}/src/OpenApiDriver/openapidriver.libspec"
     cmd = [
         "python",
         "-m",
         "robot.libdoc",
+        "-n OpenApiDriver",
+        f"-v {VERSION}",
         source,
         target,
     ]
@@ -123,3 +128,4 @@ def build(context):
 @task(post=[build])
 def bump_version(context, rule):
     subprocess.run(f"poetry version {rule}", shell=True, check=False)
+    subprocess.run("poetry install", shell=True, check=False)

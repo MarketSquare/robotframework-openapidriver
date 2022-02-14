@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-01-06T09:03:31Z" specversion="3" source="openapidriver.py" lineno="275">
-<version>1.5.0</version>
-<doc>&lt;p&gt;Helper class to be able to generate curated libdoc and libspec documentation.&lt;/p&gt;</doc>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-02-14T17:33:59Z" specversion="3" source="openapidriver.py" lineno="282">
+<version>3.1.0</version>
+<doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
 <init name="Init" lineno="148">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422">
+<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[typing.List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type>str</type>
@@ -66,6 +66,12 @@
 <type>None</type>
 <default>None</default>
 </arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
+<name>extra_headers</name>
+<type>Dict[str, str]</type>
+<type>None</type>
+<default>None</default>
+</arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
 <name>response_validation</name>
 <type>ValidationLevel</type>
@@ -109,6 +115,8 @@
 &lt;p&gt;The token to be used for token based security using the &lt;code&gt;Authorization&lt;/code&gt; header.&lt;/p&gt;
 &lt;h4&gt;auth&lt;/h4&gt;
 &lt;p&gt;A &lt;a href="https://docs.python-requests.org/en/latest/api/#authentication"&gt;requests AuthBase instance&lt;/a&gt; to be used for authentication instead of the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;extra_headers&lt;/h4&gt;
+&lt;p&gt;A dictionary with extra / custom headers that will be send with every request. This parameter can be used to send headers that are not documented in the openapi document.&lt;/p&gt;
 &lt;h4&gt;response_validation&lt;/h4&gt;
 &lt;p&gt;By default, a &lt;code&gt;WARN&lt;/code&gt; is logged when the Response received after a Request does not comply with the schema as defined in the openapi document for the given operation. The following values are supported:&lt;/p&gt;
 &lt;ul&gt;
@@ -127,7 +135,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="openapi_executors.py" lineno="135">
+<kw name="Test Endpoint" source="openapi_executors.py" lineno="137">
 <arguments repr="endpoint: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -147,7 +155,7 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="openapi_executors.py" lineno="93">
+<kw name="Test Invalid Url" source="openapi_executors.py" lineno="95">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -169,7 +177,7 @@
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="openapi_executors.py" lineno="73">
+<kw name="Test Unauthorized" source="openapi_executors.py" lineno="75">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>

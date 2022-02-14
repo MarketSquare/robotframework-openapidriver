@@ -265,7 +265,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         DataDriver.__init__(
             self,
             # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
-            # reader_class=OpenApiReader
+            # reader_class=OpenApiReader,
             reader_class="openapi_reader",
             endpoints=endpoints,
             ignored_endpoints=ignored_endpoints,
@@ -280,7 +280,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
 
 
 class DocumentationGenerator(OpenApiDriver):
-    """Helper class to be able to generate curated libdoc and libspec documentation."""
+    __doc__ = OpenApiDriver.__doc__
 
     @staticmethod
     def get_keyword_names():
