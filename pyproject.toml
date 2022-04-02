@@ -19,16 +19,17 @@ classifiers = [
 packages = [
     { include = "OpenApiDriver", from = "src" },
 ]
+include = ["*.libspec"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 robotframework = ">=4"
-robotframework-datadriver = ">=1.5"
+robotframework-datadriver = ">=1.6.1"
 requests = "*"
 prance = "*"
 openapi-core = "*"
 openapi-spec-validator = "*"
-robotframework-openapi-libcore = ">=1.1.0"
+robotframework-openapi-libcore = ">=1.1.1"
 
 [tool.poetry.dev-dependencies]
 black = "*"
