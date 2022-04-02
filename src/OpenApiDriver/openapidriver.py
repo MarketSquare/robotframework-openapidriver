@@ -130,7 +130,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from DataDriver import DataDriver
-from DataDriver.AbstractReaderClass import AbstractReaderClass
 from requests.auth import AuthBase
 from robot.api.deco import library
 
@@ -264,19 +263,12 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         endpoints = self.openapi_spec["paths"]
         DataDriver.__init__(
             self,
-            # FIXME: Enable when DataDriver accepts AbstractReaderClass subclasses
-            # reader_class=OpenApiReader,
-            reader_class="openapi_reader",
+            reader_class=OpenApiReader,
             endpoints=endpoints,
             ignored_endpoints=ignored_endpoints,
             ignored_responses=ignored_responses,
             ignored_testcases=ignored_testcases,
         )
-
-    # FIXME: Hack to allow directly loading the OpenApiReader - remove when DataDriver
-    # accepts an AbstractReaderClass subclass as reader_class argument
-    def _data_reader(self) -> AbstractReaderClass:
-        return OpenApiReader(self.reader_config)
 
 
 class DocumentationGenerator(OpenApiDriver):
