@@ -380,15 +380,20 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             method=request_method,
             status_code=response.status_code,
         )
-        # content should be a single key/value entry, so use tuple assignment
-        (content_type,) = response_spec["content"].keys()
+        # "content" is optional in the OAS, if not provided, look at the response header
+        if not response_spec.get("content"):
+            content_type = response.headers.get("Content-Type", "unknown")
+        else:
+            # content should be a single key/value entry, so use tuple assignment
+            (content_type,) = response_spec["content"].keys()
         if content_type != "application/json":
             # at present, only json reponses are supported
             raise NotImplementedError(f"content_type '{content_type}' not supported")
-        if response.headers["Content-Type"] != content_type:
+        if response.headers.get("Content-Type") != content_type:
             raise ValueError(
-                f"Content-Type '{response.headers['Content-Type']}' of the response "
-                f"is not '{content_type}' as specified in the OpenAPI document."
+                f"Content-Type '{response.headers.get('Content-Type')}' of the response "
+                f"is not '{content_type}' as specified in the OpenAPI document or the "
+                f"Content-Type was not specified."
             )
 
         json_response = response.json()

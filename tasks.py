@@ -1,14 +1,14 @@
 # pylint: disable=missing-function-docstring
-from importlib.metadata import version
 import pathlib
 import subprocess
+from importlib.metadata import version
 
 from invoke import task
 
 from OpenApiDriver import openapidriver
 
 ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
-VERSION = version('robotframework-openapidriver')
+VERSION = version("robotframework-openapidriver")
 
 
 @task
