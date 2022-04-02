@@ -49,6 +49,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
+        extra_headers: Optional[Dict[str, str]] = None,
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         require_body_for_invalid_url: bool = False,
@@ -63,6 +64,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             password=password,
             security_token=security_token,
             auth=auth,
+            extra_headers=extra_headers,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation

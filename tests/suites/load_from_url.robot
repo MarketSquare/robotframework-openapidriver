@@ -1,4 +1,5 @@
 *** Settings ***
+Variables           ${ROOT}/tests/variables.py
 Library             OpenApiDriver
 ...                 source=http://localhost:8000/openapi.json
 ...                 origin=http://localhost:8000
@@ -6,6 +7,7 @@ Library             OpenApiDriver
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
 ...                 response_validation=INFO
 ...                 require_body_for_invalid_url=${TRUE}
+...                 extra_headers=${API_KEY}
 
 Test Template       Validate Test Endpoint Keyword
 
