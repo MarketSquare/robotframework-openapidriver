@@ -68,6 +68,11 @@ Validates OK as OpenAPI 3.0.2!
 You'll have to change the url or file reference to the location of the openapi
 document for your API.
 
+> Note: Although recursion is technically allowed under the OAS, tool support is limited
+and changing the API to not use recursion is recommended.
+At present OpenApiLibCore has limited support for parsing OpenAPI documents with
+recursion in them.
+
 If the openapi document passes this validation, the next step is trying to do a test
 run with a minimal test suite.
 The example below can be used, with `source` and `origin` altered to fit your situation.
@@ -127,7 +132,7 @@ data types and properties. The following list details the most important ones:
 """
 # endregion
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from DataDriver import DataDriver
 from requests.auth import AuthBase
@@ -144,7 +149,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     for an introduction and examples.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments, too-many-locals
+    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, dangerous-default-value
         self,
         source: str,
         ignored_endpoints: Optional[List[str]] = None,
@@ -162,6 +167,8 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         disable_server_validation: bool = True,
         require_body_for_invalid_url: bool = False,
         invalid_property_default_response: int = 422,
+        recursion_limit: int = 1,
+        recursion_default: Any = {},
     ):
         # region: docstring
         """
@@ -236,6 +243,17 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         The default response code for requests with a JSON body that does not comply with
         the schema. Example: a value outside the specified range or a string value for a
         property defined as integer in the schema.
+
+        === recursion_limit ===
+        The recursion depth to which to fully parse recursive references before the
+        `recursion_default` is used to end the recursion.
+
+        === recursion_default ===
+        The value that is used instead of the referenced schema when the
+        `recursion_limit` has been reached. The default `{}` represents an empty
+        object in JSON. Depending on schema definitions, this may cause schema
+        validation errors. If this is the case, `None` (`${NONE}` in Robot Framework)
+        can be tried as an alternative.
         """
         # endregion
         ignored_endpoints = ignored_endpoints if ignored_endpoints else []
@@ -258,6 +276,8 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             disable_server_validation=disable_server_validation,
             require_body_for_invalid_url=require_body_for_invalid_url,
             invalid_property_default_response=invalid_property_default_response,
+            recursion_limit=recursion_limit,
+            recursion_default=recursion_default,
         )
 
         endpoints = self.openapi_spec["paths"]

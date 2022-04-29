@@ -39,7 +39,7 @@ class ValidationLevel(str, Enum):
 class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, dangerous-default-value
         self,
         source: str,
         origin: str = "",
@@ -54,6 +54,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         disable_server_validation: bool = True,
         require_body_for_invalid_url: bool = False,
         invalid_property_default_response: int = 422,
+        recursion_limit: int = 1,
+        recursion_default: Any = {},
     ) -> None:
         super().__init__(
             source=source,
@@ -65,6 +67,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             security_token=security_token,
             auth=auth,
             extra_headers=extra_headers,
+            recursion_limit=recursion_limit,
+            recursion_default=recursion_default,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
