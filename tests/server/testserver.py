@@ -1,10 +1,10 @@
+# pylint: disable="missing-class-docstring", "missing-function-docstring"
 import datetime
 from enum import Enum
 from sys import float_info
 from typing import Callable, Dict, List, Optional
 from uuid import uuid4
 
-import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Request, Response
 from pydantic import BaseModel, confloat, conint, constr
 
@@ -149,7 +149,14 @@ def get_message(
 
 # deliberate trailing /
 @app.get("/events/", status_code=200, response_model=List[Event])
-def get_events() -> List[Event]:
+def get_events(
+    search_strings: Optional[List[int]] = Query(None),
+) -> List[Event]:
+    if search_strings:
+        result: List[Event] = []
+        for search_string in search_strings:
+            result.extend([e for e in EVENTS if str(search_string) in e.message.message])
+        return result
     return EVENTS
 
 
@@ -338,11 +345,3 @@ def get_available_employees(weekday: WeekDay = Query(...)) -> List[EmployeeDetai
     return [
         e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday
     ]
-
-
-def main():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-if __name__ == "__main__":
-    main()
