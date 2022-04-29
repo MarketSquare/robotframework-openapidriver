@@ -29,7 +29,7 @@ requests = "*"
 prance = "*"
 openapi-core = "*"
 openapi-spec-validator = "*"
-robotframework-openapi-libcore = ">=1.3.0"
+robotframework-openapi-libcore = ">=1.4.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
