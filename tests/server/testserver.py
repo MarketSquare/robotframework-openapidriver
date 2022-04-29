@@ -150,12 +150,12 @@ def get_message(
 # deliberate trailing /
 @app.get("/events/", status_code=200, response_model=List[Event])
 def get_events(
-    search_strings: Optional[List[int]] = Query(None),
+    search_strings: Optional[List[str]] = Query(None),
 ) -> List[Event]:
     if search_strings:
         result: List[Event] = []
         for search_string in search_strings:
-            result.extend([e for e in EVENTS if str(search_string) in e.message.message])
+            result.extend([e for e in EVENTS if search_string in e.message.message])
         return result
     return EVENTS
 
