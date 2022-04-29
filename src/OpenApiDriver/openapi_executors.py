@@ -199,8 +199,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             # response_code for invalid properties, invalidate properties instead
             elif status_code == self.invalid_property_default_response:
                 if (
-                    params
-                    or request_data.has_optional_params
+                    request_data.params_that_can_be_invalidated
                     or request_data.headers_that_can_be_invalidated
                 ):
                     params, headers = run_keyword(
