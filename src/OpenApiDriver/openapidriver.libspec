@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-04-02T14:27:35Z" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="274">
-<version>3.1.0</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-04-29T16:41:20Z" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="294">
+<version>3.2.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="147">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422">
+<init name="__init__" lineno="152">
+<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type typedoc="string">str</type>
@@ -92,6 +92,16 @@
 <type typedoc="integer">int</type>
 <default>422</default>
 </arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_limit: int = 1">
+<name>recursion_limit</name>
+<type typedoc="integer">int</type>
+<default>1</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: Any = {}">
+<name>recursion_default</name>
+<type>Any</type>
+<default>{}</default>
+</arg>
 </arguments>
 <doc>&lt;h4&gt;source&lt;/h4&gt;
 &lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
@@ -130,12 +140,16 @@
 &lt;h4&gt;require_body_for_invalid_url&lt;/h4&gt;
 &lt;p&gt;When a request is made against an invalid url, this usually is because of a "404" request; a request for a resource that does not exist. Depending on API implementation, when a request with a missing or invalid request body is made on a non-existent resource, either a 404 or a 422 or 400 Response is normally returned. If the API being tested processes the request body before checking if the requested resource exists, set this parameter to True.&lt;/p&gt;
 &lt;h4&gt;invalid_property_default_response&lt;/h4&gt;
-&lt;p&gt;The default response code for requests with a JSON body that does not comply with the schema. Example: a value outside the specified range or a string value for a property defined as integer in the schema.&lt;/p&gt;</doc>
+&lt;p&gt;The default response code for requests with a JSON body that does not comply with the schema. Example: a value outside the specified range or a string value for a property defined as integer in the schema.&lt;/p&gt;
+&lt;h4&gt;recursion_limit&lt;/h4&gt;
+&lt;p&gt;The recursion depth to which to fully parse recursive references before the &lt;span class="name"&gt;recursion_default&lt;/span&gt; is used to end the recursion.&lt;/p&gt;
+&lt;h4&gt;recursion_default&lt;/h4&gt;
+&lt;p&gt;The value that is used instead of the referenced schema when the &lt;span class="name"&gt;recursion_limit&lt;/span&gt; has been reached. The default &lt;span class="name"&gt;{}&lt;/span&gt; represents an empty object in JSON. Depending on schema definitions, this may cause schema validation errors. If this is the case, &lt;a href="#type-None" class="name"&gt;None&lt;/a&gt; (&lt;span class="name"&gt;${NONE}&lt;/span&gt; in Robot Framework) can be tried as an alternative.&lt;/p&gt;</doc>
 <shortdoc>=== source === An absolute path to an openapi.json or openapi.yaml file or an url to such a file.</shortdoc>
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="137">
+<kw name="Test Endpoint" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="141">
 <arguments repr="endpoint: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -155,7 +169,7 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="95">
+<kw name="Test Invalid Url" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="99">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -177,7 +191,7 @@
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="75">
+<kw name="Test Unauthorized" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="79">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
