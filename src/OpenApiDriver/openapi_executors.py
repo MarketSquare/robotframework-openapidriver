@@ -389,7 +389,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         else:
             # content should be a single key/value entry, so use tuple assignment
             (content_type,) = response_spec["content"].keys()
-        if content_type != "application/json":
+        if content_type not in ["application/json", "application/hal+json"]:
             # at present, only json reponses are supported
             raise NotImplementedError(f"content_type '{content_type}' not supported")
         if response.headers.get("Content-Type") != content_type:
