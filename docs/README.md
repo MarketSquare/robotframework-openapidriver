@@ -15,7 +15,7 @@ https://github.com/Snooz82/robotframework-datadriver.
 
 ---
 
-> Note: OpenApiDriver is currently in early development so there are currently
+> Note: OpenApiDriver is still under development so there are currently
 restrictions / limitations that you may encounter when using this library to run
 tests against an API. See [Limitations](#limitations) for details.
 
@@ -72,7 +72,7 @@ document for your API.
 > Note: Although recursion is technically allowed under the OAS, tool support is limited
 and changing the API to not use recursion is recommended.
 At present OpenApiLibCore has limited support for parsing OpenAPI documents with
-recursion in them.
+recursion in them. See the `recursion_limit` and `recursion_default` parameters.
 
 If the openapi document passes this validation, the next step is trying to do a test
 run with a minimal test suite.
@@ -119,14 +119,8 @@ Details about the `mappings_path` variable usage can be found
 
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
-- Only JSON request and response bodies are currently supported.
+- Only JSON request and response bodies are supported.
 - The unique identifier for a resource as used in the `paths` section of the
     openapi document is expected to be the `id` property on a resource of that type.
-- Limited support for query strings and headers.
-- Limited support for authentication
-    - `username` and `password` can be passed as parameters to use Basic Authentication
-    - A [requests AuthBase instance](https://docs.python-requests.org/en/latest/api/#authentication)
-        can be passed and it will be used as provided.
-    - No support for per-endpoint authorization levels (just simple 401 validation).
-- byte, binary, date, date-time string formats not supported yet.
+- No support for per-endpoint authorization levels (only simple 401 / 403 validation).
 
