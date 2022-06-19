@@ -39,7 +39,7 @@ class ValidationLevel(str, Enum):
 class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, dangerous-default-value
         self,
         source: str,
         origin: str = "",
@@ -54,6 +54,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         disable_server_validation: bool = True,
         require_body_for_invalid_url: bool = False,
         invalid_property_default_response: int = 422,
+        recursion_limit: int = 1,
+        recursion_default: Any = {},
+        faker_locale: Optional[Union[str, List[str]]] = None,
     ) -> None:
         super().__init__(
             source=source,
@@ -65,6 +68,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             security_token=security_token,
             auth=auth,
             extra_headers=extra_headers,
+            recursion_limit=recursion_limit,
+            recursion_default=recursion_default,
+            faker_locale=faker_locale,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
@@ -195,8 +201,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             # response_code for invalid properties, invalidate properties instead
             elif status_code == self.invalid_property_default_response:
                 if (
-                    params
-                    or request_data.has_optional_params
+                    request_data.params_that_can_be_invalidated
                     or request_data.headers_that_can_be_invalidated
                 ):
                     params, headers = run_keyword(
@@ -386,7 +391,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         else:
             # content should be a single key/value entry, so use tuple assignment
             (content_type,) = response_spec["content"].keys()
-        if content_type != "application/json":
+        if not content_type.endswith("json"):
             # at present, only json reponses are supported
             raise NotImplementedError(f"content_type '{content_type}' not supported")
         if response.headers.get("Content-Type") != content_type:
@@ -412,18 +417,13 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     f"response validation of lists of "
                     f"{list_item_schema.get('type')} not supported"
                 )
-            expected_properties = list_item_schema["properties"]
             for resource in json_response:
-                run_keyword(
-                    "validate_resource_properties", resource, expected_properties
-                )
+                run_keyword("validate_resource_properties", resource, list_item_schema)
             # no further validation; value validation of individual resources should
             # be performed on the endpoints for the specific resource
             return None
 
-        run_keyword(
-            "validate_resource_properties", json_response, response_schema["properties"]
-        )
+        run_keyword("validate_resource_properties", json_response, response_schema)
         # ensure the href is valid if present in the response
         if href := json_response.get("href"):
             self._assert_href_is_valid(href, json_response)
@@ -465,21 +465,38 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
     @staticmethod
     @keyword
     def validate_resource_properties(
-        resource: Dict[str, Any], schema_properties: Dict[str, Any]
+        resource: Dict[str, Any], schema: Dict[str, Any]
     ) -> None:
         """
         Validate that the `resource` does not contain any properties that are not
         defined in the `schema_properties`.
         """
-        if resource.keys() != schema_properties.keys():
-            expected_property_names = sorted(schema_properties.keys())
-            property_names_in_resource = sorted(resource.keys())
-            raise AssertionError(
-                f"Response schema violation: the response contains properties that are "
-                f"not specified in the schema."
-                f"\n\tExpected: {expected_property_names}"
-                f"\n\tGot: {property_names_in_resource}"
+        expected_property_names = set(schema["properties"].keys())
+        property_names_in_resource = set(resource.keys())
+        if expected_property_names != property_names_in_resource:
+            optional_properties = schema.get("required", [])
+            extra_properties = expected_property_names.difference(
+                property_names_in_resource
             )
+            extra_properties = {
+                p for p in extra_properties if p not in optional_properties
+            }
+            missing_properties = property_names_in_resource.difference(
+                expected_property_names
+            )
+            if extra_properties or missing_properties:
+                extra = f"\n\tExtra: {extra_properties}" if extra_properties else ""
+                missing = (
+                    f"\n\tMissing: {missing_properties}" if missing_properties else ""
+                )
+                raise AssertionError(
+                    f"Response schema violation: the response contains properties that are "
+                    f"not specified in the schema or does not contain properties that are ."
+                    f"required according to the schema."
+                    f"\n\tReceived: {property_names_in_resource}"
+                    f"\n\tExpected: {expected_property_names}"
+                    f"{extra}{missing}"
+                )
 
     @staticmethod
     @keyword

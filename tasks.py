@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring, unused-argument
 import pathlib
 import subprocess
 from importlib.metadata import version
@@ -13,8 +13,18 @@ VERSION = version("robotframework-openapidriver")
 
 @task
 def testserver(context):
-    testserver_path = f"{ROOT}/tests/server/testserver.py"
-    subprocess.run(f"python {testserver_path}", shell=True, check=False)
+    cmd = [
+        "python",
+        "-m",
+        "uvicorn",
+        "testserver:app",
+        f"--app-dir {ROOT}/tests/server",
+        "--host 0.0.0.0",
+        "--port 8000",
+        "--reload",
+        f"--reload-dir {ROOT}/tests/server",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
 @task
