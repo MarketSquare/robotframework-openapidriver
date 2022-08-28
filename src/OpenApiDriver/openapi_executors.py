@@ -6,7 +6,7 @@ from enum import Enum
 from logging import getLogger
 from pathlib import Path
 from random import choice
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
@@ -49,6 +49,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
+        cert: Optional[Union[str, Tuple[str, str]]] = None,
         extra_headers: Optional[Dict[str, str]] = None,
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
@@ -67,6 +68,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             password=password,
             security_token=security_token,
             auth=auth,
+            cert=cert,
             extra_headers=extra_headers,
             recursion_limit=recursion_limit,
             recursion_default=recursion_default,

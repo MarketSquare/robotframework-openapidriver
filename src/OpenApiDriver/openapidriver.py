@@ -124,7 +124,7 @@ data types and properties. The following list details the most important ones:
 
 """
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from DataDriver import DataDriver
 from requests.auth import AuthBase
@@ -154,6 +154,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
+        cert: Optional[Union[str, Tuple[str, str]]] = None,
         extra_headers: Optional[Dict[str, str]] = None,
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
@@ -198,8 +199,12 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         The token to be used for token based security using the ``Authorization`` header.
 
         === auth ===
-        A [https://docs.python-requests.org/en/latest/api/#authentication | requests AuthBase instance]
+        A [https://requests.readthedocs.io/en/latest/api/#authentication | requests AuthBase instance]
         to be used for authentication instead of the ``username`` and ``password``.
+
+        === cert ===
+        The SSL certificate to use with all requests.
+        If string: the path to ssl client cert file (.pem). If tuple, ('cert', 'key') pair.
 
         === extra_headers ===
         A dictionary with extra / custom headers that will be send with every request.
@@ -266,6 +271,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             password=password,
             security_token=security_token,
             auth=auth,
+            cert=cert,
             extra_headers=extra_headers,
             response_validation=response_validation,
             disable_server_validation=disable_server_validation,
