@@ -533,7 +533,7 @@ xls = ["pandas", "xlrd (>=1.2.0)", "openpyxl"]
 
 [[package]]
 name = "robotframework-openapi-libcore"
-version = "1.6.0"
+version = "1.6.1"
 description = "A Robot Framework library to facilitate library development for OpenAPI / Swagger APIs."
 category = "main"
 optional = false
@@ -738,7 +738,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "66fc897cb4cf24d5aa6e6d55c8fd5bd5914f85648cc03ac2cee4e778cf1f0fe0"
+content-hash = "13db06d144ac7a49bad909279afc4d607a0394a3d724e88523f3167c683a3b34"
 
 [metadata.files]
 anyio = [
