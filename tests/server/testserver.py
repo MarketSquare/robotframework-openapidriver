@@ -2,30 +2,17 @@
 import datetime
 from enum import Enum
 from sys import float_info
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import FastAPI, Header, HTTPException, Path, Query, Request, Response
-from pydantic import BaseModel, confloat, conint, constr
+from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
+from pydantic import BaseModel
 
 API_KEY = "OpenApiLibCore"
 API_KEY_NAME = "api_key"
 
 
 app = FastAPI()
-
-
-# @app.middleware("http")
-# async def validate_api_key(request: Request, call_next: Callable[..., Response]) -> Response:
-#     if (
-#         not str(request.url).endswith("openapi.json") and
-#         not str(request.url).endswith("docs") and
-#         request.headers.get(API_KEY_NAME) != API_KEY and
-#         request.headers.get("Authorization") != API_KEY
-#     ):
-#         return Response(status_code=401, content="Computer says no.")
-#     response = await call_next(request)
-#     return response
 
 
 REMOVE_ME: str = uuid4().hex
@@ -59,8 +46,13 @@ class Wing(str, Enum):
     W = "West"
 
 
+class Reactions(BaseModel):
+    __root__: Dict[str, int]
+
+
 class Message(BaseModel):
     message: str
+    reactions: Optional[Reactions]
 
 
 class Detail(BaseModel):
@@ -74,15 +66,16 @@ class Event(BaseModel):
 
 class WageGroup(BaseModel):
     id: str
-    # hourly_rate: confloat(ge=14.37, lt=50.00)
     hourly_rate: float
     overtime_percentage: Optional[int] = DEPRECATED
+
+    class Config:
+        extra = "forbid"
 
 
 class EmployeeDetails(BaseModel):
     id: str
     name: str
-    # login_name: constr(strip_whitespace=True, min_length=1, max_length=20)
     employee_number: int
     wagegroup_id: str
     date_of_birth: datetime.date
@@ -91,7 +84,6 @@ class EmployeeDetails(BaseModel):
 
 class Employee(BaseModel):
     name: str
-    # login_name: constr(strip_whitespace=True, min_length=1, max_length=20)
     wagegroup_id: str
     date_of_birth: datetime.date
     parttime_day: Optional[WeekDay] = None
@@ -99,7 +91,6 @@ class Employee(BaseModel):
 
 class EmployeeUpdate(BaseModel):
     name: Optional[str] = None
-    # login_name: Optional[constr(strip_whitespace=True, min_length=1, max_length=20)]
     employee_number: Optional[int] = None
     wagegroup_id: Optional[str] = None
     date_of_birth: Optional[datetime.date] = None
@@ -118,9 +109,23 @@ ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
     }
 }
 EVENTS: List[Event] = [
-    Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
-    Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
+    Event(
+        message=Message(message="Hello?"),
+        details=[Detail(detail="First post")],
+    ),
+    Event(
+        message=Message(message="First!"),
+        details=[Detail(detail="Second post")],
+    ),
+    Event(
+        message=Message(message="That was not a first!"),
+        details=[Detail(detail="Third post")],
+    )
 ]
+REACTIONS: Reactions = {
+    "funny": 5,
+    "insightful": 3,
+}
 
 
 @app.get("/", status_code=200, response_model=Message)
@@ -166,6 +171,12 @@ def post_event(event: Event) -> Event:
     event.details.append(Detail(detail=str(datetime.datetime.now())))
     EVENTS.append(event)
     return event
+
+
+@app.get("/reactions/", status_code=200, response_model=Reactions)
+def get_reactions(
+) -> Reactions:
+    return REACTIONS
 
 
 @app.get(
