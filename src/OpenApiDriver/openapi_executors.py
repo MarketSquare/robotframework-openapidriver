@@ -464,41 +464,89 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 else:
                     logger.info(validation_error)
 
-    @staticmethod
     @keyword
     def validate_resource_properties(
-        resource: Dict[str, Any], schema: Dict[str, Any]
-    ) -> None:
+            self, resource: Dict[str, Any], schema: Dict[str, Any]
+        ) -> None:
         """
         Validate that the `resource` does not contain any properties that are not
         defined in the `schema_properties`.
         """
-        expected_property_names = set(schema["properties"].keys())
+        schema_properties = schema.get("properties", {})
+        expected_property_names = set(schema_properties.keys())
         property_names_in_resource = set(resource.keys())
         if expected_property_names != property_names_in_resource:
-            optional_properties = schema.get("required", [])
-            extra_properties = expected_property_names.difference(
-                property_names_in_resource
-            )
-            extra_properties = {
-                p for p in extra_properties if p not in optional_properties
-            }
-            missing_properties = property_names_in_resource.difference(
+            # The additionalProperties property determines whether properties with
+            # unspecified names are allowed. This property can be boolean or an object
+            # (dict) that specifies the type of any additional properties.
+            additional_properties = schema.get("additionalProperties", True)
+            if isinstance(additional_properties, bool):
+                allow_additional_properties = additional_properties
+                allowed_additional_properties_type = None
+            else:
+                allow_additional_properties = True
+                allowed_additional_properties_type = additional_properties["type"]
+
+            # Fill the extra_properties only if additionalProperties are not allowed
+            extra_property_names = property_names_in_resource.difference(
                 expected_property_names
             )
-            if extra_properties or missing_properties:
-                extra = f"\n\tExtra: {extra_properties}" if extra_properties else ""
+            if allow_additional_properties:
+                if allowed_additional_properties_type:
+                    extra_properties = {key: value for key, value in resource.items() if key in extra_property_names}
+                    self._validate_type_of_extra_properties(
+                        extra_properties=extra_properties,
+                        expected_type=allowed_additional_properties_type
+                    )
+                extra_property_names = {}
+
+            required_properties = set(schema.get("required", []))
+            missing_properties = required_properties.difference(
+                property_names_in_resource
+            )
+
+            if extra_property_names or missing_properties:
+                extra = f"\n\tExtra properties in response: {extra_property_names}" if extra_property_names else ""
                 missing = (
-                    f"\n\tMissing: {missing_properties}" if missing_properties else ""
+                    f"\n\tRequired properties missing in response: {missing_properties}" if missing_properties else ""
                 )
                 raise AssertionError(
                     f"Response schema violation: the response contains properties that are "
-                    f"not specified in the schema or does not contain properties that are ."
+                    f"not specified in the schema or does not contain properties that are "
                     f"required according to the schema."
                     f"\n\tReceived: {property_names_in_resource}"
-                    f"\n\tExpected: {expected_property_names}"
+                    f"\n\tSchema: {expected_property_names}"
                     f"{extra}{missing}"
                 )
+
+    @staticmethod
+    def _validate_type_of_extra_properties(extra_properties: Dict[str, Any], expected_type: str) -> None:
+        match expected_type:
+            case "string":
+                python_type = str
+            case "number":
+                python_type = float
+            case "integer":
+                python_type = int
+            case "boolean":
+                python_type = bool
+            case "array":
+                python_type = list
+            case "object":
+                python_type = dict
+            case _:
+                logger.warning(
+                    f"Additonal properties were not validated: "
+                    f"type '{expected_type}' is not supported."
+                )
+                return
+
+        invalid_extra_properties = {key: value for key, value in extra_properties.items() if not isinstance(value, python_type)}
+        if invalid_extra_properties:
+            raise AssertionError(
+                f"Response contains invalid additionalProperties: "
+                f"{invalid_extra_properties} are not of type {expected_type}."
+            )
 
     @staticmethod
     @keyword
