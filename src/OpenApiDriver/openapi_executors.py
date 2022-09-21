@@ -466,8 +466,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
     @keyword
     def validate_resource_properties(
-            self, resource: Dict[str, Any], schema: Dict[str, Any]
-        ) -> None:
+        self, resource: Dict[str, Any], schema: Dict[str, Any]
+    ) -> None:
         """
         Validate that the `resource` does not contain any properties that are not
         defined in the `schema_properties`.
@@ -493,12 +493,16 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             )
             if allow_additional_properties:
                 if allowed_additional_properties_type:
-                    extra_properties = {key: value for key, value in resource.items() if key in extra_property_names}
+                    extra_properties = {
+                        key: value
+                        for key, value in resource.items()
+                        if key in extra_property_names
+                    }
                     self._validate_type_of_extra_properties(
                         extra_properties=extra_properties,
-                        expected_type=allowed_additional_properties_type
+                        expected_type=allowed_additional_properties_type,
                     )
-                extra_property_names = {}
+                extra_property_names = set()
 
             required_properties = set(schema.get("required", []))
             missing_properties = required_properties.difference(
@@ -506,9 +510,15 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             )
 
             if extra_property_names or missing_properties:
-                extra = f"\n\tExtra properties in response: {extra_property_names}" if extra_property_names else ""
+                extra = (
+                    f"\n\tExtra properties in response: {extra_property_names}"
+                    if extra_property_names
+                    else ""
+                )
                 missing = (
-                    f"\n\tRequired properties missing in response: {missing_properties}" if missing_properties else ""
+                    f"\n\tRequired properties missing in response: {missing_properties}"
+                    if missing_properties
+                    else ""
                 )
                 raise AssertionError(
                     f"Response schema violation: the response contains properties that are "
@@ -520,28 +530,31 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 )
 
     @staticmethod
-    def _validate_type_of_extra_properties(extra_properties: Dict[str, Any], expected_type: str) -> None:
-        match expected_type:
-            case "string":
-                python_type = str
-            case "number":
-                python_type = float
-            case "integer":
-                python_type = int
-            case "boolean":
-                python_type = bool
-            case "array":
-                python_type = list
-            case "object":
-                python_type = dict
-            case _:
-                logger.warning(
-                    f"Additonal properties were not validated: "
-                    f"type '{expected_type}' is not supported."
-                )
-                return
+    def _validate_type_of_extra_properties(
+        extra_properties: Dict[str, Any], expected_type: str
+    ) -> None:
+        type_mapping = {
+            "string": str,
+            "number": float,
+            "integer": int,
+            "boolean": bool,
+            "array": list,
+            "object": dict,
+        }
 
-        invalid_extra_properties = {key: value for key, value in extra_properties.items() if not isinstance(value, python_type)}
+        python_type = type_mapping.get(expected_type, None)
+        if python_type is None:
+            logger.warning(
+                f"Additonal properties were not validated: "
+                f"type '{expected_type}' is not supported."
+            )
+            return
+
+        invalid_extra_properties = {
+            key: value
+            for key, value in extra_properties.items()
+            if not isinstance(value, python_type)
+        }
         if invalid_extra_properties:
             raise AssertionError(
                 f"Response contains invalid additionalProperties: "
