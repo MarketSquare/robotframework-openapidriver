@@ -120,7 +120,7 @@ EVENTS: List[Event] = [
     Event(
         message=Message(message="That was not a first!"),
         details=[Detail(detail="Third post")],
-    )
+    ),
 ]
 REACTIONS: Reactions = {
     "funny": 5,
@@ -174,8 +174,7 @@ def post_event(event: Event) -> Event:
 
 
 @app.get("/reactions/", status_code=200, response_model=Reactions)
-def get_reactions(
-) -> Reactions:
+def get_reactions() -> Reactions:
     return REACTIONS
 
 
