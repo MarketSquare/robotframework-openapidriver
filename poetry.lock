@@ -625,7 +625,7 @@ xls = ["openpyxl", "pandas", "xlrd (>=1.2.0)"]
 
 [[package]]
 name = "robotframework-openapi-libcore"
-version = "1.6.2"
+version = "1.6.3"
 description = "A Robot Framework library to facilitate library development for OpenAPI / Swagger APIs."
 category = "main"
 optional = false
@@ -1332,8 +1332,8 @@ robotframework-datadriver = [
     {file = "robotframework_datadriver-1.6.1-py3-none-any.whl", hash = "sha256:6c3ddbe372187c4a8ed97cfe6dbb9a14628cc7de7f9313e4d2f219176258bdcd"},
 ]
 robotframework-openapi-libcore = [
-    {file = "robotframework-openapi-libcore-1.6.2.tar.gz", hash = "sha256:1a952b78847e5cecf997f569cd51652d4e3f3a8fc691d23302c14fdbab2832fa"},
-    {file = "robotframework_openapi_libcore-1.6.2-py3-none-any.whl", hash = "sha256:52d5c25866007d60996e090dd43a37d3323a01f685d606f7deb1ccb1f32b7d29"},
+    {file = "robotframework-openapi-libcore-1.6.3.tar.gz", hash = "sha256:0df9b0d2e61b33ef7a459035b714501d8ccb320342d4d059a99f0d8df3a0f58b"},
+    {file = "robotframework_openapi_libcore-1.6.3-py3-none-any.whl", hash = "sha256:60b06dc3dad33d388f24caf7d4099cb56da8ee19dacd6c8ebc69c8f3a1cd40b2"},
 ]
 robotframework-stacktrace = [
     {file = "robotframework-stacktrace-0.4.1.tar.gz", hash = "sha256:e96cb36e7e9ab55104c1f7d3606249a109e0a4c3bb6a0e294bff07d54ee6f6a5"},
