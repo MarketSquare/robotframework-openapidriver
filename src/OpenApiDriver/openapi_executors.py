@@ -13,6 +13,7 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
+from openapi_core.unmarshalling.schemas.exceptions import InvalidSchemaValue
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
@@ -455,6 +456,26 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             validation_result.errors = [
                 e for e in validation_result.errors if not isinstance(e, ServerNotFound)
             ]
+
+        # The OAS concepts of optional / nullable are not compatible with Python.
+        # Filter the schema errors caused by this incompatibility.
+        errors_to_keep = []
+        for error in validation_result.errors:
+            if isinstance(error, InvalidSchemaValue):
+                schema_errors_to_keep = []
+                for schema_error in error.schema_errors:
+                    message = schema_error.message
+                    if message == "None for not nullable" or message.startswith("None is not "):
+                        logger.debug("'None for not nullable' ValidationError ignored.")
+                    else:
+                        schema_errors_to_keep.append(schema_error)
+                if schema_errors_to_keep:
+                    error.schema_errors = tuple(schema_errors_to_keep)
+                    errors_to_keep.append(error)
+            else:
+                errors_to_keep.append(error)
+        validation_result.errors = errors_to_keep
+
         if self.response_validation == ValidationLevel.STRICT:
             validation_result.raise_for_errors()
         if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
@@ -473,9 +494,10 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         defined in the `schema_properties`.
         """
         schema_properties = schema.get("properties", {})
-        expected_property_names = set(schema_properties.keys())
+        property_names_from_schema = set(schema_properties.keys())
         property_names_in_resource = set(resource.keys())
-        if expected_property_names != property_names_in_resource:
+
+        if property_names_from_schema != property_names_in_resource:
             # The additionalProperties property determines whether properties with
             # unspecified names are allowed. This property can be boolean or an object
             # (dict) that specifies the type of any additional properties.
@@ -487,11 +509,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 allow_additional_properties = True
                 allowed_additional_properties_type = additional_properties["type"]
 
-            # Fill the extra_properties only if additionalProperties are not allowed
             extra_property_names = property_names_in_resource.difference(
-                expected_property_names
+                property_names_from_schema
             )
             if allow_additional_properties:
+                # If a type is defined for extra properties, validate them
                 if allowed_additional_properties_type:
                     extra_properties = {
                         key: value
@@ -502,6 +524,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                         extra_properties=extra_properties,
                         expected_type=allowed_additional_properties_type,
                     )
+                # If allowed, validation should not fail on extra properties
                 extra_property_names = set()
 
             required_properties = set(schema.get("required", []))
@@ -524,8 +547,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     f"Response schema violation: the response contains properties that are "
                     f"not specified in the schema or does not contain properties that are "
                     f"required according to the schema."
-                    f"\n\tReceived: {property_names_in_resource}"
-                    f"\n\tSchema: {expected_property_names}"
+                    f"\n\tReceived in the response: {property_names_in_resource}"
+                    f"\n\tDefined in the schema:    {property_names_from_schema}"
                     f"{extra}{missing}"
                 )
 
@@ -573,14 +596,48 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         have changed and that other properties are still at their pre-patch values.
         """
 
-        def validate_array_response(
-            send_value: List[Any], received_value: List[Any]
+        def validate_list_response(
+            send_list: List[Any], received_list: List[Any]
         ) -> None:
-            for item in send_value:
-                if item not in received_value:
+            for item in send_list:
+                if item not in received_list:
                     raise AssertionError(
-                        f"Received value for {send_property_name} '{received_value}' does "
+                        f"Received value '{received_list}' does "
                         f"not contain '{item}' in the {response.request.method} request."
+                        f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
+                        f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
+                    )
+
+        def validate_dict_response(
+            send_dict: Dict[str, Any], received_dict: Dict[str, Any]
+        ) -> None:
+            for send_property_name, send_property_value in send_dict.items():
+                # sometimes, a property in the request is not in the response, e.g. a password
+                if send_property_name not in received_dict.keys():
+                    continue
+                if send_property_value is not None:
+                    # if a None value is send, the target property should be cleared or
+                    # reverted to the default value (which cannot be specified in the
+                    # openapi document)
+                    received_value = received_dict[send_property_name]
+                    # In case of lists / arrays, the send values are often appended to
+                    # existing data
+                    if isinstance(received_value, list):
+                        validate_list_response(
+                            send_list=send_property_value, received_list=received_value
+                        )
+                        continue
+
+                    # when dealing with objects, we'll need to iterate the properties
+                    if isinstance(received_value, dict):
+                        validate_dict_response(
+                            send_dict=send_property_value, received_dict=received_value
+                        )
+                        continue
+
+                    assert received_value == send_property_value, (
+                        f"Received value for {send_property_name} '{received_value}' does not "
+                        f"match '{send_property_value}' in the {response.request.method} request."
                         f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
                         f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
                     )
@@ -612,28 +669,10 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 [response_data] = [
                     item for item in item_list if item["id"] == send_json["id"]
                 ]
-        for send_property_name, send_value in send_json.items():
-            # sometimes, a property in the request is not in the response, e.g. a password
-            if send_property_name not in response_data.keys():
-                continue
-            if send_value is not None:
-                # if a None value is send, the target property should be cleared or
-                # reverted to the default value (which cannot be specified in the
-                # openapi document)
-                received_value = response_data[send_property_name]
-                # In case of lists / arrays, the send values are often appended to
-                # existing data
-                if isinstance(received_value, list):
-                    validate_array_response(
-                        send_value=send_value, received_value=received_value
-                    )
-                    continue
-                assert response_data[send_property_name] == send_value, (
-                    f"Received value for {send_property_name} '{received_value}' does not "
-                    f"match '{send_value}' in the {response.request.method} request."
-                    f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                    f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
-                )
+
+        # incoming arguments are dictionaries, so they can be validated as such
+        validate_dict_response(send_dict=send_json, received_dict=response_data)
+
         # In case of PATCH requests, ensure that only send properties have changed
         if original_data:
             for send_property_name, send_value in original_data.items():
