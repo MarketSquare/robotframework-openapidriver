@@ -1,0 +1,1034 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "FastAPI",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Get Root",
+                "operationId": "get_root__get",
+                "parameters": [
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Name-From-Header",
+                            "type": "string",
+                            "default": ""
+                        },
+                        "name": "name-from-header",
+                        "in": "header"
+                    },
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Title",
+                            "type": "string",
+                            "default": ""
+                        },
+                        "name": "title",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/secret_message": {
+            "get": {
+                "summary": "Get Message",
+                "operationId": "get_message_secret_message_get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Secret-Code",
+                            "type": "integer"
+                        },
+                        "name": "secret-code",
+                        "in": "header"
+                    },
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Seal",
+                            "type": "string",
+                            "default": "840f086623714059b893fe7ea1cf8cb4"
+                        },
+                        "name": "seal",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/events/": {
+            "get": {
+                "summary": "Get Events",
+                "operationId": "get_events_events__get",
+                "parameters": [
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Search Strings",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "name": "search_strings",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Get Events Events  Get",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Event"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Post Event",
+                "operationId": "post_event_events__post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reactions/": {
+            "get": {
+                "summary": "Get Reactions",
+                "operationId": "get_reactions_reactions__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Reactions"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/energy_label/{zipcode}/{home_number}": {
+            "get": {
+                "summary": "Get Energy Label",
+                "operationId": "get_energy_label_energy_label__zipcode___home_number__get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Zipcode",
+                            "maxLength": 6,
+                            "minLength": 6,
+                            "type": "string"
+                        },
+                        "name": "zipcode",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Home Number",
+                            "minimum": 1.0,
+                            "type": "integer"
+                        },
+                        "name": "home_number",
+                        "in": "path"
+                    },
+                    {
+                        "required": false,
+                        "schema": {
+                            "title": "Extension",
+                            "maxLength": 99,
+                            "minLength": 1,
+                            "type": "string"
+                        },
+                        "name": "extension",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/wagegroups": {
+            "post": {
+                "summary": "Post Wagegroup",
+                "operationId": "post_wagegroup_wagegroups_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WageGroup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WageGroup"
+                                }
+                            }
+                        }
+                    },
+                    "418": {
+                        "description": "I'm a Teapot",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/wagegroups/{wagegroup_id}": {
+            "get": {
+                "summary": "Get Wagegroup",
+                "operationId": "get_wagegroup_wagegroups__wagegroup_id__get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Wagegroup Id",
+                            "type": "string"
+                        },
+                        "name": "wagegroup_id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WageGroup"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "summary": "Put Wagegroup",
+                "operationId": "put_wagegroup_wagegroups__wagegroup_id__put",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Wagegroup Id",
+                            "type": "string"
+                        },
+                        "name": "wagegroup_id",
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WageGroup"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WageGroup"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "418": {
+                        "description": "I'm a Teapot",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete Wagegroup",
+                "operationId": "delete_wagegroup_wagegroups__wagegroup_id__delete",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Wagegroup Id",
+                            "type": "string"
+                        },
+                        "name": "wagegroup_id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "406": {
+                        "description": "Not Acceptable",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/wagegroups/{wagegroup_id}/employees": {
+            "get": {
+                "summary": "Get Employees In Wagegroup",
+                "operationId": "get_employees_in_wagegroup_wagegroups__wagegroup_id__employees_get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Wagegroup Id",
+                            "type": "string"
+                        },
+                        "name": "wagegroup_id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Get Employees In Wagegroup Wagegroups  Wagegroup Id  Employees Get",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EmployeeDetails"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees": {
+            "get": {
+                "summary": "Get Employees",
+                "operationId": "get_employees_employees_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Get Employees Employees Get",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EmployeeDetails"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Post Employee",
+                "operationId": "post_employee_employees_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Employee"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployeeDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "451": {
+                        "description": "Unavailable For Legal Reasons",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/employees/{employee_id}": {
+            "get": {
+                "summary": "Get Employee",
+                "operationId": "get_employee_employees__employee_id__get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Employee Id",
+                            "type": "string"
+                        },
+                        "name": "employee_id",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployeeDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "summary": "Patch Employee",
+                "operationId": "patch_employee_employees__employee_id__patch",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "title": "Employee Id",
+                            "type": "string"
+                        },
+                        "name": "employee_id",
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmployeeUpdate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmployeeDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/available_employees": {
+            "get": {
+                "summary": "Get Available Employees",
+                "operationId": "get_available_employees_available_employees_get",
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/WeekDay"
+                        },
+                        "name": "weekday",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "Response Get Available Employees Available Employees Get",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EmployeeDetails"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Detail": {
+                "title": "Detail",
+                "required": [
+                    "detail"
+                ],
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "title": "Detail",
+                        "type": "string"
+                    }
+                }
+            },
+            "Employee": {
+                "title": "Employee",
+                "required": [
+                    "name",
+                    "wagegroup_id",
+                    "date_of_birth",
+                    "team"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "wagegroup_id": {
+                        "title": "Wagegroup Id",
+                        "type": "string"
+                    },
+                    "date_of_birth": {
+                        "title": "Date Of Birth",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "team": {
+                        "title": "Team",
+                        "type": "string"
+                    },
+                    "parttime_day": {
+                        "$ref": "#/components/schemas/WeekDay"
+                    }
+                }
+            },
+            "EmployeeDetails": {
+                "title": "EmployeeDetails",
+                "required": [
+                    "id",
+                    "name",
+                    "employee_number",
+                    "wagegroup_id",
+                    "team",
+                    "date_of_birth"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "employee_number": {
+                        "title": "Employee Number",
+                        "type": "integer"
+                    },
+                    "wagegroup_id": {
+                        "title": "Wagegroup Id",
+                        "type": "string"
+                    },
+                    "date_of_birth": {
+                        "title": "Date Of Birth",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "team": {
+                        "title": "Team",
+                        "type": "string"
+                    },
+                    "parttime_day": {
+                        "$ref": "#/components/schemas/WeekDay"
+                    }
+                }
+            },
+            "EmployeeUpdate": {
+                "title": "EmployeeUpdate",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "title": "Name",
+                        "type": "string"
+                    },
+                    "employee_number": {
+                        "title": "Employee Number",
+                        "type": "integer"
+                    },
+                    "wagegroup_id": {
+                        "title": "Wagegroup Id",
+                        "type": "string"
+                    },
+                    "date_of_birth": {
+                        "title": "Date Of Birth",
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "parttime_day": {
+                        "$ref": "#/components/schemas/WeekDay"
+                    }
+                }
+            },
+            "Event": {
+                "title": "Event",
+                "required": [
+                    "message",
+                    "details"
+                ],
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "$ref": "#/components/schemas/Message"
+                    },
+                    "details": {
+                        "title": "Details",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Detail"
+                        }
+                    },
+                    "event_number": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "HTTPValidationError": {
+                "title": "HTTPValidationError",
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "title": "Detail",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        }
+                    }
+                }
+            },
+            "Message": {
+                "title": "Message",
+                "required": [
+                    "message"
+                ],
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "title": "Message",
+                        "type": "string"
+                    },
+                    "reactions": {
+                        "title": "Reactions",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/Reactions"
+                            }
+                        ],
+                        "nullable": false
+                    }
+                }
+            },
+            "Reactions": {
+                "title": "Reactions",
+                "type": "object",
+                "additionalProperties": {
+                    "type": "integer"
+                }
+            },
+            "ValidationError": {
+                "title": "ValidationError",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "loc": {
+                        "title": "Location",
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
+                    },
+                    "msg": {
+                        "title": "Message",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Error Type",
+                        "type": "string"
+                    }
+                }
+            },
+            "WageGroup": {
+                "title": "WageGroup",
+                "required": [
+                    "id",
+                    "hourly_rate"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "title": "Id",
+                        "type": "string"
+                    },
+                    "hourly_rate": {
+                        "title": "Hourly Rate",
+                        "type": "number"
+                    },
+                    "overtime_percentage": {
+                        "title": "Overtime Percentage",
+                        "type": "integer",
+                        "default": 25613301836844122005170211214791920802
+                    }
+                }
+            },
+            "WeekDay": {
+                "title": "WeekDay",
+                "enum": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday"
+                ],
+                "type": "string",
+                "nullable": true,
+                "description": "An enumeration."
+            }
+        }
+    }
+}

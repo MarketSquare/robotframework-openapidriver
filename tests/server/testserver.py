@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 API_KEY = "OpenApiLibCore"
 API_KEY_NAME = "api_key"
@@ -52,7 +52,7 @@ class Reactions(BaseModel):
 
 class Message(BaseModel):
     message: str
-    reactions: Optional[Reactions]
+    reactions: Optional[Reactions] = Field(nullable=False)
 
 
 class Detail(BaseModel):
