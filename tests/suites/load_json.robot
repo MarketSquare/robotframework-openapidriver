@@ -1,6 +1,6 @@
 *** Settings ***
 Library             OpenApiDriver
-...                     source=${root}/tests/files/petstore_openapi.json
+...                     source=${ROOT}/tests/files/petstore_openapi.json
 ...                     ignored_responses=${ignored_responses}
 ...                     ignored_testcases=${ignored_tests}
 

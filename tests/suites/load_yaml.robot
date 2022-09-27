@@ -1,6 +1,6 @@
 *** Settings ***
 Library             OpenApiDriver
-...                     source=${root}/tests/files/petstore_openapi.yaml
+...                     source=${ROOT}/tests/files/petstore_openapi.yaml
 ...                     ignored_endpoints=${ignored_endpoints}
 
 Test Template       Do Nothing
