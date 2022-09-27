@@ -465,7 +465,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 schema_errors_to_keep = []
                 for schema_error in error.schema_errors:
                     message = schema_error.message
-                    if message == "None for not nullable" or message.startswith("None is not "):
+                    if message == "None for not nullable" or message.startswith(
+                        "None is not "
+                    ):
                         logger.debug("'None for not nullable' ValidationError ignored.")
                     else:
                         schema_errors_to_keep.append(schema_error)
