@@ -448,7 +448,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         ), f"{get_response.json()} not equal to original {json_response}"
 
     def _validate_response_against_spec(self, response: Response):
-        validation_result = self.response_validator.validate(
+        validation_result = self.validate_response_vs_spec(
             request=RequestsOpenAPIRequest(response.request),
             response=RequestsOpenAPIResponse(response),
         )

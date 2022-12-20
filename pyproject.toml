@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapidriver"
-version = "3.4.3"
+version = "3.5.0"
 description = "A library for contract-testing OpenAPI / Swagger APIs."
 license = "Apache-2.0"
 authors = ["Robin Mackaij <r.a.mackaij@gmail.com>"]
@@ -24,8 +24,8 @@ include = ["*.libspec"]
 [tool.poetry.dependencies]
 python = "^3.8"
 robotframework-datadriver = ">=1.6.1"
-requests = "*"
-robotframework-openapi-libcore = "^1.6.2"
+requests = "2.27"
+robotframework-openapi-libcore = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
@@ -37,7 +37,7 @@ invoke = "*"
 robotframework-stacktrace = "*"
 robotframework-tidy = "*"
 uvicorn = "*"
-fastapi = "*"
+fastapi = ">=0.88"
 coverage = {version = "^5.5", extras = ["toml"]}
 
 [build-system]
