@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-09-27T12:08:32Z" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="296">
-<version>3.4.3</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-12-20T19:04:56+00:00" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="296">
+<version>3.5.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
@@ -42,7 +42,7 @@
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="mappings_path: str | Path = ">
 <name>mappings_path</name>
 <type typedoc="string">str</type>
-<type>Path</type>
+<type typedoc="Path">Path</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
@@ -255,6 +255,7 @@
 </type>
 <type name="dictionary" type="Standard">
 <doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#dict"&gt;dictionary&lt;/a&gt; literals. They are converted to actual dictionaries using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including dictionaries and other containers.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;dict[str, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;{'a': 1, 'b': 2}&lt;/code&gt;, &lt;code&gt;{'key': 1, 'nested': {'key': 2}}&lt;/code&gt;&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
@@ -281,6 +282,7 @@
 </type>
 <type name="list" type="Standard">
 <doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#list"&gt;list&lt;/a&gt; literals. They are converted to actual lists using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including lists and other containers.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;list[int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;['one', 'two']&lt;/code&gt;, &lt;code&gt;[('one', 1), ('two', 2)]&lt;/code&gt;&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
@@ -294,6 +296,17 @@
 <doc>&lt;p&gt;String &lt;code&gt;NONE&lt;/code&gt; (case-insensitive) is converted to Python &lt;code&gt;None&lt;/code&gt; object. Other values cause an error.&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="Path" type="Standard">
+<doc>&lt;p&gt;Strings are converted &lt;a href="https://docs.python.org/library/pathlib.html"&gt;Path&lt;/a&gt; objects. On Windows &lt;code&gt;/&lt;/code&gt; is converted to &lt;code&gt;\&lt;/code&gt; automatically.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;/tmp/absolute/path&lt;/code&gt;, &lt;code&gt;relative/path/to/file.ext&lt;/code&gt;, &lt;code&gt;name.txt&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>PurePath</type>
 </accepts>
 <usages>
 <usage>__init__</usage>
@@ -313,6 +326,7 @@
 </type>
 <type name="tuple" type="Standard">
 <doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#tuple"&gt;tuple&lt;/a&gt; literals. They are converted to actual tuples using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including tuples and other containers.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;tuple[str, int, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;('one', 'two')&lt;/code&gt;, &lt;code&gt;(('one', 1), ('two', 2))&lt;/code&gt;&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
