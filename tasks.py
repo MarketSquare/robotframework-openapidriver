@@ -1,7 +1,11 @@
 # pylint: disable=missing-function-docstring, unused-argument
+import inspect
 import pathlib
 import subprocess
 from importlib.metadata import version
+
+if not hasattr(inspect, "getargspec"):
+    inspect.getargspec = inspect.getfullargspec
 
 from invoke import task
 
