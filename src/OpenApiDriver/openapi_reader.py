@@ -47,6 +47,7 @@ class OpenApiReader(AbstractReaderClass):
                 if item_name not in ["get", "put", "post", "delete", "patch"]:
                     continue
                 method, method_data = item_name, item_data
+                tags_from_spec = method_data.get("tags")
                 for response in method_data.get("responses"):
                     # default applies to all status codes that are not specified, in
                     # which case we don't know what to expect and thus can't verify
@@ -56,7 +57,7 @@ class OpenApiReader(AbstractReaderClass):
                         or Test(path, method, response) in ignored_tests
                     ):
                         continue
-                    tag_list = method_data.get("tags", [])
+                    tag_list = _get_tag_list(tags=tags_from_spec, method=method, response=response)
                     test_data.append(
                         TestCaseData(
                             arguments={
@@ -64,17 +65,11 @@ class OpenApiReader(AbstractReaderClass):
                                 "${method}": method.upper(),
                                 "${status_code}": response,
                             },
-                            tags=_get_tag_list(
-                                tags=tag_list,
-                                method=method,
-                                response=response,
-                            ),
+                            tags=tag_list,
                         ),
                     )
         return test_data
 
 
 def _get_tag_list(tags: List[str], method: str, response: str) -> List[str]:
-    tags.append(f"Method: {method.upper()}")
-    tags.append(f"Response: {response}")
-    return tags
+    return [*tags, f"Method: {method.upper()}", f"Response: {response}"]
