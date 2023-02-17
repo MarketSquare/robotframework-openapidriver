@@ -47,7 +47,7 @@ class OpenApiReader(AbstractReaderClass):
                 if item_name not in ["get", "put", "post", "delete", "patch"]:
                     continue
                 method, method_data = item_name, item_data
-                tags_from_spec = method_data.get("tags")
+                tags_from_spec = method_data.get("tags", [])
                 for response in method_data.get("responses"):
                     # default applies to all status codes that are not specified, in
                     # which case we don't know what to expect and thus can't verify
