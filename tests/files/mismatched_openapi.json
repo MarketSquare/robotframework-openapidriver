@@ -830,7 +830,7 @@
             "EmployeeDetails": {
                 "title": "EmployeeDetails",
                 "required": [
-                    "id",
+                    "identification",
                     "name",
                     "employee_number",
                     "wagegroup_id",
@@ -839,8 +839,8 @@
                 ],
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "title": "Id",
+                    "identification": {
+                        "title": "Identification",
                         "type": "string"
                     },
                     "name": {
@@ -996,13 +996,13 @@
             "WageGroup": {
                 "title": "WageGroup",
                 "required": [
-                    "id",
+                    "wagegroup_id",
                     "hourly_rate"
                 ],
                 "type": "object",
                 "properties": {
-                    "id": {
-                        "title": "Id",
+                    "wagegroup_id": {
+                        "title": "Wagegroup id",
                         "type": "string"
                     },
                     "hourly_rate": {

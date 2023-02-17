@@ -118,8 +118,6 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are supported.
-- The unique identifier for a resource as used in the `paths` section of the
-    openapi document is expected to be the `id` property on a resource of that type.
 - No support for per-endpoint authorization levels (only simple 401 / 403 validation).
 
 """
@@ -163,6 +161,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         recursion_limit: int = 1,
         recursion_default: Any = {},
         faker_locale: Optional[Union[str, List[str]]] = None,
+        default_id_property_name: str = "id",
     ):
         """
         === source ===
@@ -180,7 +179,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         ``method`` and ``response``.
 
         === origin ===
-        The server (and port) of the target server. E.g. ``https://localhost:7000``
+        The server (and port) of the target server. E.g. ``https://localhost:8000``
 
         === base_path ===
         The routing between ``origin`` and the endpoints as found in the ``paths`` in the
@@ -255,6 +254,16 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         === faker_locale ===
         A locale string or list of locale strings to pass to Faker to be used in
         generation of string data for supported format types.
+
+        === default_id_property_name ===
+        The default name for the property that identifies a resource (i.e. a unique
+        entiry) within the API.
+        The default value for this property name is `id`.
+        If the target API uses a different name for all the resources within the API,
+        you can configure it globally using this property.
+
+        If different property names are used for the unique identifier for different
+        types of resources, an `ID_MAPPING` can be implemented in the `mappings_path`.
         """
         ignored_endpoints = ignored_endpoints if ignored_endpoints else []
         ignored_responses = ignored_responses if ignored_responses else []
@@ -280,6 +289,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             recursion_limit=recursion_limit,
             recursion_default=recursion_default,
             faker_locale=faker_locale,
+            default_id_property_name=default_id_property_name,
         )
 
         endpoints = self.openapi_spec["paths"]

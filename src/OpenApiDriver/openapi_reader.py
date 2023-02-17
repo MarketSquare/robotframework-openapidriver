@@ -42,36 +42,36 @@ class OpenApiReader(AbstractReaderClass):
             ignored_tests = [Test(*test) for test in ignored_testcases]
         else:
             ignored_tests = []
-        for endpoint, methods in endpoints.items():
-            for method, method_data in reversed(methods.items()):
+        for path, path_item in endpoints.items():
+            for item_name, item_data in reversed(path_item.items()):
+                if item_name not in ["get", "put", "post", "delete", "patch"]:
+                    continue
+                method, method_data = item_name, item_data
+                tags_from_spec = method_data.get("tags", [])
                 for response in method_data.get("responses"):
                     # default applies to all status codes that are not specified, in
                     # which case we don't know what to expect and thus can't verify
                     if (
                         response == "default"
                         or response in ignore_list
-                        or Test(endpoint, method, response) in ignored_tests
+                        or Test(path, method, response) in ignored_tests
                     ):
                         continue
-                    tag_list = method_data.get("tags", [])
+                    tag_list = _get_tag_list(
+                        tags=tags_from_spec, method=method, response=response
+                    )
                     test_data.append(
                         TestCaseData(
                             arguments={
-                                "${endpoint}": endpoint,
+                                "${endpoint}": path,
                                 "${method}": method.upper(),
                                 "${status_code}": response,
                             },
-                            tags=_get_tag_list(
-                                tags=tag_list,
-                                method=method,
-                                response=response,
-                            ),
+                            tags=tag_list,
                         ),
                     )
         return test_data
 
 
 def _get_tag_list(tags: List[str], method: str, response: str) -> List[str]:
-    tags.append(f"Method: {method.upper()}")
-    tags.append(f"Response: {response}")
-    return tags
+    return [*tags, f"Method: {method.upper()}", f"Response: {response}"]

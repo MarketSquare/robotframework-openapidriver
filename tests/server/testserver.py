@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 API_KEY = "OpenApiLibCore"
 API_KEY_NAME = "api_key"
@@ -46,13 +46,8 @@ class Wing(str, Enum):
     W = "West"
 
 
-class Reactions(BaseModel):
-    __root__: Dict[str, int]
-
-
 class Message(BaseModel):
     message: str
-    reactions: Optional[Reactions] = Field(nullable=False)
 
 
 class Detail(BaseModel):
@@ -65,16 +60,13 @@ class Event(BaseModel):
 
 
 class WageGroup(BaseModel):
-    id: str
+    wagegroup_id: str
     hourly_rate: float
     overtime_percentage: Optional[int] = DEPRECATED
 
-    class Config:
-        extra = "forbid"
-
 
 class EmployeeDetails(BaseModel):
-    id: str
+    identification: str
     name: str
     employee_number: int
     wagegroup_id: str
@@ -82,7 +74,7 @@ class EmployeeDetails(BaseModel):
     parttime_day: Optional[WeekDay] = None
 
 
-class Employee(BaseModel):
+class Employee(BaseModel, extra="forbid"):
     name: str
     wagegroup_id: str
     date_of_birth: datetime.date
@@ -109,23 +101,9 @@ ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
     }
 }
 EVENTS: List[Event] = [
-    Event(
-        message=Message(message="Hello?"),
-        details=[Detail(detail="First post")],
-    ),
-    Event(
-        message=Message(message="First!"),
-        details=[Detail(detail="Second post")],
-    ),
-    Event(
-        message=Message(message="That was not a first!"),
-        details=[Detail(detail="Third post")],
-    ),
+    Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
+    Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
 ]
-REACTIONS: Reactions = {
-    "funny": 5,
-    "insightful": 3,
-}
 
 
 @app.get("/", status_code=200, response_model=Message)
@@ -173,11 +151,6 @@ def post_event(event: Event) -> Event:
     return event
 
 
-@app.get("/reactions/", status_code=200, response_model=Reactions)
-def get_reactions() -> Reactions:
-    return REACTIONS
-
-
 @app.get(
     "/energy_label/{zipcode}/{home_number}",
     status_code=200,
@@ -203,7 +176,7 @@ def get_energy_label(
     responses={418: {"model": Detail}, 422: {"model": Detail}},
 )
 def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
-    if wagegroup.id in WAGE_GROUPS.keys():
+    if wagegroup.wagegroup_id in WAGE_GROUPS.keys():
         raise HTTPException(status_code=418, detail="Wage group already exists.")
     if not (0.99 - DELTA) < (wagegroup.hourly_rate % 1) < (0.99 + DELTA):
         raise HTTPException(
@@ -215,7 +188,7 @@ def post_wagegroup(wagegroup: WageGroup) -> WageGroup:
             status_code=422, detail="Overtime percentage is deprecated."
         )
     wagegroup.overtime_percentage = None
-    WAGE_GROUPS[wagegroup.id] = wagegroup
+    WAGE_GROUPS[wagegroup.wagegroup_id] = wagegroup
     return wagegroup
 
 
@@ -240,7 +213,7 @@ def get_wagegroup(wagegroup_id: str) -> WageGroup:
 def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
     if wagegroup_id not in WAGE_GROUPS.keys():
         raise HTTPException(status_code=404, detail="Wage group not found.")
-    if wagegroup.id in WAGE_GROUPS.keys():
+    if wagegroup.wagegroup_id in WAGE_GROUPS.keys():
         raise HTTPException(status_code=418, detail="Wage group already exists.")
     if not (0.99 - DELTA) < (wagegroup.hourly_rate % 1) < (0.99 + DELTA):
         raise HTTPException(
@@ -252,7 +225,7 @@ def put_wagegroup(wagegroup_id: str, wagegroup: WageGroup) -> WageGroup:
             status_code=422, detail="Overtime percentage is deprecated."
         )
     wagegroup.overtime_percentage = None
-    WAGE_GROUPS[wagegroup.id] = wagegroup
+    WAGE_GROUPS[wagegroup.wagegroup_id] = wagegroup
     return wagegroup
 
 
@@ -305,11 +278,11 @@ def post_employee(employee: Employee) -> EmployeeDetails:
             status_code=403, detail="An employee must be at least 18 years old."
         )
     new_employee = EmployeeDetails(
-        id=uuid4().hex,
+        identification=uuid4().hex,
         employee_number=next(EMPLOYEE_NUMBERS),
         **employee.dict(),
     )
-    EMPLOYEES[new_employee.id] = new_employee
+    EMPLOYEES[new_employee.identification] = new_employee
     return new_employee
 
 

@@ -59,6 +59,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         recursion_limit: int = 1,
         recursion_default: Any = {},
         faker_locale: Optional[Union[str, List[str]]] = None,
+        default_id_property_name: str = "id",
     ) -> None:
         super().__init__(
             source=source,
@@ -74,6 +75,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             recursion_limit=recursion_limit,
             recursion_default=recursion_default,
             faker_locale=faker_locale,
+            default_id_property_name=default_id_property_name,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
@@ -223,7 +225,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                         "No properties or parameters can be invalidated."
                     )
             else:
-                logger.error(
+                raise AssertionError(
                     f"No Dto mapping found to cause status_code {status_code}."
                 )
         run_keyword(
@@ -295,7 +297,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
-        Response keyword and finally validates is, for `DELETE` operations, whether
+        Response keyword and finally validates, for `DELETE` operations, whether
         the target resource was indeed deleted (OK response) or not (error responses).
         """
         response = run_keyword(
@@ -307,24 +309,31 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             request_values.json_data,
         )
         if response.status_code != status_code:
-            if not response.ok:
-                if description := response.json().get("detail"):
-                    pass
-                else:
-                    description = response.json().get("message")
-                logger.error(f"{response.reason}: {description}")
             try:
                 response_json = response.json()
-            except Exception as exception:  # pylint: disable=broad-except
-                logger.error(f"Failed to get json body from response: {exception}")
+            except Exception as _:  # pylint: disable=broad-except
+                logger.info(
+                    f"Failed to get json content from response. "
+                    f"Response text was: {response.text}"
+                )
                 response_json = {}
-            logger.info(
+            if not response.ok:
+                if description := response_json.get("detail"):
+                    pass
+                else:
+                    description = response_json.get(
+                        "message", "response contains no message or detail."
+                    )
+                logger.error(f"{response.reason}: {description}")
+
+            logger.debug(
                 f"\nSend: {_json.dumps(request_values.json_data, indent=4, sort_keys=True)}"
                 f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
             )
             raise AssertionError(
                 f"Response status_code {response.status_code} was not {status_code}"
             )
+
         run_keyword("validate_response", endpoint, response, original_data)
         if request_values.method == "DELETE":
             get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
@@ -414,14 +423,17 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     f"Response schema violation: the schema specifies an array as "
                     f"response type but the response was of type {type(json_response)}."
                 )
-            # at present, only lists of resource objects are supported
-            if list_item_schema.get("type") != "object":
-                raise NotImplementedError(
-                    f"response validation of lists of "
-                    f"{list_item_schema.get('type')} not supported"
-                )
-            for resource in json_response:
-                run_keyword("validate_resource_properties", resource, list_item_schema)
+            type_of_list_items = list_item_schema.get("type")
+            if type_of_list_items == "object":
+                for resource in json_response:
+                    run_keyword(
+                        "validate_resource_properties", resource, list_item_schema
+                    )
+            else:
+                for item in json_response:
+                    self._validate_value_type(
+                        value=item, expected_type=type_of_list_items
+                    )
             # no further validation; value validation of individual resources should
             # be performed on the endpoints for the specific resource
             return None
@@ -464,7 +476,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             if isinstance(error, InvalidSchemaValue):
                 schema_errors_to_keep = []
                 for schema_error in error.schema_errors:
-                    message = schema_error.message
+                    message = str(schema_error)
                     if message == "None for not nullable" or message.startswith(
                         "None is not "
                     ):
@@ -553,6 +565,24 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     f"\n\tDefined in the schema:    {property_names_from_schema}"
                     f"{extra}{missing}"
                 )
+
+    @staticmethod
+    def _validate_value_type(value: Any, expected_type: str) -> None:
+        type_mapping = {
+            "string": str,
+            "number": float,
+            "integer": int,
+            "boolean": bool,
+            "array": list,
+            "object": dict,
+        }
+        python_type = type_mapping.get(expected_type, None)
+        if python_type is None:
+            raise AssertionError(
+                f"Validation of type '{expected_type}' is not supported."
+            )
+        if not isinstance(value, python_type):
+            raise AssertionError(f"{value} is not of type {expected_type}")
 
     @staticmethod
     def _validate_type_of_extra_properties(

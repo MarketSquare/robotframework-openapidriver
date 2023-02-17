@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2022-12-21T12:11:39+00:00" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="296">
-<version>3.5.1</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-02-17T14:35:26+00:00" specversion="4" source="" lineno="306">
+<version>3.6.2</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="144">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}, faker_locale: str | List[str] | None = None">
+<init name="__init__" lineno="142">
+<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}, faker_locale: str | List[str] | None = None, default_id_property_name: str = id">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type typedoc="string">str</type>
@@ -116,6 +116,11 @@
 <type typedoc="None">None</type>
 <default>None</default>
 </arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_id_property_name: str = id">
+<name>default_id_property_name</name>
+<type typedoc="string">str</type>
+<default>id</default>
+</arg>
 </arguments>
 <doc>&lt;h4&gt;source&lt;/h4&gt;
 &lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
@@ -126,7 +131,7 @@
 &lt;h4&gt;ignored_testcases&lt;/h4&gt;
 &lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;endpoint&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;origin&lt;/h4&gt;
-&lt;p&gt;The server (and port) of the target server. E.g. &lt;code&gt;https://localhost:7000&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;The server (and port) of the target server. E.g. &lt;code&gt;https://localhost:8000&lt;/code&gt;&lt;/p&gt;
 &lt;h4&gt;base_path&lt;/h4&gt;
 &lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;mappings_path&lt;/h4&gt;
@@ -162,12 +167,15 @@
 &lt;h4&gt;recursion_default&lt;/h4&gt;
 &lt;p&gt;The value that is used instead of the referenced schema when the &lt;span class="name"&gt;recursion_limit&lt;/span&gt; has been reached. The default &lt;span class="name"&gt;{}&lt;/span&gt; represents an empty object in JSON. Depending on schema definitions, this may cause schema validation errors. If this is the case, &lt;a href="#type-None" class="name"&gt;None&lt;/a&gt; (&lt;span class="name"&gt;${NONE}&lt;/span&gt; in Robot Framework) can be tried as an alternative.&lt;/p&gt;
 &lt;h4&gt;faker_locale&lt;/h4&gt;
-&lt;p&gt;A locale string or list of locale strings to pass to Faker to be used in generation of string data for supported format types.&lt;/p&gt;</doc>
+&lt;p&gt;A locale string or list of locale strings to pass to Faker to be used in generation of string data for supported format types.&lt;/p&gt;
+&lt;h4&gt;default_id_property_name&lt;/h4&gt;
+&lt;p&gt;The default name for the property that identifies a resource (i.e. a unique entiry) within the API. The default value for this property name is &lt;span class="name"&gt;id&lt;/span&gt;. If the target API uses a different name for all the resources within the API, you can configure it globally using this property.&lt;/p&gt;
+&lt;p&gt;If different property names are used for the unique identifier for different types of resources, an &lt;span class="name"&gt;ID_MAPPING&lt;/span&gt; can be implemented in the &lt;span class="name"&gt;mappings_path&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>=== source === An absolute path to an openapi.json or openapi.yaml file or an url to such a file.</shortdoc>
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="146">
+<kw name="Test Endpoint" source="" lineno="148">
 <arguments repr="endpoint: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -187,7 +195,7 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="104">
+<kw name="Test Invalid Url" source="" lineno="106">
 <arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>
@@ -209,7 +217,7 @@
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="84">
+<kw name="Test Unauthorized" source="" lineno="86">
 <arguments repr="endpoint: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
 <name>endpoint</name>

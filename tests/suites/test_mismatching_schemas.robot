@@ -9,8 +9,19 @@ Library             OpenApiDriver
 ...                     require_body_for_invalid_url=${TRUE}
 ...                     extra_headers=${API_KEY}
 ...                     faker_locale=nl_NL
+...                     default_id_property_name=identification
 
 Test Template       Validate Test Endpoint Keyword
+
+
+*** Variables ***
+@{expected_failures}
+...                     GET /reactions/ 200
+...                     POST /employees 201
+...                     GET /employees 200
+...                     PATCH /employees/{employee_id} 200
+...                     GET /employees/{employee_id} 200
+...                     GET /available_employees 200
 
 
 *** Test Cases ***
@@ -23,6 +34,12 @@ Validate Test Endpoint Keyword
     IF    ${status_code} == 404
         Test Invalid Url    endpoint=${endpoint}    method=${method}
     ELSE
-        Test Endpoint
-        ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        ${operation}=    Set Variable    ${method}${SPACE}${endpoint}${SPACE}${status_code}
+        IF    $operation in $expected_failures
+            Run Keyword And Expect Error    *    Test Endpoint
+            ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        ELSE
+            Test Endpoint
+            ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        END
     END

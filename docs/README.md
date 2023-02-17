@@ -1,14 +1,16 @@
 ---
 ---
 
-# OpenApiDriver for Robot Framework®
+# OpenApiDriver for Robot Framework
 
-OpenApiDriver is an extension of the Robot Framework® DataDriver library that allows
+OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
 for generation and execution of test cases based on the information in an OpenAPI
 document (also known as Swagger document).
 This document explains how to use the OpenApiDriver library.
 
-For more information about Robot Framework®, see http://robotframework.org.
+My RoboCon 2022 talk about OpenApiDriver and OpenApiLibCore can be found [here](https://www.youtube.com/watch?v=7YWZEHxk9Ps)
+
+For more information about Robot Framework, see http://robotframework.org.
 
 For more information about the DataDriver library, see
 https://github.com/Snooz82/robotframework-datadriver.
@@ -120,7 +122,5 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are supported.
-- The unique identifier for a resource as used in the `paths` section of the
-    openapi document is expected to be the `id` property on a resource of that type.
 - No support for per-endpoint authorization levels (only simple 401 / 403 validation).
-
+- Parsing of OAS 3.1 documents is supported by the parsing tools, but runtime behavior is untested.
