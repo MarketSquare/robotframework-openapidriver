@@ -76,6 +76,13 @@ class EmployeeDto(Dto):
                 invalid_value_error_code=403,
                 error_code=422,
             ),
+            PropertyValueConstraint(
+                property_name="team",
+                values=[IGNORE],
+                invalid_value="dummy",
+                invalid_value_error_code=422,
+                error_code=400,
+            ),
         ]
         return relations
 

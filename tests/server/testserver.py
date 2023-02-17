@@ -74,7 +74,7 @@ class EmployeeDetails(BaseModel):
     parttime_day: Optional[WeekDay] = None
 
 
-class Employee(BaseModel):
+class Employee(BaseModel, extra="forbid"):
     name: str
     wagegroup_id: str
     date_of_birth: datetime.date

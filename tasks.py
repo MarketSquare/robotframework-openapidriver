@@ -51,7 +51,7 @@ def atests(context):
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
-        f"{ROOT}/tests/suites/test_mismatching_schemas.robot",
+        f"{ROOT}/tests/suites/",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 

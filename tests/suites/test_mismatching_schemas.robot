@@ -18,12 +18,28 @@ Test Template       Validate Test Endpoint Keyword
 Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
 
 
+*** Variables ***
+@{expected_failures}
+...    GET /reactions/ 200
+...    POST /employees 201
+...    GET /employees 200
+...    PATCH /employees/{employee_id} 200
+...    GET /employees/{employee_id} 200
+...    GET /available_employees 200
+
+
 *** Keywords ***
 Validate Test Endpoint Keyword
     [Arguments]    ${endpoint}    ${method}    ${status_code}
     IF    ${status_code} == 404
         Test Invalid Url    endpoint=${endpoint}    method=${method}
     ELSE
-        Test Endpoint
-        ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        ${operation}=    Set Variable    ${method}${SPACE}${endpoint}${SPACE}${status_code}
+        IF    $operation in $expected_failures
+            Run Keyword And Expect Error    *    Test Endpoint
+            ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        ELSE
+            Test Endpoint
+            ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        END
     END
