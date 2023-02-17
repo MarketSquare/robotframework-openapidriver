@@ -57,7 +57,9 @@ class OpenApiReader(AbstractReaderClass):
                         or Test(path, method, response) in ignored_tests
                     ):
                         continue
-                    tag_list = _get_tag_list(tags=tags_from_spec, method=method, response=response)
+                    tag_list = _get_tag_list(
+                        tags=tags_from_spec, method=method, response=response
+                    )
                     test_data.append(
                         TestCaseData(
                             arguments={

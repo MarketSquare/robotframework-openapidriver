@@ -426,10 +426,14 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             type_of_list_items = list_item_schema.get("type")
             if type_of_list_items == "object":
                 for resource in json_response:
-                    run_keyword("validate_resource_properties", resource, list_item_schema)
+                    run_keyword(
+                        "validate_resource_properties", resource, list_item_schema
+                    )
             else:
                 for item in json_response:
-                    self._validate_value_type(value=item, expected_type=type_of_list_items)
+                    self._validate_value_type(
+                        value=item, expected_type=type_of_list_items
+                    )
             # no further validation; value validation of individual resources should
             # be performed on the endpoints for the specific resource
             return None

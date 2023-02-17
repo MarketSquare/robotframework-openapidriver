@@ -14,18 +14,18 @@ Library             OpenApiDriver
 Test Template       Validate Test Endpoint Keyword
 
 
-*** Test Cases ***
-Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
-
-
 *** Variables ***
 @{expected_failures}
-...    GET /reactions/ 200
-...    POST /employees 201
-...    GET /employees 200
-...    PATCH /employees/{employee_id} 200
-...    GET /employees/{employee_id} 200
-...    GET /available_employees 200
+...                     GET /reactions/ 200
+...                     POST /employees 201
+...                     GET /employees 200
+...                     PATCH /employees/{employee_id} 200
+...                     GET /employees/{employee_id} 200
+...                     GET /available_employees 200
+
+
+*** Test Cases ***
+Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
 
 
 *** Keywords ***
