@@ -116,3 +116,8 @@ DTO_MAPPING: Dict[Tuple[Any, Any], Any] = {
     ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
     ("/secret_message", "get"): MessageDto,
 }
+
+ID_MAPPING: Dict[str, str] = {
+    "/wagegroups": "wagegroup_id",
+    "/wagegroups/{wagegroup_id}": "wagegroup_id",
+}

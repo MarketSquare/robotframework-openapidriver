@@ -9,6 +9,7 @@ Library             OpenApiDriver
 ...                     require_body_for_invalid_url=${TRUE}
 ...                     extra_headers=${API_KEY}
 ...                     faker_locale=nl_NL
+...                     default_id_property_name=identification
 
 Test Template       Validate Test Endpoint Keyword
 
