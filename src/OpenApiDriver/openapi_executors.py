@@ -472,7 +472,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             if isinstance(error, InvalidSchemaValue):
                 schema_errors_to_keep = []
                 for schema_error in error.schema_errors:
-                    message = schema_error.message
+                    message = str(schema_error)
                     if message == "None for not nullable" or message.startswith(
                         "None is not "
                     ):
