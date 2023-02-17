@@ -59,6 +59,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         recursion_limit: int = 1,
         recursion_default: Any = {},
         faker_locale: Optional[Union[str, List[str]]] = None,
+        default_id_property_name: str = "id",
     ) -> None:
         super().__init__(
             source=source,
@@ -74,6 +75,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             recursion_limit=recursion_limit,
             recursion_default=recursion_default,
             faker_locale=faker_locale,
+            default_id_property_name=default_id_property_name,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
@@ -295,7 +297,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
-        Response keyword and finally validates is, for `DELETE` operations, whether
+        Response keyword and finally validates, for `DELETE` operations, whether
         the target resource was indeed deleted (OK response) or not (error responses).
         """
         response = run_keyword(
@@ -307,24 +309,31 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             request_values.json_data,
         )
         if response.status_code != status_code:
-            if not response.ok:
-                if description := response.json().get("detail"):
-                    pass
-                else:
-                    description = response.json().get("message")
-                logger.error(f"{response.reason}: {description}")
             try:
                 response_json = response.json()
-            except Exception as exception:  # pylint: disable=broad-except
-                logger.error(f"Failed to get json body from response: {exception}")
+            except Exception as _:  # pylint: disable=broad-except
+                logger.info(
+                    f"Failed to get json content from response. "
+                    f"Response text was: {response.text}"
+                )
                 response_json = {}
-            logger.info(
+            if not response.ok:
+                if description := response_json.get("detail"):
+                    pass
+                else:
+                    description = response_json.get(
+                        "message", "response contains no message or detail."
+                    )
+                logger.error(f"{response.reason}: {description}")
+
+            logger.debug(
                 f"\nSend: {_json.dumps(request_values.json_data, indent=4, sort_keys=True)}"
                 f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
             )
             raise AssertionError(
                 f"Response status_code {response.status_code} was not {status_code}"
             )
+
         run_keyword("validate_response", endpoint, response, original_data)
         if request_values.method == "DELETE":
             get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
