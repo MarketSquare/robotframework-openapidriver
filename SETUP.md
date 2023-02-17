@@ -29,7 +29,7 @@ poetry config virtualenvs.in-project true
 ```
 Now that poetry is set up, the project's Python dependencies can be installed:
 ```
-poetry install --remove-untracked
+poetry install
 ```
 
 ## Running tests using poetry and invoke

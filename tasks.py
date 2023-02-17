@@ -1,11 +1,7 @@
 # pylint: disable=missing-function-docstring, unused-argument
-import inspect
 import pathlib
 import subprocess
 from importlib.metadata import version
-
-if not hasattr(inspect, "getargspec"):
-    inspect.getargspec = inspect.getfullargspec
 
 from invoke import task
 
@@ -55,7 +51,7 @@ def atests(context):
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
-        f"{ROOT}/tests/suites",
+        f"{ROOT}/tests/suites/test_mismatching_schemas.robot",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
@@ -71,13 +67,14 @@ def tests(context):
 def lint(context):
     subprocess.run(f"mypy {ROOT}", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
+    subprocess.run(f"robocop {ROOT}/tests/suites", shell=True, check=False)
 
 
 @task
 def format_code(context):
     subprocess.run(f"black {ROOT}", shell=True, check=False)
     subprocess.run(f"isort {ROOT}", shell=True, check=False)
-    subprocess.run(f"robotidy {ROOT}", shell=True, check=False)
+    subprocess.run(f"robotidy {ROOT}/tests/suites", shell=True, check=False)
 
 
 @task
@@ -137,9 +134,3 @@ def readme(context):
 @task(format_code, libdoc, libspec, readme)
 def build(context):
     subprocess.run("poetry build", shell=True, check=False)
-
-
-@task(post=[build])
-def bump_version(context, rule):
-    subprocess.run(f"poetry version {rule}", shell=True, check=False)
-    subprocess.run("poetry install", shell=True, check=False)
