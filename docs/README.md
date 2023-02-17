@@ -120,7 +120,5 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are supported.
-- The unique identifier for a resource as used in the `paths` section of the
-    openapi document is expected to be the `id` property on a resource of that type.
 - No support for per-endpoint authorization levels (only simple 401 / 403 validation).
 
