@@ -225,7 +225,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                         "No properties or parameters can be invalidated."
                     )
             else:
-                logger.error(
+                raise AssertionError(
                     f"No Dto mapping found to cause status_code {status_code}."
                 )
         run_keyword(
@@ -423,14 +423,13 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     f"Response schema violation: the schema specifies an array as "
                     f"response type but the response was of type {type(json_response)}."
                 )
-            # at present, only lists of resource objects are supported
-            if list_item_schema.get("type") != "object":
-                raise NotImplementedError(
-                    f"response validation of lists of "
-                    f"{list_item_schema.get('type')} not supported"
-                )
-            for resource in json_response:
-                run_keyword("validate_resource_properties", resource, list_item_schema)
+            type_of_list_items = list_item_schema.get("type")
+            if type_of_list_items == "object":
+                for resource in json_response:
+                    run_keyword("validate_resource_properties", resource, list_item_schema)
+            else:
+                for item in json_response:
+                    self._validate_value_type(value=item, expected_type=type_of_list_items)
             # no further validation; value validation of individual resources should
             # be performed on the endpoints for the specific resource
             return None
@@ -562,6 +561,24 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     f"\n\tDefined in the schema:    {property_names_from_schema}"
                     f"{extra}{missing}"
                 )
+
+    @staticmethod
+    def _validate_value_type(value: Any, expected_type: str) -> None:
+        type_mapping = {
+            "string": str,
+            "number": float,
+            "integer": int,
+            "boolean": bool,
+            "array": list,
+            "object": dict,
+        }
+        python_type = type_mapping.get(expected_type, None)
+        if python_type is None:
+            raise AssertionError(
+                f"Validation of type '{expected_type}' is not supported."
+            )
+        if not isinstance(value, python_type):
+            raise AssertionError(f"{value} is not of type {expected_type}")
 
     @staticmethod
     def _validate_type_of_extra_properties(
