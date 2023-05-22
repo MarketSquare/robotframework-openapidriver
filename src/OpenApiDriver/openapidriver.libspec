@@ -1,31 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-02-17T14:35:26+00:00" specversion="4" source="" lineno="306">
-<version>3.6.2</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-05-22T14:30:38+00:00" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="316">
+<version>4.0.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
 <init name="__init__" lineno="142">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}, faker_locale: str | List[str] | None = None, default_id_property_name: str = id">
+<arguments repr="source: str, included_paths: Iterable[str] | None = None, ignored_paths: Iterable[str] | None = None, ignored_responses: Iterable[int] | None = None, ignored_testcases: Iterable[Tuple[str, str, int]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}, faker_locale: str | List[str] | None = None, default_id_property_name: str = id">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type typedoc="string">str</type>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] | None = None">
-<name>ignored_endpoints</name>
-<type typedoc="list">List[str]</type>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="included_paths: Iterable[str] | None = None">
+<name>included_paths</name>
+<type>Iterable[str]</type>
 <type typedoc="None">None</type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_paths: Iterable[str] | None = None">
+<name>ignored_paths</name>
+<type>Iterable[str]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: Iterable[int] | None = None">
 <name>ignored_responses</name>
-<type typedoc="list">List[int]</type>
+<type>Iterable[int]</type>
 <type typedoc="None">None</type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[List[str]] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: Iterable[Tuple[str, str, int]] | None = None">
 <name>ignored_testcases</name>
-<type typedoc="list">List[List[str]]</type>
+<type>Iterable[Tuple[str, str, int]]</type>
 <type typedoc="None">None</type>
 <default>None</default>
 </arg>
@@ -124,16 +130,18 @@
 </arguments>
 <doc>&lt;h4&gt;source&lt;/h4&gt;
 &lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
-&lt;h4&gt;ignored_endpoints&lt;/h4&gt;
-&lt;p&gt;A list of endpoints that will be ignored when generating the test cases.&lt;/p&gt;
+&lt;h4&gt;included_paths&lt;/h4&gt;
+&lt;p&gt;A list of paths that will be included when generating the test cases. The &lt;code&gt;*&lt;/code&gt; character can be used at the end of a partial path to include all paths starting with the partial path (wildcard include).&lt;/p&gt;
+&lt;h4&gt;ignored_paths&lt;/h4&gt;
+&lt;p&gt;A list of paths that will be ignored when generating the test cases. The &lt;code&gt;*&lt;/code&gt; character can be used at the end of a partial path to ignore all paths starting with the partial path (wildcard ignore).&lt;/p&gt;
 &lt;h4&gt;ignored_responses&lt;/h4&gt;
 &lt;p&gt;A list of responses that will be ignored when generating the test cases.&lt;/p&gt;
 &lt;h4&gt;ignored_testcases&lt;/h4&gt;
-&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;endpoint&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;Tuple&lt;/code&gt; or &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;path&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;origin&lt;/h4&gt;
 &lt;p&gt;The server (and port) of the target server. E.g. &lt;code&gt;https://localhost:8000&lt;/code&gt;&lt;/p&gt;
 &lt;h4&gt;base_path&lt;/h4&gt;
-&lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the paths as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;mappings_path&lt;/h4&gt;
 &lt;p&gt;See &lt;a href="https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html"&gt;here&lt;/a&gt;.&lt;/p&gt;
 &lt;h4&gt;username&lt;/h4&gt;
@@ -175,10 +183,10 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="" lineno="148">
-<arguments repr="endpoint: str, method: str, status_code: int">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
+<kw name="Test Endpoint" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="148">
+<arguments repr="path: str, method: str, status_code: int">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
 <type typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
@@ -190,15 +198,15 @@
 <type typedoc="integer">int</type>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;span class="name"&gt;endpoint&lt;/span&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
+<doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
 &lt;p&gt;This is the main keyword to be used in the &lt;span class="name"&gt;Test Template&lt;/span&gt; keyword when using the OpenApiDriver.&lt;/p&gt;
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
-<shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
+<shortdoc>Validate that performing the `method` operation on `path` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="" lineno="106">
-<arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
+<kw name="Test Invalid Url" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="106">
+<arguments repr="path: str, method: str, expected_status_code: int = 404">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
 <type typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
@@ -211,16 +219,16 @@
 <default>404</default>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Perform a request for the provided 'endpoint' and 'method' where the url for the &lt;span class="name"&gt;endpoint&lt;/span&gt; is invalidated.&lt;/p&gt;
-&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the endpoint contains no parts that can be invalidated.&lt;/p&gt;
+<doc>&lt;p&gt;Perform a request for the provided 'path' and 'method' where the url for the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; is invalidated.&lt;/p&gt;
+&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the path contains no parts that can be invalidated.&lt;/p&gt;
 &lt;p&gt;The optional &lt;span class="name"&gt;expected_status_code&lt;/span&gt; parameter (default: 404) can be set to the expected status code for APIs that do not return a 404 on invalid urls.&lt;/p&gt;
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
-<shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
+<shortdoc>Perform a request for the provided 'path' and 'method' where the url for the `path` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="" lineno="86">
-<arguments repr="endpoint: str, method: str">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
+<kw name="Test Unauthorized" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="86">
+<arguments repr="path: str, method: str">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
 <type typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
@@ -228,10 +236,10 @@
 <type typedoc="string">str</type>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;span class="name"&gt;endpoint&lt;/span&gt;, with no authorization.&lt;/p&gt;
+<doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt;, with no authorization.&lt;/p&gt;
 &lt;p&gt;This keyword only passes if the response code is 401: Unauthorized.&lt;/p&gt;
 &lt;p&gt;Any authorization parameters used to initialize the library are ignored for this request. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the authorization validation should be checked first.&lt;/p&gt;</doc>
-<shortdoc>Perform a request for `method` on the `endpoint`, with no authorization.</shortdoc>
+<shortdoc>Perform a request for `method` on the `path`, with no authorization.</shortdoc>
 </kw>
 </keywords>
 <datatypes>

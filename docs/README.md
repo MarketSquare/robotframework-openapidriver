@@ -1,16 +1,14 @@
 ---
 ---
 
-# OpenApiDriver for Robot Framework
+# OpenApiDriver for Robot Framework®
 
-OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
+OpenApiDriver is an extension of the Robot Framework® DataDriver library that allows
 for generation and execution of test cases based on the information in an OpenAPI
 document (also known as Swagger document).
 This document explains how to use the OpenApiDriver library.
 
-My RoboCon 2022 talk about OpenApiDriver and OpenApiLibCore can be found [here](https://www.youtube.com/watch?v=7YWZEHxk9Ps)
-
-For more information about Robot Framework, see http://robotframework.org.
+For more information about Robot Framework®, see http://robotframework.org.
 
 For more information about the DataDriver library, see
 https://github.com/Snooz82/robotframework-datadriver.
@@ -37,8 +35,8 @@ The OpenAPI Specification (OAS) defines a standard, language-agnostic interface
 to RESTful APIs, see https://swagger.io/specification/
 
 The OpenApiDriver module implements a reader class that generates a test case for
-each endpoint, method and response that is defined in an OpenAPI document, typically
-an openapi.json or openapi.yaml file.
+each path, method and response (i.e. every response for each endpoint) that is defined
+in an OpenAPI document, typically an openapi.json or openapi.yaml file.
 
 > Note: OpenApiDriver is designed for APIs based on the OAS v3
 The library has not been tested for APIs based on the OAS v2.
@@ -88,13 +86,13 @@ Library            OpenApiDriver
 Test Template      Validate Using Test Endpoint Keyword
 
 *** Test Cases ***
-Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
 
 *** Keywords ***
 Validate Using Test Endpoint Keyword
-    [Arguments]    ${endpoint}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}
     Test Endpoint
-    ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+    ...    path=${path}    method=${method}    status_code=${status_code}
 
 ```
 
@@ -122,5 +120,5 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are supported.
-- No support for per-endpoint authorization levels (only simple 401 / 403 validation).
-- Parsing of OAS 3.1 documents is supported by the parsing tools, but runtime behavior is untested.
+- No support for per-path authorization levels (only simple 401 / 403 validation).
+
