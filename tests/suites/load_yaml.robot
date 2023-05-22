@@ -1,23 +1,25 @@
 *** Settings ***
 Library             OpenApiDriver
 ...                     source=${ROOT}/tests/files/petstore_openapi.yaml
-...                     ignored_endpoints=${ignored_endpoints}
+...                     included_paths=${INCLUDED_PATHS}
+...                     ignored_paths=${IGNORED_PATHS}
 
 Test Template       Do Nothing
 
 
 *** Variables ***
-@{ignored_endpoints}=
-...                         /pet    /pet/findByStatus    /pet/findByTags    /pet/{petId}
-...                         /store/inventory    /store/order    /store/order/{orderId}
-...                         /user/createWithList    /user/login    /user/{username}
+@{INCLUDED_PATHS}=
+...                     /pet/{petId}/uploadImage
+...                     /user*
+@{IGNORED_PATHS}=
+...                     /user/createWithList    /user/l*
 
 
 *** Test Cases ***
-openapi.yaml test for ${method} on ${endpoint} where ${status_code} is expected
+OpenApiYaml test for ${method} on ${path} where ${status_code} is expected
 
 
 *** Keywords ***
 Do Nothing
-    [Arguments]    ${endpoint}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}
     No Operation

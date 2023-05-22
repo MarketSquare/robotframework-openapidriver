@@ -33,8 +33,8 @@ The OpenAPI Specification (OAS) defines a standard, language-agnostic interface
 to RESTful APIs, see https://swagger.io/specification/
 
 The OpenApiDriver module implements a reader class that generates a test case for
-each endpoint, method and response that is defined in an OpenAPI document, typically
-an openapi.json or openapi.yaml file.
+each path, method and response (i.e. every response for each endpoint) that is defined
+in an OpenAPI document, typically an openapi.json or openapi.yaml file.
 
 > Note: OpenApiDriver is designed for APIs based on the OAS v3
 The library has not been tested for APIs based on the OAS v2.
@@ -84,13 +84,13 @@ Library            OpenApiDriver
 Test Template      Validate Using Test Endpoint Keyword
 
 *** Test Cases ***
-Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
 
 *** Keywords ***
 Validate Using Test Endpoint Keyword
-    [Arguments]    ${endpoint}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}
     Test Endpoint
-    ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+    ...    path=${path}    method=${method}    status_code=${status_code}
 
 ```
 
@@ -118,11 +118,11 @@ Details about the `mappings_path` variable usage can be found
 There are currently a number of limitations to supported API structures, supported
 data types and properties. The following list details the most important ones:
 - Only JSON request and response bodies are supported.
-- No support for per-endpoint authorization levels (only simple 401 / 403 validation).
+- No support for per-path authorization levels (only simple 401 / 403 validation).
 
 """
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from DataDriver import DataDriver
 from requests.auth import AuthBase
@@ -142,9 +142,10 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals, dangerous-default-value
         self,
         source: str,
-        ignored_endpoints: Optional[List[str]] = None,
-        ignored_responses: Optional[List[int]] = None,
-        ignored_testcases: Optional[List[List[str]]] = None,
+        included_paths: Optional[Iterable[str]] = None,
+        ignored_paths: Optional[Iterable[str]] = None,
+        ignored_responses: Optional[Iterable[int]] = None,
+        ignored_testcases: Optional[Iterable[Tuple[str, str, int]]] = None,
         origin: str = "",
         base_path: str = "",
         mappings_path: Union[str, Path] = "",
@@ -167,22 +168,29 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         === source ===
         An absolute path to an openapi.json or openapi.yaml file or an url to such a file.
 
-        === ignored_endpoints ===
-        A list of endpoints that will be ignored when generating the test cases.
+        === included_paths ===
+        A list of paths that will be included when generating the test cases.
+        The ``*`` character can be used at the end of a partial path to include all paths
+        starting with the partial path (wildcard include).
+
+        === ignored_paths ===
+        A list of paths that will be ignored when generating the test cases.
+        The ``*`` character can be used at the end of a partial path to ignore all paths
+        starting with the partial path (wildcard ignore).
 
         === ignored_responses ===
         A list of responses that will be ignored when generating the test cases.
 
         === ignored_testcases ===
         A list of specific test cases that, if it would be generated, will be ignored.
-        Specific test cases to ignore must be specified as a ``List`` of ``endpoint``,
-        ``method`` and ``response``.
+        Specific test cases to ignore must be specified as a ``Tuple`` or ``List``
+        of ``path``, ``method`` and ``response``.
 
         === origin ===
         The server (and port) of the target server. E.g. ``https://localhost:8000``
 
         === base_path ===
-        The routing between ``origin`` and the endpoints as found in the ``paths`` in the
+        The routing between ``origin`` and the paths as found in the ``paths`` in the
         openapi document. E.g. ``/petshop/v2``.
 
         === mappings_path ===
@@ -265,9 +273,10 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         If different property names are used for the unique identifier for different
         types of resources, an `ID_MAPPING` can be implemented in the `mappings_path`.
         """
-        ignored_endpoints = ignored_endpoints if ignored_endpoints else []
-        ignored_responses = ignored_responses if ignored_responses else []
-        ignored_testcases = ignored_testcases if ignored_testcases else []
+        included_paths = included_paths if included_paths else ()
+        ignored_paths = ignored_paths if ignored_paths else ()
+        ignored_responses = ignored_responses if ignored_responses else ()
+        ignored_testcases = ignored_testcases if ignored_testcases else ()
 
         mappings_path = Path(mappings_path).as_posix()
         OpenApiExecutors.__init__(
@@ -292,12 +301,13 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             default_id_property_name=default_id_property_name,
         )
 
-        endpoints = self.openapi_spec["paths"]
+        paths = self.openapi_spec["paths"]
         DataDriver.__init__(
             self,
             reader_class=OpenApiReader,
-            endpoints=endpoints,
-            ignored_endpoints=ignored_endpoints,
+            paths=paths,
+            included_paths=included_paths,
+            ignored_paths=ignored_paths,
             ignored_responses=ignored_responses,
             ignored_testcases=ignored_testcases,
         )
@@ -307,7 +317,7 @@ class DocumentationGenerator(OpenApiDriver):
     __doc__ = OpenApiDriver.__doc__
 
     @staticmethod
-    def get_keyword_names():
+    def get_keyword_names() -> List[str]:
         """Curated keywords for libdoc and libspec."""
         return [
             "test_unauthorized",

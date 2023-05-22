@@ -1,25 +1,25 @@
 *** Settings ***
 Library             OpenApiDriver
 ...                     source=${ROOT}/tests/files/petstore_openapi.json
-...                     ignored_responses=${ignored_responses}
-...                     ignored_testcases=${ignored_tests}
+...                     ignored_responses=${IGNORED_RESPONSES}
+...                     ignored_testcases=${IGNORED_TESTS}
 
 Test Template       Do Nothing
 
 
 *** Variables ***
-@{ignored_responses}=       200    404    400
-@{ignore_post_pet}=         /pet    POST    405
-@{ignore_post_pet_id}=      /pet/{petId}    post    405
-@{ignore_post_order}=       /store/order    post    405
-@{ignored_tests}=           ${ignore_post_pet}    ${ignore_post_pet_id}    ${ignore_post_order}
+@{IGNORED_RESPONSES}=       200    404    400
+@{IGNORE_POST_PET}=         /pet    POST    405
+@{IGNORE_POST_PET_ID}=      /pet/{petId}    post    405
+@{IGNORE_POST_ORDER}=       /store/order    post    405
+@{IGNORED_TESTS}=           ${IGNORE_POST_PET}    ${IGNORE_POST_PET_ID}    ${IGNORE_POST_ORDER}
 
 
 *** Test Cases ***
-openapi.json test for ${method} on ${endpoint} where ${status_code} is expected
+OpenApiJson test for ${method} on ${path} where ${status_code} is expected
 
 
 *** Keywords ***
 Do Nothing
-    [Arguments]    ${endpoint}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}
     No Operation
