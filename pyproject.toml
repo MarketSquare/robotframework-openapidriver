@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapidriver"
-version = "3.6.2"
+version = "4.0.0"
 description = "A library for contract-testing OpenAPI / Swagger APIs."
 license = "Apache-2.0"
 authors = ["Robin Mackaij <r.a.mackaij@gmail.com>"]
@@ -24,21 +24,30 @@ include = ["*.libspec"]
 [tool.poetry.dependencies]
 python = "^3.8"
 robotframework-datadriver = ">=1.6.1"
-robotframework-openapi-libcore = "^1.8.2"
+robotframework-openapi-libcore = "^1.8.5"
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
-isort = "*"
-pylint = "*"
-mypy = "*"
-types-requests = "^2.25.6"
-invoke = "*"
-robotframework-stacktrace = "*"
-robotframework-tidy = "^3.3.3"
-robotframework-robocop = "^2.7.0"
-uvicorn = "*"
-fastapi = ">=0.88"
-coverage = {version = "^5.5", extras = ["toml"]}
+fastapi = ">=0.95.0"
+uvicorn = ">=0.22.0"
+invoke = ">=2.0.0"
+coverage = {version=">=7.2.5", extras = ["toml"]}
+robotframework-stacktrace = ">=0.4.1"
+
+[tool.poetry.group.formatting.dependencies]
+black = ">=22.10.0"
+isort = ">=5.10.1"
+robotframework-tidy = ">=3.4.0"
+
+[tool.poetry.group.type-checking.dependencies]
+mypy = ">=1.2.0"
+pyright = ">=1.1.300"
+types-requests = ">=2.28.11"
+types-invoke = ">=2.0.0.6"
+
+[tool.poetry.group.linting.dependencies]
+pylint = ">=2.17.2"
+ruff = ">=0.0.267"
+robotframework-robocop = ">=2.7.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -56,6 +65,13 @@ exclude_lines = [
 ]
 
 [tool.mypy]
+plugins = ["pydantic.mypy"]
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+strict = true
 show_error_codes = true
 
 [[tool.mypy.overrides]]
@@ -75,16 +91,13 @@ line-length = 88
 target-version = ["py38"]
 
 [tool.isort]
-src_paths = [
-    "src"
-]
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-combine_as_imports = true
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
+profile = "black"
+py_version=38
+
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "PL"]
+src = ["src/OpenApiDriver"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["logging-fstring-interpolation", "missing-class-docstring"]
@@ -94,3 +107,19 @@ max-line-length=120
 
 [tool.pylint.'SIMILARITIES CHECKER']
 ignore-imports="yes"
+
+[tool.robotidy]
+line_length = 120
+spacecount = 4
+
+[tool.robocop]
+filetypes = [".robot", ".resource"]
+configure = [
+    "line-too-long:line_length:120"
+]
+exclude = [
+    "missing-doc-suite",
+    "missing-doc-test-case",
+    "missing-doc-keyword",
+    "too-few-calls-in-test-case"
+]

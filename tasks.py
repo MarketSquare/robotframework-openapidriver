@@ -12,7 +12,7 @@ VERSION = version("robotframework-openapidriver")
 
 
 @task
-def testserver(context):
+def testserver(context) -> None:
     cmd = [
         "python",
         "-m",
@@ -28,7 +28,7 @@ def testserver(context):
 
 
 @task
-def utests(context):
+def utests(context) -> None:
     cmd = [
         "coverage",
         "run",
@@ -41,7 +41,7 @@ def utests(context):
 
 
 @task
-def atests(context):
+def atests(context) -> None:
     cmd = [
         "coverage",
         "run",
@@ -57,28 +57,34 @@ def atests(context):
 
 
 @task(utests, atests)
-def tests(context):
+def tests(context) -> None:
     subprocess.run("coverage combine", shell=True, check=False)
     subprocess.run("coverage report", shell=True, check=False)
     subprocess.run("coverage html", shell=True, check=False)
 
 
 @task
-def lint(context):
-    subprocess.run(f"mypy {ROOT}", shell=True, check=False)
+def type_check(context) -> None:
+    subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
+    subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
+
+
+@task
+def lint(context) -> None:
+    subprocess.run(f"ruff {ROOT}", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"robocop {ROOT}/tests/suites", shell=True, check=False)
 
 
 @task
-def format_code(context):
+def format_code(context) -> None:
     subprocess.run(f"black {ROOT}", shell=True, check=False)
     subprocess.run(f"isort {ROOT}", shell=True, check=False)
     subprocess.run(f"robotidy {ROOT}/tests/suites", shell=True, check=False)
 
 
 @task
-def libdoc(context):
+def libdoc(context) -> None:
     print(f"Generating libdoc for library version {VERSION}")
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
     source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
@@ -96,7 +102,7 @@ def libdoc(context):
 
 
 @task
-def libspec(context):
+def libspec(context) -> None:
     print(f"Generating libspec for library version {VERSION}")
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
     source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
@@ -114,7 +120,7 @@ def libspec(context):
 
 
 @task
-def readme(context):
+def readme(context) -> None:
     #     front_matter = (
     # r"""---
     # ![[Unit-tests](https://img.shields.io/github/workflow/status/MarketSquare/robotframework-openapidriver/Unit%20tests/main)](https://github.com/MarketSquare/robotframework-openapidriver/actions?query=workflow%3A%22Unit+tests%22 "GitHub Workflow Unit Tests Status")
@@ -132,5 +138,5 @@ def readme(context):
 
 
 @task(format_code, libdoc, libspec, readme)
-def build(context):
+def build(context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
