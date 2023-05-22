@@ -4,7 +4,7 @@ from OpenApiDriver import OpenApiDriver
 
 
 class TestInit(unittest.TestCase):
-    def test_load_from_invalid_source(self):
+    def test_load_from_invalid_source(self) -> None:
         self.assertRaises(
             Exception, OpenApiDriver, source="http://localhost:8000/openapi.doc"
         )
