@@ -126,6 +126,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from DataDriver import DataDriver
 from requests.auth import AuthBase
+from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api.deco import library
 
 from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
@@ -142,136 +143,167 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     def __init__(  # pylint: disable=too-many-arguments, too-many-locals, dangerous-default-value
         self,
         source: str,
+        origin: str = "",
+        base_path: str = "",
         included_paths: Optional[Iterable[str]] = None,
         ignored_paths: Optional[Iterable[str]] = None,
         ignored_responses: Optional[Iterable[int]] = None,
         ignored_testcases: Optional[Iterable[Tuple[str, str, int]]] = None,
-        origin: str = "",
-        base_path: str = "",
+        response_validation: ValidationLevel = ValidationLevel.WARN,
+        disable_server_validation: bool = True,
         mappings_path: Union[str, Path] = "",
+        invalid_property_default_response: int = 422,
+        default_id_property_name: str = "id",
+        faker_locale: Optional[Union[str, List[str]]] = None,
+        require_body_for_invalid_url: bool = False,
+        recursion_limit: int = 1,
+        recursion_default: Any = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
         cert: Optional[Union[str, Tuple[str, str]]] = None,
+        verify_tls: Optional[Union[bool, str]] = True,
         extra_headers: Optional[Dict[str, str]] = None,
-        response_validation: ValidationLevel = ValidationLevel.WARN,
-        disable_server_validation: bool = True,
-        require_body_for_invalid_url: bool = False,
-        invalid_property_default_response: int = 422,
-        recursion_limit: int = 1,
-        recursion_default: Any = {},
-        faker_locale: Optional[Union[str, List[str]]] = None,
-        default_id_property_name: str = "id",
+        cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
+        proxies: Optional[Dict[str, str]] = None,
     ):
         """
-        === source ===
-        An absolute path to an openapi.json or openapi.yaml file or an url to such a file.
+         == Base parameters ==
 
-        === included_paths ===
-        A list of paths that will be included when generating the test cases.
-        The ``*`` character can be used at the end of a partial path to include all paths
-        starting with the partial path (wildcard include).
+         === source ===
+         An absolute path to an openapi.json or openapi.yaml file or an url to such a file.
 
-        === ignored_paths ===
-        A list of paths that will be ignored when generating the test cases.
-        The ``*`` character can be used at the end of a partial path to ignore all paths
-        starting with the partial path (wildcard ignore).
-
-        === ignored_responses ===
-        A list of responses that will be ignored when generating the test cases.
-
-        === ignored_testcases ===
-        A list of specific test cases that, if it would be generated, will be ignored.
-        Specific test cases to ignore must be specified as a ``Tuple`` or ``List``
-        of ``path``, ``method`` and ``response``.
-
-        === origin ===
-        The server (and port) of the target server. E.g. ``https://localhost:8000``
+         === origin ===
+         The server (and port) of the target server. E.g. ``https://localhost:8000``
 
         === base_path ===
-        The routing between ``origin`` and the paths as found in the ``paths`` in the
-        openapi document. E.g. ``/petshop/v2``.
+         The routing between ``origin`` and the endpoints as found in the ``paths``
+         section in the openapi document.
+         E.g. ``/petshop/v2``.
 
-        === mappings_path ===
-        See [https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html | here].
+         == Test case generation and execution ==
 
-        === username ===
-        The username to be used for Basic Authentication.
+         === included_paths ===
+         A list of paths that will be included when generating the test cases.
+         The ``*`` character can be used at the end of a partial path to include all paths
+         starting with the partial path (wildcard include).
 
-        === password ===
-        The password to be used for Basic Authentication.
+         === ignored_paths ===
+         A list of paths that will be ignored when generating the test cases.
+         The ``*`` character can be used at the end of a partial path to ignore all paths
+         starting with the partial path (wildcard ignore).
 
-        === security_token ===
-        The token to be used for token based security using the ``Authorization`` header.
+         === ignored_responses ===
+         A list of responses that will be ignored when generating the test cases.
 
-        === auth ===
-        A [https://requests.readthedocs.io/en/latest/api/#authentication | requests AuthBase instance]
-        to be used for authentication instead of the ``username`` and ``password``.
+         === ignored_testcases ===
+         A list of specific test cases that, if it would be generated, will be ignored.
+         Specific test cases to ignore must be specified as a ``Tuple`` or ``List``
+         of ``path``, ``method`` and ``response``.
 
-        === cert ===
-        The SSL certificate to use with all requests.
-        If string: the path to ssl client cert file (.pem). If tuple, ('cert', 'key') pair.
+         === response_validation ===
+         By default, a ``WARN`` is logged when the Response received after a Request does not
+         comply with the schema as defined in the openapi document for the given operation. The
+         following values are supported:
 
-        === extra_headers ===
-        A dictionary with extra / custom headers that will be send with every request.
-        This parameter can be used to send headers that are not documented in the
-        openapi document.
+         - ``DISABLED``: All Response validation errors will be ignored
+         - ``INFO``: Any Response validation erros will be logged at ``INFO`` level
+         - ``WARN``: Any Response validation erros will be logged at ``WARN`` level
+         - ``STRICT``: The Test Case will fail on any Response validation errors
 
-        === response_validation ===
-        By default, a ``WARN`` is logged when the Response received after a Request does not
-        comply with the schema as defined in the openapi document for the given operation. The
-        following values are supported:
+         === disable_server_validation ===
+         If enabled by setting this parameter to ``True``, the Response validation will also
+         include possible errors for Requests made to a server address that is not defined in
+         the list of servers in the openapi document. This generally means that if there is a
+         mismatch, every Test Case will raise this error. Note that ``localhost`` and
+         ``127.0.0.1`` are not considered the same by Response validation.
 
-        - ``DISABLED``: All Response validation errors will be ignored
-        - ``INFO``: Any Response validation erros will be logged at ``INFO`` level
-        - ``WARN``: Any Response validation erros will be logged at ``WARN`` level
-        - ``STRICT``: The Test Case will fail on any Response validation errors
+         == API-specific configurations ==
 
-        === disable_server_validation ===
-        If enabled by setting this parameter to ``True``, the Response validation will also
-        include possible errors for Requests made to a server address that is not defined in
-        the list of servers in the openapi document. This generally means that if there is a
-        mismatch, every Test Case will raise this error. Note that ``localhost`` and
-        ``127.0.0.1`` are not considered the same by Response validation.
+         === mappings_path ===
+         See [https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html | this page]
+         for an in-depth explanation.
 
-        === require_body_for_invalid_url ===
-        When a request is made against an invalid url, this usually is because of a "404" request;
-        a request for a resource that does not exist. Depending on API implementation, when a
-        request with a missing or invalid request body is made on a non-existent resource,
-        either a 404 or a 422 or 400 Response is normally returned. If the API being tested
-        processes the request body before checking if the requested resource exists, set
-        this parameter to True.
+         === invalid_property_default_response ===
+         The default response code for requests with a JSON body that does not comply
+         with the schema.
+         Example: a value outside the specified range or a string value
+         for a property defined as integer in the schema.
 
-        === invalid_property_default_response ===
-        The default response code for requests with a JSON body that does not comply with
-        the schema. Example: a value outside the specified range or a string value for a
-        property defined as integer in the schema.
+         === default_id_property_name ===
+         The default name for the property that identifies a resource (i.e. a unique
+         entity) within the API.
+         The default value for this property name is ``id``.
+         If the target API uses a different name for all the resources within the API,
+         you can configure it globally using this property.
 
-        === recursion_limit ===
-        The recursion depth to which to fully parse recursive references before the
-        `recursion_default` is used to end the recursion.
+         If different property names are used for the unique identifier for different
+         types of resources, an ``ID_MAPPING`` can be implemented using the ``mappings_path``.
 
-        === recursion_default ===
-        The value that is used instead of the referenced schema when the
-        `recursion_limit` has been reached. The default `{}` represents an empty
-        object in JSON. Depending on schema definitions, this may cause schema
-        validation errors. If this is the case, `None` (`${NONE}` in Robot Framework)
-        can be tried as an alternative.
+         === faker_locale ===
+         A locale string or list of locale strings to pass to the Faker library to be
+         used in generation of string data for supported format types.
 
-        === faker_locale ===
-        A locale string or list of locale strings to pass to Faker to be used in
-        generation of string data for supported format types.
+         === require_body_for_invalid_url ===
+         When a request is made against an invalid url, this usually is because of a "404" request;
+         a request for a resource that does not exist. Depending on API implementation, when a
+         request with a missing or invalid request body is made on a non-existent resource,
+         either a 404 or a 422 or 400 Response is normally returned. If the API being tested
+         processes the request body before checking if the requested resource exists, set
+         this parameter to True.
 
-        === default_id_property_name ===
-        The default name for the property that identifies a resource (i.e. a unique
-        entiry) within the API.
-        The default value for this property name is `id`.
-        If the target API uses a different name for all the resources within the API,
-        you can configure it globally using this property.
+         == Parsing parameters ==
 
-        If different property names are used for the unique identifier for different
-        types of resources, an `ID_MAPPING` can be implemented in the `mappings_path`.
+         === recursion_limit ===
+         The recursion depth to which to fully parse recursive references before the
+         `recursion_default` is used to end the recursion.
+
+         === recursion_default ===
+         The value that is used instead of the referenced schema when the
+         `recursion_limit` has been reached.
+         The default `{}` represents an empty object in JSON.
+         Depending on schema definitions, this may cause schema validation errors.
+         If this is the case, 'None' (``${NONE}`` in Robot Framework) or an empty list
+         can be tried as an alternative.
+
+         == Security-related parameters ==
+         _Note: these parameters are equivalent to those in the ``requests`` library._
+
+         === username ===
+         The username to be used for Basic Authentication.
+
+         === password ===
+         The password to be used for Basic Authentication.
+
+         === security_token ===
+         The token to be used for token based security using the ``Authorization`` header.
+
+         === auth ===
+         A [https://requests.readthedocs.io/en/latest/api/#authentication | requests ``AuthBase`` instance]
+         to be used for authentication instead of the ``username`` and ``password``.
+
+         === cert ===
+         The SSL certificate to use with all requests.
+         If string: the path to ssl client cert file (.pem).
+         If tuple: the ('cert', 'key') pair.
+
+         === verify_tls ===
+         Whether or not to verify the TLS / SSL certificate of the server.
+         If boolean: whether or not to verify the server TLS certificate.
+         If string: path to a CA bundle to use for verification.
+
+         === extra_headers ===
+         A dictionary with extra / custom headers that will be send with every request.
+         This parameter can be used to send headers that are not documented in the
+         openapi document or to provide an API-key.
+
+         === cookies ===
+         A dictionary or [https://docs.python.org/3/library/http.cookiejar.html#http.cookiejar.CookieJar | CookieJar object]
+         to send with all requests.
+
+         === proxies ===
+         A dictionary of 'protocol': 'proxy url' to use for all requests.
         """
         included_paths = included_paths if included_paths else ()
         ignored_paths = ignored_paths if ignored_paths else ()
@@ -284,21 +316,24 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             source=source,
             origin=origin,
             base_path=base_path,
+            response_validation=response_validation,
+            disable_server_validation=disable_server_validation,
             mappings_path=mappings_path,
+            invalid_property_default_response=invalid_property_default_response,
+            default_id_property_name=default_id_property_name,
+            faker_locale=faker_locale,
+            require_body_for_invalid_url=require_body_for_invalid_url,
+            recursion_limit=recursion_limit,
+            recursion_default=recursion_default,
             username=username,
             password=password,
             security_token=security_token,
             auth=auth,
             cert=cert,
+            verify_tls=verify_tls,
             extra_headers=extra_headers,
-            response_validation=response_validation,
-            disable_server_validation=disable_server_validation,
-            require_body_for_invalid_url=require_body_for_invalid_url,
-            invalid_property_default_response=invalid_property_default_response,
-            recursion_limit=recursion_limit,
-            recursion_default=recursion_default,
-            faker_locale=faker_locale,
-            default_id_property_name=default_id_property_name,
+            cookies=cookies,
+            proxies=proxies,
         )
 
         paths = self.openapi_spec["paths"]
