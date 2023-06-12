@@ -55,12 +55,12 @@ Both a local openapi.json or openapi.yaml file or one hosted by the API server
 can be checked using the `prance validate <reference_to_file>` shell command:
 
 ```shell
-prance validate http://localhost:8000/openapi.json
+prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
 Processing "http://localhost:8000/openapi.json"...
  -> Resolving external references.
 Validates OK as OpenAPI 3.0.2!
 
-prance validate /tests/files/petstore_openapi.yaml
+prance validate --backend=openapi-spec-validator /tests/files/petstore_openapi.yaml
 Processing "/tests/files/petstore_openapi.yaml"...
  -> Resolving external references.
 Validates OK as OpenAPI 3.0.2!
@@ -70,8 +70,8 @@ You'll have to change the url or file reference to the location of the openapi
 document for your API.
 
 > Note: Although recursion is technically allowed under the OAS, tool support is limited
-and changing the API to not use recursion is recommended.
-At present OpenApiLibCore has limited support for parsing OpenAPI documents with
+and changing the OAS to not use recursion is recommended.
+OpenApiDriver has limited support for parsing OpenAPI documents with
 recursion in them. See the `recursion_limit` and `recursion_default` parameters.
 
 If the openapi document passes this validation, the next step is trying to do a test

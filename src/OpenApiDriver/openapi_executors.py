@@ -13,10 +13,11 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
-from openapi_core.unmarshalling.schemas.exceptions import InvalidSchemaValue
+from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
+from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api import SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
@@ -45,37 +46,43 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         source: str,
         origin: str = "",
         base_path: str = "",
+        response_validation: ValidationLevel = ValidationLevel.WARN,
+        disable_server_validation: bool = True,
         mappings_path: Union[str, Path] = "",
+        invalid_property_default_response: int = 422,
+        default_id_property_name: str = "id",
+        faker_locale: Optional[Union[str, List[str]]] = None,
+        require_body_for_invalid_url: bool = False,
+        recursion_limit: int = 1,
+        recursion_default: Any = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
         cert: Optional[Union[str, Tuple[str, str]]] = None,
+        verify_tls: Optional[Union[bool, str]] = True,
         extra_headers: Optional[Dict[str, str]] = None,
-        response_validation: ValidationLevel = ValidationLevel.WARN,
-        disable_server_validation: bool = True,
-        require_body_for_invalid_url: bool = False,
-        invalid_property_default_response: int = 422,
-        recursion_limit: int = 1,
-        recursion_default: Any = {},
-        faker_locale: Optional[Union[str, List[str]]] = None,
-        default_id_property_name: str = "id",
+        cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
+        proxies: Optional[Dict[str, str]] = None,
     ) -> None:
         super().__init__(
             source=source,
             origin=origin,
             base_path=base_path,
             mappings_path=mappings_path,
+            default_id_property_name=default_id_property_name,
+            faker_locale=faker_locale,
+            recursion_limit=recursion_limit,
+            recursion_default=recursion_default,
             username=username,
             password=password,
             security_token=security_token,
             auth=auth,
             cert=cert,
+            verify_tls=verify_tls,
             extra_headers=extra_headers,
-            recursion_limit=recursion_limit,
-            recursion_default=recursion_default,
-            faker_locale=faker_locale,
-            default_id_property_name=default_id_property_name,
+            cookies=cookies,
+            proxies=proxies,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
