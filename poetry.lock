@@ -1354,13 +1354,13 @@ xls = ["openpyxl", "pandas", "xlrd (>=1.2.0)"]
 
 [[package]]
 name = "robotframework-openapi-libcore"
-version = "1.10.0"
+version = "1.10.1"
 description = "A Robot Framework library to facilitate library development for OpenAPI / Swagger APIs."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "robotframework_openapi_libcore-1.10.0-py3-none-any.whl", hash = "sha256:56431c1aa114a85cb1269faf131527226cdf6e69521974c0d1d65f522ee4b634"},
-    {file = "robotframework_openapi_libcore-1.10.0.tar.gz", hash = "sha256:cc387bc4ef01678eb4da4835182e381146c68c66dfe75a5ec7e785ac550403dd"},
+    {file = "robotframework_openapi_libcore-1.10.1-py3-none-any.whl", hash = "sha256:e44096c7ea08c80f4894d173861297b70d2196e8b1baeac6901f89cb3ac47683"},
+    {file = "robotframework_openapi_libcore-1.10.1.tar.gz", hash = "sha256:67946f033931cbb223bbe2cd21b6a561eb17ff48b8d74eaa6d36853e32c4cfe7"},
 ]
 
 [package.dependencies]
@@ -1814,4 +1814,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "32ba2c9b1520111fd59678629eaa7fd00ee85d1d5a3e85e0ea889c492598e3bf"
+content-hash = "8bcba9f85bbb06ccd11b948d83d1e9523df2dae212de5ce60c93485206492809"
