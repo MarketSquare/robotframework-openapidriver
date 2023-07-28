@@ -254,7 +254,7 @@
                         "required": false,
                         "schema": {
                             "title": "Extension",
-                            "maxLength": 99,
+                            "maxLength": 9,
                             "minLength": 1,
                             "type": "string"
                         },
@@ -997,7 +997,7 @@
                 "title": "WageGroup",
                 "required": [
                     "wagegroup_id",
-                    "hourly_rate"
+                    "hourly-rate"
                 ],
                 "type": "object",
                 "properties": {
@@ -1005,7 +1005,7 @@
                         "title": "Wagegroup id",
                         "type": "string"
                     },
-                    "hourly_rate": {
+                    "hourly-rate": {
                         "title": "Hourly Rate",
                         "type": "number"
                     },

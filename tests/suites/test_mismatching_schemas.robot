@@ -17,11 +17,13 @@ Test Template       Validate Test Endpoint Keyword
 *** Variables ***
 @{EXPECTED_FAILURES}
 ...                     GET /reactions/ 200
+...                     POST /events/ 201
 ...                     POST /employees 201
 ...                     GET /employees 200
 ...                     PATCH /employees/{employee_id} 200
 ...                     GET /employees/{employee_id} 200
 ...                     GET /available_employees 200
+&{API_KEY}              api_key=Super secret key
 
 
 *** Test Cases ***

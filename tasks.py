@@ -3,7 +3,7 @@ import pathlib
 import subprocess
 from importlib.metadata import version
 
-from invoke import task
+from invoke import task, Context
 
 from OpenApiDriver import openapidriver
 
@@ -12,7 +12,7 @@ VERSION = version("robotframework-openapidriver")
 
 
 @task
-def testserver(context) -> None:
+def start_api(context: Context) -> None:
     cmd = [
         "python",
         "-m",
@@ -28,7 +28,7 @@ def testserver(context) -> None:
 
 
 @task
-def utests(context) -> None:
+def utests(context: Context) -> None:
     cmd = [
         "coverage",
         "run",
@@ -41,7 +41,7 @@ def utests(context) -> None:
 
 
 @task
-def atests(context) -> None:
+def atests(context: Context) -> None:
     cmd = [
         "coverage",
         "run",
@@ -57,34 +57,34 @@ def atests(context) -> None:
 
 
 @task(utests, atests)
-def tests(context) -> None:
+def tests(context: Context) -> None:
     subprocess.run("coverage combine", shell=True, check=False)
     subprocess.run("coverage report", shell=True, check=False)
     subprocess.run("coverage html", shell=True, check=False)
 
 
 @task
-def type_check(context) -> None:
+def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
 
 
 @task
-def lint(context) -> None:
+def lint(context: Context) -> None:
     subprocess.run(f"ruff {ROOT}", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"robocop {ROOT}/tests/suites", shell=True, check=False)
 
 
 @task
-def format_code(context) -> None:
+def format_code(context: Context) -> None:
     subprocess.run(f"black {ROOT}", shell=True, check=False)
     subprocess.run(f"isort {ROOT}", shell=True, check=False)
     subprocess.run(f"robotidy {ROOT}/tests/suites", shell=True, check=False)
 
 
 @task
-def libdoc(context) -> None:
+def libdoc(context: Context) -> None:
     print(f"Generating libdoc for library version {VERSION}")
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
     source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
@@ -102,7 +102,7 @@ def libdoc(context) -> None:
 
 
 @task
-def libspec(context) -> None:
+def libspec(context: Context) -> None:
     print(f"Generating libspec for library version {VERSION}")
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
     source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
@@ -120,16 +120,7 @@ def libspec(context) -> None:
 
 
 @task
-def readme(context) -> None:
-    #     front_matter = (
-    # r"""---
-    # ![[Unit-tests](https://img.shields.io/github/workflow/status/MarketSquare/robotframework-openapidriver/Unit%20tests/main)](https://github.com/MarketSquare/robotframework-openapidriver/actions?query=workflow%3A%22Unit+tests%22 "GitHub Workflow Unit Tests Status")
-    # ![Codecov](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapidriver/main "Code coverage on master branch")
-    # ![PyPI](https://img.shields.io/pypi/v/robotframework-openapidriver?label=version "PyPI package version")
-    # ![Python versions](https://img.shields.io/pypi/pyversions/robotframework-openapidriver "Supported Python versions")
-    # ![Licence](https://img.shields.io/pypi/l/robotframework-openapidriver "PyPI - License")
-    # ---
-    # """)
+def readme(context: Context) -> None:
     front_matter = """---\n---\n"""
     with open(f"{ROOT}/docs/README.md", "w", encoding="utf-8") as readme:
         doc_string = openapidriver.__doc__
@@ -138,5 +129,5 @@ def readme(context) -> None:
 
 
 @task(format_code, libdoc, libspec, readme)
-def build(context) -> None:
+def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
