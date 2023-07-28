@@ -1,7 +1,6 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
 import json as _json
-from dataclasses import asdict
 from enum import Enum
 from logging import getLogger
 from pathlib import Path
@@ -13,7 +12,6 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 from openapi_core.templating.paths.exceptions import ServerNotFound
-from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
@@ -142,7 +140,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             params = request_data.params
             headers = request_data.headers
             dto = request_data.dto
-            json_data = asdict(dto)
+            json_data = dto.as_dict()
         response: Response = run_keyword(
             "authorized_request", url, method, params, headers, json_data
         )
@@ -170,7 +168,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         request_data: RequestData = self.get_request_data(method=method, endpoint=path)
         params = request_data.params
         headers = request_data.headers
-        json_data = asdict(request_data.dto)
+        json_data = request_data.dto.as_dict()
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
@@ -487,24 +485,15 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             ]
 
         # The OAS concepts of optional / nullable are not compatible with Python.
-        # Filter the schema errors caused by this incompatibility.
+        # Filter the errors caused by this incompatibility.
         errors_to_keep = []
         for error in validation_result.errors:
-            if isinstance(error, InvalidSchemaValue):
-                schema_errors_to_keep = []
-                for schema_error in error.schema_errors:
-                    message = str(schema_error)
-                    if message == "None for not nullable" or message.startswith(
-                        "None is not "
-                    ):
-                        logger.debug("'None for not nullable' ValidationError ignored.")
-                    else:
-                        schema_errors_to_keep.append(schema_error)
-                if schema_errors_to_keep:
-                    error.schema_errors = tuple(schema_errors_to_keep)
-                    errors_to_keep.append(error)
+            message = str(error)
+            if message == "None for not nullable" or message.startswith("None is not "):
+                logger.debug("'None for not nullable' OpenAPIError ignored.")
             else:
                 errors_to_keep.append(error)
+
         validation_result.errors = errors_to_keep
 
         if self.response_validation == ValidationLevel.STRICT:

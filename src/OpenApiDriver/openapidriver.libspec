@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-06-12T08:01:12+00:00" specversion="4" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="351">
-<version>4.1.0</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-07-28T14:31:11+00:00" specversion="5" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapidriver.py" lineno="351">
+<version>4.2.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
@@ -9,142 +9,126 @@
 <arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] | None = None, ignored_paths: Iterable[str] | None = None, ignored_responses: Iterable[int] | None = None, ignored_testcases: Iterable[Tuple[str, str, int]] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | List[str] | None = None, require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: Any = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, verify_tls: bool | str | None = True, extra_headers: Dict[str, str] | None = None, cookies: Dict[str, str] | RequestsCookieJar | None = None, proxies: Dict[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="origin: str = ">
 <name>origin</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="base_path: str = ">
 <name>base_path</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="included_paths: Iterable[str] | None = None">
 <name>included_paths</name>
-<type>Iterable[str]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Iterable[str] | None<type name="Iterable">Iterable[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_paths: Iterable[str] | None = None">
 <name>ignored_paths</name>
-<type>Iterable[str]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Iterable[str] | None<type name="Iterable">Iterable[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: Iterable[int] | None = None">
 <name>ignored_responses</name>
-<type>Iterable[int]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Iterable[int] | None<type name="Iterable">Iterable[int]<type name="int" typedoc="integer">int</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: Iterable[Tuple[str, str, int]] | None = None">
 <name>ignored_testcases</name>
-<type>Iterable[Tuple[str, str, int]]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Iterable[Tuple[str, str, int]] | None<type name="Iterable">Iterable[Tuple[str, str, int]]<type name="Tuple" typedoc="tuple">Tuple[str, str, int]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type><type name="int" typedoc="integer">int</type></type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
 <name>response_validation</name>
-<type typedoc="ValidationLevel">ValidationLevel</type>
+<type name="ValidationLevel" typedoc="ValidationLevel">ValidationLevel</type>
 <default>WARN</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="disable_server_validation: bool = True">
 <name>disable_server_validation</name>
-<type typedoc="boolean">bool</type>
+<type name="bool" typedoc="boolean">bool</type>
 <default>True</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="mappings_path: str | Path = ">
 <name>mappings_path</name>
-<type typedoc="string">str</type>
-<type typedoc="Path">Path</type>
+<type name="Union" union="true">str | Path<type name="str" typedoc="string">str</type><type name="Path" typedoc="Path">Path</type></type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_property_default_response: int = 422">
 <name>invalid_property_default_response</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 <default>422</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_id_property_name: str = id">
 <name>default_id_property_name</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default>id</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | List[str] | None = None">
 <name>faker_locale</name>
-<type typedoc="string">str</type>
-<type typedoc="list">List[str]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">str | List[str] | None<type name="str" typedoc="string">str</type><type name="List" typedoc="list">List[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="require_body_for_invalid_url: bool = False">
 <name>require_body_for_invalid_url</name>
-<type typedoc="boolean">bool</type>
+<type name="bool" typedoc="boolean">bool</type>
 <default>False</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_limit: int = 1">
 <name>recursion_limit</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 <default>1</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: Any = {}">
 <name>recursion_default</name>
-<type>Any</type>
+<type name="Any" typedoc="Any">Any</type>
 <default>{}</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
 <name>username</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="password: str = ">
 <name>password</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="security_token: str = ">
 <name>security_token</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="auth: AuthBase | None = None">
 <name>auth</name>
-<type>AuthBase</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">AuthBase | None<type name="AuthBase">AuthBase</type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | Tuple[str, str] | None = None">
 <name>cert</name>
-<type typedoc="string">str</type>
-<type typedoc="tuple">Tuple[str, str]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">str | Tuple[str, str] | None<type name="str" typedoc="string">str</type><type name="Tuple" typedoc="tuple">Tuple[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="verify_tls: bool | str | None = True">
 <name>verify_tls</name>
-<type typedoc="boolean">bool</type>
-<type typedoc="string">str</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">bool | str | None<type name="bool" typedoc="boolean">bool</type><type name="str" typedoc="string">str</type><type name="None" typedoc="None">None</type></type>
 <default>True</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
 <name>extra_headers</name>
-<type typedoc="dictionary">Dict[str, str]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Dict[str, str] | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="cookies: Dict[str, str] | RequestsCookieJar | None = None">
 <name>cookies</name>
-<type typedoc="dictionary">Dict[str, str]</type>
-<type typedoc="dictionary">RequestsCookieJar</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Dict[str, str] | RequestsCookieJar | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="RequestsCookieJar" typedoc="dictionary">RequestsCookieJar</type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="proxies: Dict[str, str] | None = None">
 <name>proxies</name>
-<type typedoc="dictionary">Dict[str, str]</type>
-<type typedoc="None">None</type>
+<type name="Union" union="true">Dict[str, str] | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 </arguments>
@@ -215,19 +199,19 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="155">
+<kw name="Test Endpoint" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="154">
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
 <name>status_code</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 </arg>
 </arguments>
 <doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
@@ -235,19 +219,19 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `path` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="113">
+<kw name="Test Invalid Url" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="112">
 <arguments repr="path: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="expected_status_code: int = 404">
 <name>expected_status_code</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 <default>404</default>
 </arg>
 </arguments>
@@ -257,15 +241,15 @@
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'path' and 'method' where the url for the `path` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="93">
+<kw name="Test Unauthorized" source="C:\GitHub\robotframework-openapidriver\src\OpenApiDriver\openapi_executors.py" lineno="92">
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 </arguments>
 <doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt;, with no authorization.&lt;/p&gt;
@@ -288,6 +272,15 @@
 </enums>
 </datatypes>
 <typedocs>
+<type name="Any" type="Standard">
+<doc>&lt;p&gt;Any value is accepted. No conversion is done.&lt;/p&gt;</doc>
+<accepts>
+<type>Any</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
 <type name="boolean" type="Standard">
 <doc>&lt;p&gt;Strings &lt;code&gt;TRUE&lt;/code&gt;, &lt;code&gt;YES&lt;/code&gt;, &lt;code&gt;ON&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt; are converted to Boolean &lt;code&gt;True&lt;/code&gt;, the empty string as well as strings &lt;code&gt;FALSE&lt;/code&gt;, &lt;code&gt;NO&lt;/code&gt;, &lt;code&gt;OFF&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; are converted to Boolean &lt;code&gt;False&lt;/code&gt;, and the string &lt;code&gt;NONE&lt;/code&gt; is converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other strings and other accepted values are passed as-is, allowing keywords to handle them specially if needed. All string comparisons are case-insensitive.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;TRUE&lt;/code&gt; (converted to &lt;code&gt;True&lt;/code&gt;), &lt;code&gt;off&lt;/code&gt; (converted to &lt;code&gt;False&lt;/code&gt;), &lt;code&gt;example&lt;/code&gt; (used as-is)&lt;/p&gt;</doc>
