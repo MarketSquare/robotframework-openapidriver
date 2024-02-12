@@ -11,12 +11,15 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
     RequestsOpenAPIResponse,
 )
-from openapi_core.templating.paths.exceptions import ServerNotFound
+from openapi_core.exceptions import OpenAPIError
+from openapi_core.validation.exceptions import ValidationError
+from openapi_core.validation.response.exceptions import InvalidData
+from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar as CookieJar
-from robot.api import SkipExecution
+from robot.api import Failure, SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -338,6 +341,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             )
 
         run_keyword("validate_response", path, response, original_data)
+
         if request_values.method == "DELETE":
             get_request_data = self.get_request_data(endpoint=path, method="GET")
             get_params = get_request_data.params
@@ -383,8 +387,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         if response.status_code == 204:
             assert not response.content
             return None
-        # validate the response against the schema
-        self._validate_response_against_spec(response)
+
+        try:
+            self._validate_response_against_spec(response)
+        except OpenAPIError:
+            raise Failure("Response did not pass schema validation.")
 
         request_method = response.request.method
         if request_method is None:
@@ -475,35 +482,36 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         ), f"{get_response.json()} not equal to original {json_response}"
 
     def _validate_response_against_spec(self, response: Response) -> None:
-        validation_result = self.validate_response_vs_spec(
-            request=RequestsOpenAPIRequest(response.request),
-            response=RequestsOpenAPIResponse(response),
-        )
-        if self.disable_server_validation:
-            validation_result.errors = [
-                e for e in validation_result.errors if not isinstance(e, ServerNotFound)
-            ]
-
-        # The OAS concepts of optional / nullable are not compatible with Python.
-        # Filter the errors caused by this incompatibility.
-        errors_to_keep = []
-        for error in validation_result.errors:
-            message = str(error)
-            if message == "None for not nullable" or message.startswith("None is not "):
-                logger.debug("'None for not nullable' OpenAPIError ignored.")
+        try:
+            self.validate_response_vs_spec(
+                request=RequestsOpenAPIRequest(response.request),
+                response=RequestsOpenAPIResponse(response),
+            )
+        except InvalidData as exception:
+            errors: List[InvalidSchemaValue] = exception.__cause__
+            validation_errors: Optional[List[ValidationError]] = getattr(
+                errors, "schema_errors", None
+            )
+            if validation_errors:
+                error_message = "\n".join(
+                    [
+                        f"{list(error.schema_path)}: {error.message}"
+                        for error in validation_errors
+                    ]
+                )
             else:
-                errors_to_keep.append(error)
+                error_message = str(exception)
 
-        validation_result.errors = errors_to_keep
-
-        if self.response_validation == ValidationLevel.STRICT:
-            validation_result.raise_for_errors()
-        if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
-            for validation_error in validation_result.errors:
-                if self.response_validation == ValidationLevel.WARN:
-                    logger.warning(validation_error)
-                else:
-                    logger.info(validation_error)
+            if response.status_code == self.invalid_property_default_response:
+                logger.debug(error_message)
+                return
+            if self.response_validation == ValidationLevel.STRICT:
+                logger.error(error_message)
+                raise exception
+            if self.response_validation == ValidationLevel.WARN:
+                logger.warning(error_message)
+            elif self.response_validation == ValidationLevel.INFO:
+                logger.info(error_message)
 
     @keyword
     def validate_resource_properties(
