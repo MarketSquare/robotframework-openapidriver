@@ -121,6 +121,7 @@ data types and properties. The following list details the most important ones:
 - No support for per-path authorization levels (only simple 401 / 403 validation).
 
 """
+
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 

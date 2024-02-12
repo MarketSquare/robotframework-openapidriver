@@ -1,4 +1,5 @@
 """Module holding the OpenApiReader reader_class implementation."""
+
 from typing import Any, Dict, List, Union
 
 from DataDriver.AbstractReaderClass import AbstractReaderClass
