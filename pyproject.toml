@@ -96,8 +96,10 @@ py_version=38
 
 [tool.ruff]
 line-length = 120
-select = ["E", "F", "PL"]
 src = ["src/OpenApiDriver"]
+
+[tool.ruff.lint]
+select = ["E", "F", "PL"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["logging-fstring-interpolation", "missing-class-docstring"]
