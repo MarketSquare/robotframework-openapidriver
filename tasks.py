@@ -3,7 +3,8 @@ import pathlib
 import subprocess
 from importlib.metadata import version
 
-from invoke import task, Context
+from invoke.context import Context
+from invoke.tasks import task
 
 from OpenApiDriver import openapidriver
 

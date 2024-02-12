@@ -5,7 +5,7 @@ Library             OpenApiDriver
 ...                     origin=http://localhost:8000
 ...                     base_path=${EMPTY}
 ...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
-...                     response_validation=INFO
+...                     response_validation=STRICT
 ...                     require_body_for_invalid_url=${TRUE}
 ...                     extra_headers=${API_KEY}
 ...                     faker_locale=nl_NL

@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapidriver"
-version = "4.2.1"
+version = "4.3.0"
 description = "A library for contract-testing OpenAPI / Swagger APIs."
 license = "Apache-2.0"
 authors = ["Robin Mackaij <r.a.mackaij@gmail.com>"]
@@ -24,7 +24,7 @@ include = ["*.libspec"]
 [tool.poetry.dependencies]
 python = "^3.8"
 robotframework-datadriver = ">=1.6.1"
-robotframework-openapi-libcore = "^1.10.1"
+robotframework-openapi-libcore = "^1.11.0"
 
 [tool.poetry.group.dev.dependencies]
 fastapi = ">=0.95.0"
@@ -96,8 +96,10 @@ py_version=38
 
 [tool.ruff]
 line-length = 120
-select = ["E", "F", "PL"]
 src = ["src/OpenApiDriver"]
+
+[tool.ruff.lint]
+select = ["E", "F", "PL"]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["logging-fstring-interpolation", "missing-class-docstring"]
