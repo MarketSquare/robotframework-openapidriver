@@ -317,7 +317,9 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetail
     if employee_id not in EMPLOYEES.keys():
         raise HTTPException(status_code=404, detail="Employee not found")
     stored_employee_data = EMPLOYEES[employee_id]
-    employee_update_data = employee.model_dump(exclude_unset=True)
+    employee_update_data = employee.model_dump(
+        exclude_defaults=True, exclude_unset=True
+    )
 
     wagegroup_id = employee_update_data.get("wagegroup_id", None)
     if wagegroup_id and wagegroup_id not in WAGE_GROUPS:
