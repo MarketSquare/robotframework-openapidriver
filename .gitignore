@@ -127,7 +127,8 @@ report.html
 tests/logs
 
 # IDE config
-.vscode
+.vscode/launch.json
+.vscode/settings.json
 
 # PowerShell utility scripts
 _*.ps1
