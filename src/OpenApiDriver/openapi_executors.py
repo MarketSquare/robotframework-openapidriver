@@ -2,7 +2,7 @@
 
 import json as _json
 from enum import Enum
-from logging import getLogger
+from robot.api import logger
 from pathlib import Path
 from random import choice
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -24,9 +24,6 @@ from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
 run_keyword = BuiltIn().run_keyword
-
-
-logger = getLogger(__name__)
 
 
 class ValidationLevel(str, Enum):
@@ -171,7 +168,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         request_data: RequestData = self.get_request_data(method=method, endpoint=path)
         params = request_data.params
         headers = request_data.headers
-        json_data = request_data.dto.as_dict()
+        json_data = request_data.dto.as_dict() if request_data.dto.as_dict() else None
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
