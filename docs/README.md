@@ -3,6 +3,9 @@
 
 # OpenApiDriver for Robot Framework®
 
+> OpenApiDriver has moved!
+Please head over to https://github.com/MarketSquare/robotframework-openapitools for the latest version!
+
 OpenApiDriver is an extension of the Robot Framework® DataDriver library that allows
 for generation and execution of test cases based on the information in an OpenAPI
 document (also known as Swagger document).
